@@ -2,19 +2,6 @@ import { envolver, responder, HttpError } from './_lib/http.js';
 import { clienteAdmin } from './_lib/supabase.js';
 import { criarSessao } from './_lib/auth.js';
 import { normalizarLogin } from './_lib/login.js';
-import { scryptSync, timingSafeEqual } from 'node:crypto';
-
-function senhaConfere(senha, armazenada) {
-  if (typeof armazenada !== 'string') return false;
-  if (armazenada.startsWith('scrypt$')) {
-    const [, salt, esperado] = armazenada.split('$');
-    try {
-      const derivada = scryptSync(senha, salt, 64).toString('hex');
-      return timingSafeEqual(Buffer.from(derivada, 'hex'), Buffer.from(esperado, 'hex'));
-    } catch { return false; }
-  }
-  return armazenada === senha;
-}
 
 export default envolver(async (req, res) => {
   if (req.method !== 'POST') throw new HttpError(405, 'método não permitido');
@@ -23,11 +10,17 @@ export default envolver(async (req, res) => {
   if (!login || !senha) throw new HttpError(400, 'login ou senha inválidos');
 
   const db = clienteAdmin();
+  const { data: conta, error: authError } = await db.auth.signInWithPassword({
+    email: `${login}@${process.env.AUTH_EMAIL_DOMAIN || 'celulaagape.app'}`,
+    password: senha,
+  });
+  if (authError || !conta?.user) throw new HttpError(401, 'login ou senha inválidos');
+
   const { data: perfil, error } = await db.from('users')
-    .select('id,name,login,role,auth_id,created_at,pass_hash')
-    .eq('login', login).maybeSingle();
+    .select('id,name,login,role,auth_id,created_at')
+    .eq('auth_id', conta.user.id).maybeSingle();
   if (error) throw new Error(error.message);
-  if (!perfil || !senhaConfere(senha, perfil.pass_hash)) throw new HttpError(401, 'login ou senha inválidos');
+  if (!perfil) throw new HttpError(403, 'usuário sem cadastro na célula');
 
   return responder(res, 200, {
     ok: true,
@@ -36,4 +29,3 @@ export default envolver(async (req, res) => {
   });
 });
 
-export { senhaConfere };

@@ -1,12 +1,8 @@
 // Identifica quem está chamando a API a partir da sessão própria do Ágape.
-import { createHmac, timingSafeEqual, randomBytes, scryptSync } from 'node:crypto';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 import { HttpError, tokenDaRequisicao } from './http.js';
 
 const segredo = () => process.env.AUTH_SESSION_SECRET || process.env.SUPABASE_SERVICE_KEY;
-export function hashSenha(senha) {
-  const salt = randomBytes(16).toString('hex');
-  return `scrypt$${salt}$${scryptSync(senha, salt, 64).toString('hex')}`;
-}
 const codificar = (valor) => Buffer.from(JSON.stringify(valor)).toString('base64url');
 const assinatura = (valor) => createHmac('sha256', segredo()).update(valor).digest('base64url');
 
@@ -38,9 +34,9 @@ export async function usuarioAutenticado(db, req) {
   }
   if (!authId) throw new HttpError(401, 'sessão inválida ou expirada');
   const { data: perfil, error } = await db
-    .from('users').select('id, name, login, role, created_at, pass_hash, auth_id').eq('auth_id', authId).maybeSingle();
+    .from('users').select('id, name, login, role, created_at, auth_id').eq('auth_id', authId).maybeSingle();
   if (!perfil) {
-    const fallback = await db.from('users').select('id, name, login, role, created_at, pass_hash, auth_id').eq('id', authId).maybeSingle();
+    const fallback = await db.from('users').select('id, name, login, role, created_at, auth_id').eq('id', authId).maybeSingle();
     if (!fallback.error && fallback.data) return { perfil: fallback.data };
   }
   if (error) throw new Error(error.message);
