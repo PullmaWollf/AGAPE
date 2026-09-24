@@ -25,7 +25,13 @@ export default envolver(async (req, res) => {
   return responder(res, 200, {
     ok: true,
     token: criarSessao(perfil),
-    usuario: { id: perfil.id, name: perfil.name, login: perfil.login, role: perfil.role, created_at: perfil.created_at },
+    // Entrega a sessão oficial do Supabase ao navegador. Assim RLS, Storage,
+    // RPCs de push e operações de posts usam exatamente o mesmo auth.uid().
+    supabase_session: {
+      access_token: conta.session?.access_token,
+      refresh_token: conta.session?.refresh_token,
+    },
+    usuario: { id: perfil.id, name: perfil.name, login: perfil.login, role: perfil.role, auth_id: perfil.auth_id, created_at: perfil.created_at },
   });
 });
 

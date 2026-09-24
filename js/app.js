@@ -91,13 +91,14 @@ async function doLogin() {
     const r = await fetch('/api/auth-login.js', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login, senha }) });
     const data = await r.json().catch(() => ({}));
     if (!r.ok) return erroLogin(r.status === 401 ? 'Login ou senha incorretos.' : 'Não foi possível entrar agora. Tente de novo.');
-    // A sessão própria autoriza as APIs administrativas; a sessão Supabase
-    // autoriza as operações normais do app protegidas por RLS.
-    const { error: supabaseLoginError } = await db.auth.signInWithPassword({
-      email: loginParaEmail(login, CFG.EMAIL_DOMAIN),
-      password: senha,
-    });
-    if (supabaseLoginError) {
+    // A sessão própria autoriza as APIs administrativas; a sessão oficial do
+    // Supabase autoriza RLS, Storage, RPCs e notificações no mesmo auth.uid().
+    const supabaseSession = data.supabase_session;
+    if (!supabaseSession?.access_token || !supabaseSession?.refresh_token) {
+      return erroLogin('A sessão do servidor veio incompleta. Tente entrar novamente.');
+    }
+    const { error: supabaseSessionError } = await db.auth.setSession(supabaseSession);
+    if (supabaseSessionError) {
       return erroLogin('Não foi possível preparar sua sessão. Tente entrar novamente.');
     }
     sessionStorage.setItem('agape-session', data.token);
