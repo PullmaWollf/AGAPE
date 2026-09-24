@@ -1,0 +1,38 @@
+{
+  "name": "Célula Ágape",
+  "short_name": "Ágape",
+  "description": "App da Célula Ágape — Igreja Videira Aparecida de Goiânia",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5ede4",
+  "theme_color": "#4a4040",
+  "orientation": "portrait-primary",
+  "lang": "pt-BR",
+  "categories": ["lifestyle", "social"],
+  "icons": [
+    { "src": "/icons/icon-72.png",  "sizes": "72x72",   "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-96.png",  "sizes": "96x96",   "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-128.png", "sizes": "128x128", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-144.png", "sizes": "144x144", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-152.png", "sizes": "152x152", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-384.png", "sizes": "384x384", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Mural",
+      "short_name": "Mural",
+      "description": "Ver o mural da célula",
+      "url": "/?page=mural",
+      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Escala de Lanche",
+      "short_name": "Escala",
+      "description": "Ver a escala de lanche",
+      "url": "/?page=escala",
+      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
+    }
+  ]
+}
