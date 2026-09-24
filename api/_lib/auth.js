@@ -1,16 +1,37 @@
-// Identifica quem está chamando a API a partir do token de sessão do Supabase Auth.
+// Identifica quem está chamando a API a partir da sessão própria do Ágape.
+import { createHmac, timingSafeEqual, randomBytes, scryptSync } from 'node:crypto';
 import { HttpError, tokenDaRequisicao } from './http.js';
 
+const segredo = () => process.env.AUTH_SESSION_SECRET || process.env.SUPABASE_SERVICE_KEY;
+export function hashSenha(senha) {
+  const salt = randomBytes(16).toString('hex');
+  return `scrypt$${salt}$${scryptSync(senha, salt, 64).toString('hex')}`;
+}
+const codificar = (valor) => Buffer.from(JSON.stringify(valor)).toString('base64url');
+const assinatura = (valor) => createHmac('sha256', segredo()).update(valor).digest('base64url');
+
+export function criarSessao(perfil) {
+  const corpo = codificar({ sub: perfil.id, exp: Date.now() + 1000 * 60 * 60 * 24 * 30 });
+  return `${corpo}.${assinatura(corpo)}`;
+}
+
+function lerSessao(token) {
+  const [corpo, sig] = String(token || '').split('.');
+  if (!corpo || !sig) return null;
+  const esperada = assinatura(corpo);
+  if (sig.length !== esperada.length || !timingSafeEqual(Buffer.from(sig), Buffer.from(esperada))) return null;
+  const dados = JSON.parse(Buffer.from(corpo, 'base64url').toString());
+  return dados.exp > Date.now() ? dados : null;
+}
+
 export async function usuarioAutenticado(db, req) {
-  const token = tokenDaRequisicao(req);
-  if (!token) throw new HttpError(401, 'faça login');
-  const { data, error } = await db.auth.getUser(token);
-  if (error || !data?.user) throw new HttpError(401, 'sessão inválida ou expirada');
-  const { data: perfil, error: e2 } = await db
-    .from('users').select('id, name, login, role, auth_id').eq('auth_id', data.user.id).maybeSingle();
-  if (e2) throw new Error(e2.message);
+  const sessao = lerSessao(tokenDaRequisicao(req));
+  if (!sessao) throw new HttpError(401, 'sessão inválida ou expirada');
+  const { data: perfil, error } = await db
+    .from('users').select('id, name, login, role, created_at, pass_hash').eq('id', sessao.sub).maybeSingle();
+  if (error) throw new Error(error.message);
   if (!perfil) throw new HttpError(403, 'usuário sem cadastro na célula');
-  return { authId: data.user.id, perfil };
+  return { perfil };
 }
 
 export async function exigirAdmin(db, req) {

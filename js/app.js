@@ -50,11 +50,11 @@ async function comBotao(btn, fn) {
 }
 
 async function chamarApi(caminho, corpo) {
-  const { data: { session } } = await db.auth.getSession();
-  if (!session) throw new Error('Sessão expirada. Entre novamente.');
+  const token = S.session?.token || sessionStorage.getItem('agape-session');
+  if (!token) throw new Error('Sessão expirada. Entre novamente.');
   const r = await fetch(caminho, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
     body: JSON.stringify(corpo || {}),
   });
   const j = await r.json().catch(() => ({}));
@@ -74,12 +74,9 @@ async function carregarPerfil(session) {
 }
 
 async function restaurarSessao() {
-  const { data: { session } } = await db.auth.getSession();
-  if (!session) return;
-  try {
-    const perfil = await carregarPerfil(session);
-    if (perfil) { S.me = perfil; S.session = session; } else await db.auth.signOut();
-  } catch (e) { console.warn('restaurarSessao:', e); }
+  const token = sessionStorage.getItem('agape-session');
+  const perfil = JSON.parse(sessionStorage.getItem('agape-user') || 'null');
+  if (token && perfil) { S.me = perfil; S.session = { token }; }
 }
 
 function erroLogin(msg) {
@@ -91,16 +88,16 @@ async function doLogin() {
   $('login-err').style.display = 'none';
   if (!login.trim() || !senha) return erroLogin('Informe login e senha.');
   await comBotao($('li-btn'), async () => {
-    const { data, error } = await db.auth.signInWithPassword({ email: loginParaEmail(login, CFG.EMAIL_DOMAIN), password: senha });
-    if (error) return erroLogin(/invalid login/i.test(error.message) ? 'Login ou senha incorretos.' : 'Não foi possível entrar agora. Tente de novo.');
-    let perfil = null;
-    try { perfil = await carregarPerfil(data.session); } catch (e) { console.warn(e); }
-    if (!perfil) { await db.auth.signOut(); return erroLogin('Sua conta ainda não foi liberada pelo ADM.'); }
-    S.me = perfil; S.session = data.session;
+    const r = await fetch('/api/auth-login.js', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login, senha }) });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) return erroLogin(r.status === 401 ? 'Login ou senha incorretos.' : 'Não foi possível entrar agora. Tente de novo.');
+    sessionStorage.setItem('agape-session', data.token);
+    sessionStorage.setItem('agape-user', JSON.stringify(data.usuario));
+    S.me = data.usuario; S.session = { token: data.token };
     $('li-user').value = ''; $('li-pass').value = '';
     closeSheet('login-sheet');
     await aposLogin();
-    toast(`Bem-vindo(a), ${primeiroNome(perfil.name)}!`);
+    toast(`Bem-vindo(a), ${primeiroNome(S.me.name)}!`);
   });
 }
 
@@ -112,7 +109,8 @@ async function aposLogin() {
 
 async function doLogout() {
   await removerDispositivoAtual().catch(() => {});
-  await db.auth.signOut();
+  sessionStorage.removeItem('agape-session');
+  sessionStorage.removeItem('agape-user');
   S.me = null; S.session = null; S.users = []; S.modelos = []; S.dispositivos = []; S.notifs = []; S.pushOk = false;
   closeSheet('conta-sheet');
   goPage('home');
@@ -168,10 +166,11 @@ async function trocarSenha() {
   if (nova.length < 6) return toast('A nova senha precisa ter pelo menos 6 caracteres.', 'warn');
   if (nova !== conf) return toast('A confirmação não confere com a nova senha.', 'warn');
   await comBotao($('conta-senha-btn'), async () => {
-    const re = await db.auth.signInWithPassword({ email: loginParaEmail(S.me.login, CFG.EMAIL_DOMAIN), password: atual });
-    if (re.error) return toast('Senha atual incorreta.', 'err');
-    const { error } = await db.auth.updateUser({ password: nova });
-    if (error) return toast(msgErro(error, 'Não foi possível trocar a senha.'), 'err');
+    try {
+      await chamarApi('/api/admin-users.js', { acao: 'trocar_senha', senhaAtual: atual, senhaNova: nova });
+    } catch (e) {
+      return toast(/senha atual/i.test(e.message) ? 'Senha atual incorreta.' : msgErro(e, 'Não foi possível trocar a senha.'), 'err');
+    }
     ['conta-senha-atual', 'conta-senha-nova', 'conta-senha-conf'].forEach((i) => ($(i).value = ''));
     toast('Senha alterada com sucesso ✅');
   });
@@ -235,12 +234,6 @@ async function iniciar() {
       if (ev.data?.type === 'push-resubscribe') sincronizarPush({ silencioso: true });
     });
   }
-  db.auth.onAuthStateChange((evento, sessao) => {
-    // Só estado síncrono aqui (chamar o Supabase dentro deste callback pode travar).
-    S.session = sessao;
-    if (evento === 'SIGNED_OUT' && S.me) { S.me = null; setTimeout(renderTudo, 0); }
-  });
-
   try {
     await Promise.all([restaurarSessao(), carregarPublico()]);
     $('erro-conexao').style.display = 'none';
