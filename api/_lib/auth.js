@@ -1,8 +1,12 @@
 // Identifica quem está chamando a API a partir da sessão própria do Ágape.
-import { createHmac, timingSafeEqual } from 'node:crypto';
+import { createHmac, timingSafeEqual, randomBytes, scryptSync } from 'node:crypto';
 import { HttpError, tokenDaRequisicao } from './http.js';
 
 const segredo = () => process.env.AUTH_SESSION_SECRET || process.env.SUPABASE_SERVICE_KEY;
+export function hashSenha(senha) {
+  const salt = randomBytes(16).toString('hex');
+  return `scrypt$${salt}$${scryptSync(senha, salt, 64).toString('hex')}`;
+}
 const codificar = (valor) => Buffer.from(JSON.stringify(valor)).toString('base64url');
 const assinatura = (valor) => createHmac('sha256', segredo()).update(valor).digest('base64url');
 
