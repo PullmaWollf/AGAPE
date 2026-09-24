@@ -91,6 +91,15 @@ async function doLogin() {
     const r = await fetch('/api/auth-login.js', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login, senha }) });
     const data = await r.json().catch(() => ({}));
     if (!r.ok) return erroLogin(r.status === 401 ? 'Login ou senha incorretos.' : 'Não foi possível entrar agora. Tente de novo.');
+    // A sessão própria autoriza as APIs administrativas; a sessão Supabase
+    // autoriza as operações normais do app protegidas por RLS.
+    const { error: supabaseLoginError } = await db.auth.signInWithPassword({
+      email: loginParaEmail(login, CFG.EMAIL_DOMAIN),
+      password: senha,
+    });
+    if (supabaseLoginError) {
+      return erroLogin('Não foi possível preparar sua sessão. Tente entrar novamente.');
+    }
     sessionStorage.setItem('agape-session', data.token);
     sessionStorage.setItem('agape-user', JSON.stringify(data.usuario));
     S.me = data.usuario; S.session = { token: data.token, user: { id: data.usuario.auth_id } };
@@ -109,6 +118,7 @@ async function aposLogin() {
 
 async function doLogout() {
   await removerDispositivoAtual().catch(() => {});
+  await db.auth.signOut().catch(() => {});
   sessionStorage.removeItem('agape-session');
   sessionStorage.removeItem('agape-user');
   S.me = null; S.session = null; S.users = []; S.modelos = []; S.dispositivos = []; S.notifs = []; S.pushOk = false;
