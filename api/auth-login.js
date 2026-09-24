@@ -24,7 +24,7 @@ export default envolver(async (req, res) => {
 
   const db = clienteAdmin();
   const { data: perfil, error } = await db.from('users')
-    .select('id,name,login,role,created_at,pass_hash')
+    .select('id,name,login,role,auth_id,created_at,pass_hash')
     .eq('login', login).maybeSingle();
   if (error) throw new Error(error.message);
   if (!perfil || !senhaConfere(senha, perfil.pass_hash)) throw new HttpError(401, 'login ou senha inválidos');

@@ -76,7 +76,7 @@ async function carregarPerfil(session) {
 async function restaurarSessao() {
   const token = sessionStorage.getItem('agape-session');
   const perfil = JSON.parse(sessionStorage.getItem('agape-user') || 'null');
-  if (token && perfil) { S.me = perfil; S.session = { token }; }
+  if (token && perfil) { S.me = perfil; S.session = { token, user: { id: perfil.auth_id } }; }
 }
 
 function erroLogin(msg) {
@@ -93,7 +93,7 @@ async function doLogin() {
     if (!r.ok) return erroLogin(r.status === 401 ? 'Login ou senha incorretos.' : 'Não foi possível entrar agora. Tente de novo.');
     sessionStorage.setItem('agape-session', data.token);
     sessionStorage.setItem('agape-user', JSON.stringify(data.usuario));
-    S.me = data.usuario; S.session = { token: data.token };
+    S.me = data.usuario; S.session = { token: data.token, user: { id: data.usuario.auth_id } };
     $('li-user').value = ''; $('li-pass').value = '';
     closeSheet('login-sheet');
     await aposLogin();
@@ -176,7 +176,7 @@ async function trocarSenha() {
   });
 }
 
-// ══════════════════════════════════════════
+// ═════════════���════════════════════════════
 // CARGA DE DADOS
 // ══════════════════════════════════════════
 function montarSemanas(semanas, atribs) {
