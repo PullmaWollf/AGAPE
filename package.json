@@ -7,7 +7,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "test": "node --test tests/",
+    "test": "node --test tests/*.test.js",
     "migrar-usuarios": "node scripts/migrar-usuarios.mjs"
   },
   "dependencies": {
