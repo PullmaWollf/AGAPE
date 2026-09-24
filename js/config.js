@@ -7,6 +7,6 @@ window.AGAPE_CONFIG = {
   VAPID_PUBLIC_KEY: 'BM8z5iHQ48R6PmbY9TCxWBhw-a3dUqov5cg37DVlFSjuP3jSMisAS_XfkBxJoufFt5QTtMJM-syloUNqH9Y30DY',
   // Domínio do e-mail interno usado no Supabase Auth (login "ana" → ana@celulaagape.app).
   // Precisa ser IGUAL à variável AUTH_EMAIL_DOMAIN da Vercel e do script de migração.
-  EMAIL_DOMAIN: 'gmail.com',
+  EMAIL_DOMAIN: 'celulaagape.app',
   TZ: 'America/Sao_Paulo',
 };
