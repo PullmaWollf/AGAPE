@@ -56,7 +56,7 @@ export async function migrar({ db, dominio, dryRun = false, log = console.log })
       } else { relatorio.falhas.push({ login: u.login, motivo: error.message }); continue; }
     } else authId = conta.user.id;
 
-    const { error: eUp } = await db.from('users').update({ auth_id: authId, pass_hash: senhaAgape }).eq('id', u.id);
+    const { error: eUp } = await db.from('users').update({ auth_id: authId, pass_hash: null }).eq('id', u.id);
     if (eUp) { relatorio.falhas.push({ login: u.login, motivo: `vincular auth_id: ${eUp.message}` }); continue; }
     relatorio.migrados.push(u.login);
     if (!temSenhaBoa && !error) relatorio.temporarias.push({ login: u.login, senha });
