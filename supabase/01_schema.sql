@@ -787,8 +787,11 @@ create policy mural_leitura on storage.objects for select to public
 
 drop policy if exists mural_envio on storage.objects;
 create policy mural_envio on storage.objects for insert to authenticated
-  with check (bucket_id = 'mural' and public.is_membro()
-              and (storage.foldername(name))[1] = auth.uid()::text);
+  with check (
+    bucket_id = 'mural'
+    and (public.is_membro() or public.is_admin())
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
 
 drop policy if exists mural_exclusao on storage.objects;
 create policy mural_exclusao on storage.objects for delete to authenticated

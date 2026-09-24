@@ -1,7 +1,7 @@
 // ─── Célula Ágape — Service Worker v5 ───
 // Só cuida de push e clique na notificação. Toda a rede vai direto ao Supabase/API
 // (sem cache) para os dados nunca ficarem desatualizados.
-const VERSAO = 'agape-v5';
+const VERSAO = 'agape-v6';
 
 self.addEventListener('install', () => self.skipWaiting());
 
@@ -24,7 +24,8 @@ self.addEventListener('push', (e) => {
     self.registration.showNotification(data.title, {
       body: data.body,
       icon: '/icons/icon-192.png',
-      badge: '/icons/icon-72.png',
+      // Sem badge colorido: o Android pode renderizar PNGs fotográficos como quadrado preto.
+      // O ícone principal continua sendo usado pela notificação e pelo app instalado.
       vibrate: [300, 100, 300],
       tag: data.tag || 'agape-push',
       renotify: true,
