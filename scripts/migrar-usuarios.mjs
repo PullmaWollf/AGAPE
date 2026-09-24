@@ -13,7 +13,6 @@ import { createClient } from '@supabase/supabase-js';
 import { randomBytes } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import { loginParaEmail } from '../api/_lib/login.js';
-import { hashSenha } from '../api/_lib/auth.js';
 
 const SENHA_MIN = 6;
 const senhaTemporaria = () => randomBytes(9).toString('base64url').replace(/[-_]/g, 'x').slice(0, 10);
@@ -42,9 +41,6 @@ export async function migrar({ db, dominio, dryRun = false, log = console.log })
     const email = loginParaEmail(u.login, dominio);
     const temSenhaBoa = typeof u.pass_hash === 'string' && u.pass_hash.length >= SENHA_MIN;
     const senha = temSenhaBoa ? u.pass_hash : senhaTemporaria();
-    const senhaAgape = typeof u.pass_hash === 'string' && u.pass_hash.startsWith('scrypt$')
-      ? u.pass_hash : hashSenha(senha);
-
     if (dryRun) { log(`  [simulação] ${u.login} → ${email}${temSenhaBoa ? '' : ' (senha temporária)'}`); continue; }
 
     let authId = null;
@@ -56,14 +52,21 @@ export async function migrar({ db, dominio, dryRun = false, log = console.log })
       } else { relatorio.falhas.push({ login: u.login, motivo: error.message }); continue; }
     } else authId = conta.user.id;
 
-    const { error: eUp } = await db.from('users').update({ auth_id: authId, pass_hash: null }).eq('id', u.id);
+    const { error: eUp } = await db.from('users').update({ auth_id: authId }).eq('id', u.id);
     if (eUp) { relatorio.falhas.push({ login: u.login, motivo: `vincular auth_id: ${eUp.message}` }); continue; }
+    // Bancos legados ainda podem ter pass_hash; instalações novas não têm essa coluna.
+    if (Object.prototype.hasOwnProperty.call(u, 'pass_hash')) {
+      const { error: eLimpeza } = await db.from('users').update({ pass_hash: null }).eq('id', u.id);
+      if (eLimpeza && !/pass_hash|column|schema cache/i.test(eLimpeza.message)) {
+        relatorio.falhas.push({ login: u.login, motivo: `limpar senha legada: ${eLimpeza.message}` });
+        continue;
+      }
+    }
     relatorio.migrados.push(u.login);
     if (!temSenhaBoa && !error) relatorio.temporarias.push({ login: u.login, senha });
     log(`  ✔ ${u.login}`);
   }
 
-  // pass_hash permanece como hash scrypt para o login próprio do Ágape.
   return relatorio;
 }
 

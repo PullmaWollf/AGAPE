@@ -2,24 +2,13 @@
 // no Supabase Auth e trocar senhas não pode ser feito pelo navegador.
 import { envolver, responder, HttpError } from './_lib/http.js';
 import { clienteAdmin } from './_lib/supabase.js';
-import { exigirAdmin, hashSenha } from './_lib/auth.js';
+import { exigirAdmin } from './_lib/auth.js';
 import { loginParaEmail, normalizarLogin } from './_lib/login.js';
-import { scryptSync, timingSafeEqual } from 'node:crypto';
-
 const PERFIS = ['adm', 'membro'];
 
 function validarSenha(s) {
   if (typeof s !== 'string' || s.length < 6) throw new HttpError(400, 'a senha precisa ter pelo menos 6 caracteres');
   if (s.length > 72) throw new HttpError(400, 'a senha pode ter no máximo 72 caracteres');
-}
-
-function senhaConfere(senha, armazenada) {
-  if (typeof armazenada !== 'string' || !armazenada.startsWith('scrypt$')) return false;
-  const [, salt, esperado] = armazenada.split('$');
-  try {
-    const derivada = scryptSync(senha, salt, 64).toString('hex');
-    return timingSafeEqual(Buffer.from(derivada, 'hex'), Buffer.from(esperado, 'hex'));
-  } catch { return false; }
 }
 
 async function buscarUsuario(db, id) {
@@ -49,11 +38,13 @@ export function criarHandler({ env = process.env, criarCliente = clienteAdmin } 
 
     if (acao === 'trocar_senha') {
       validarSenha(req.body.senhaNova);
-      if (!senhaConfere(String(req.body.senhaAtual ?? ''), eu.pass_hash)) {
-        throw new HttpError(401, 'senha atual incorreta');
-      }
-      const { error } = await db.from('users').update({ pass_hash: hashSenha(req.body.senhaNova) }).eq('id', eu.id);
-      if (error) throw new Error(error.message);
+      const { error: senhaError } = await db.auth.signInWithPassword({
+        email: loginParaEmail(eu.login),
+        password: String(req.body.senhaAtual ?? ''),
+      });
+      if (senhaError) throw new HttpError(401, 'senha atual incorreta');
+      const { error } = await db.auth.admin.updateUserById(eu.auth_id, { password: req.body.senhaNova });
+      if (error) throw new HttpError(400, error.message);
       return responder(res, 200, { ok: true });
     }
 
@@ -75,7 +66,7 @@ export function criarHandler({ env = process.env, criarCliente = clienteAdmin } 
       if (eAuth) throw new HttpError(400, traduzirAuth(eAuth.message));
 
       const { data: novo, error: eIns } = await db.from('users')
-        .insert({ name: nome, login, role: perfil, auth_id: conta.user.id, pass_hash: hashSenha(req.body.senha) })
+        .insert({ name: nome, login, role: perfil, auth_id: conta.user.id })
         .select('id, name, login, role').single();
       if (eIns) {
         await db.auth.admin.deleteUser(conta.user.id);   // desfaz para não deixar conta órfã
@@ -105,7 +96,7 @@ export function criarHandler({ env = process.env, criarCliente = clienteAdmin } 
           email: loginParaEmail(alvo.login), password: req.body.senha, email_confirm: true,
         });
         if (error) throw new HttpError(400, traduzirAuth(error.message));
-        await db.from('users').update({ auth_id: conta.user.id, pass_hash: hashSenha(req.body.senha) }).eq('id', alvo.id);
+        await db.from('users').update({ auth_id: conta.user.id }).eq('id', alvo.id);
       }
       return responder(res, 200, { ok: true });
     }
