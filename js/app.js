@@ -453,7 +453,10 @@ async function addPost() {
   try {
     const img = S.imgPendente;
     if (img) {
-      caminho = `${S.session.user.id}/${novoId()}.${img.ext}`;
+      // O Storage valida a primeira pasta contra auth.uid(), que é o auth_id do perfil,
+      // não contra o id interno de public.users usado pela sessão própria do Ágape.
+      const pastaUsuario = S.me.auth_id || S.session.user.id;
+      caminho = `${pastaUsuario}/${novoId()}.${img.ext}`;
       const up = await db.storage.from('mural').upload(caminho, img.blob, { contentType: img.mime, cacheControl: '31536000', upsert: false });
       if (up.error) throw up.error;
     }
