@@ -97,7 +97,7 @@ async function doLogin() {
     $('li-user').value = ''; $('li-pass').value = '';
     closeSheet('login-sheet');
     await aposLogin();
-    toast(`Bem-vindo(a), ${primeiroNome(perfil.name)}!`);
+    toast(`Bem-vindo(a), ${primeiroNome(S.me.name)}!`);
   });
 }
 
@@ -166,10 +166,11 @@ async function trocarSenha() {
   if (nova.length < 6) return toast('A nova senha precisa ter pelo menos 6 caracteres.', 'warn');
   if (nova !== conf) return toast('A confirmação não confere com a nova senha.', 'warn');
   await comBotao($('conta-senha-btn'), async () => {
-    const re = await db.auth.signInWithPassword({ email: loginParaEmail(S.me.login, CFG.EMAIL_DOMAIN), password: atual });
-    if (re.error) return toast('Senha atual incorreta.', 'err');
-    const { error } = await db.auth.updateUser({ password: nova });
-    if (error) return toast(msgErro(error, 'Não foi possível trocar a senha.'), 'err');
+    try {
+      await chamarApi('/api/admin-users.js', { acao: 'trocar_senha', senhaAtual: atual, senhaNova: nova });
+    } catch (e) {
+      return toast(/senha atual/i.test(e.message) ? 'Senha atual incorreta.' : msgErro(e, 'Não foi possível trocar a senha.'), 'err');
+    }
     ['conta-senha-atual', 'conta-senha-nova', 'conta-senha-conf'].forEach((i) => ($(i).value = ''));
     toast('Senha alterada com sucesso ✅');
   });
