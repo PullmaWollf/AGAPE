@@ -25,10 +25,24 @@ function lerSessao(token) {
 }
 
 export async function usuarioAutenticado(db, req) {
-  const sessao = lerSessao(tokenDaRequisicao(req));
-  if (!sessao) throw new HttpError(401, 'sessão inválida ou expirada');
+  const token = tokenDaRequisicao(req);
+  const sessao = lerSessao(token);
+  let authId = sessao?.sub;
+
+  // Compatibilidade com chamadas Supabase já existentes; o login do Ágape
+  // continua usando a sessão própria assinada acima.
+  if (!authId && token && db.auth?.getUser) {
+    const { data, error } = await db.auth.getUser(token);
+    if (error || !data?.user) throw new HttpError(401, 'sessão inválida ou expirada');
+    authId = data.user.id;
+  }
+  if (!authId) throw new HttpError(401, 'sessão inválida ou expirada');
   const { data: perfil, error } = await db
-    .from('users').select('id, name, login, role, created_at, pass_hash').eq('id', sessao.sub).maybeSingle();
+    .from('users').select('id, name, login, role, created_at, pass_hash, auth_id').eq('auth_id', authId).maybeSingle();
+  if (!perfil) {
+    const fallback = await db.from('users').select('id, name, login, role, created_at, pass_hash, auth_id').eq('id', authId).maybeSingle();
+    if (!fallback.error && fallback.data) return { perfil: fallback.data };
+  }
   if (error) throw new Error(error.message);
   if (!perfil) throw new HttpError(403, 'usuário sem cadastro na célula');
   return { perfil };
