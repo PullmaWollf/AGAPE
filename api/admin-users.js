@@ -5,7 +5,6 @@ import { clienteAdmin } from './_lib/supabase.js';
 import { exigirAdmin } from './_lib/auth.js';
 import { normalizarLogin } from './_lib/login.js';
 import { hashPassword, verifyPassword, validarSenha } from './_lib/password.js';
-const PERFIS = ['adm', 'membro'];
 
 function validarSenhaOuErro(s) {
   if (!validarSenha(s)) throw new HttpError(400, 'a senha precisa ter entre 6 e 128 caracteres');
@@ -54,18 +53,21 @@ export function criarHandler({ env = process.env, criarCliente = clienteAdmin } 
     if (acao === 'criar') {
       const nome = String(req.body.nome ?? '').trim();
       const login = normalizarLogin(req.body.login);
-      const perfil = req.body.perfil ?? 'membro';
+      const perfilId = String(req.body.perfilId || '').trim();
       if (nome.length < 2 || nome.length > 80) throw new HttpError(400, 'informe o nome (2 a 80 caracteres)');
       if (!/^[a-z0-9._-]{3,30}$/.test(login)) throw new HttpError(400, 'login: 3 a 30 letras minúsculas, números, ponto, hífen ou sublinhado');
-      if (!PERFIS.includes(perfil)) throw new HttpError(400, 'perfil inválido');
+      if (!perfilId) throw new HttpError(400, 'selecione um perfil de acesso');
+      const { data: perfilAcesso, error: perfilError } = await db.from('perfis_permissao').select('id,nome,permissoes').eq('id', perfilId).maybeSingle();
+      if (perfilError) throw new Error(perfilError.message);
+      if (!perfilAcesso) throw new HttpError(400, 'perfil de acesso inválido');
       validarSenhaOuErro(req.body.senha);
 
       const { data: existente } = await db.from('users').select('id').ilike('login', login).maybeSingle();
       if (existente) throw new HttpError(409, 'já existe um usuário com esse login');
 
       const { data: novo, error: eIns } = await db.from('users')
-        .insert({ name: nome, login, role: perfil, perfil_id: req.body.perfilId || null, pass_hash: await hashPassword(req.body.senha) })
-        .select('id, name, login, role').single();
+        .insert({ name: nome, login, role: 'membro', perfil_id: perfilId, pass_hash: await hashPassword(req.body.senha) })
+        .select('id, name, login, role, perfil_id').single();
       if (eIns) throw new Error(eIns.message);
       return responder(res, 200, { ok: true, usuario: novo });
     }

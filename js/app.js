@@ -952,6 +952,8 @@ async function gerarMes() {
 // ══════════════════════════════════════════
 function renderUsers() {
   const el = $('user-list'); if (!el) return;
+  const perfilSelect = $('new-role');
+  if (perfilSelect && S.perfis.length) perfilSelect.innerHTML = S.perfis.map((p) => `<option value="${esc(p.id)}">${esc(p.nome)}</option>`).join('');
   const disp = Object.fromEntries(S.dispositivos.map((d) => [d.user_id, d.dispositivos]));
   el.innerHTML = S.users.map((u) => {
     const id = idSeguro(u.id), n = disp[u.id] ?? 0, eu = u.id === S.me?.id;
@@ -959,7 +961,7 @@ function renderUsers() {
       <div class="user-av">${esc(inicial(u.name))}</div>
       <div class="user-info"><div class="user-name">${esc(u.name)}</div>
         <div class="user-login">${esc(u.login)} · ${n ? `🔔 ${n}` : '🔕 sem aparelho'}</div></div>
-      <span class="role-tag role-${u.role === 'adm' ? 'adm' : 'membro'}">${u.role === 'adm' ? '⭐ ADM' : 'Membro'}</span>
+      <span class="role-tag role-${u.role === 'adm' ? 'adm' : 'membro'}">${esc(S.perfis.find((p) => p.id === u.perfil_id)?.nome || 'Sem perfil')}</span>
       <button class="btn-sm-icon" onclick="abrirSenhaUsuario('${id}')" aria-label="Redefinir senha">🔑</button>
       ${eu ? '' : `<button class="btn-sm-icon" onclick="alternarPerfil('${id}')" aria-label="Alternar perfil">⭐</button>
       <button class="btn-sm-icon" onclick="deleteUser('${id}')" aria-label="Excluir usuário">🗑</button>`}
@@ -973,11 +975,11 @@ async function atualizarDispositivos() {
 }
 
 async function addUser() {
-  const nome = $('new-name').value.trim(), login = $('new-login').value.trim(), senha = $('new-pass').value, perfil = $('new-role').value;
+  const nome = $('new-name').value.trim(), login = $('new-login').value.trim(), senha = $('new-pass').value, perfilId = $('new-role').value;
   if (!nome || !login || !senha) return toast('Preencha nome, login e senha.', 'warn');
   await comBotao($('new-user-btn'), async () => {
     try {
-      await chamarApi('/api/admin-users', { acao: 'criar', nome, login, senha, perfil });
+      await chamarApi('/api/admin-users', { acao: 'criar', nome, login, senha, perfilId });
       ['new-name', 'new-login', 'new-pass'].forEach((i) => ($(i).value = ''));
       await carregarAdmin(); renderUsers();
       toast('Usuário criado ✅');
@@ -1198,7 +1200,7 @@ function renderBannerInstall() {
   const el = $('install-banner-home');
   if (!el || !S.deferredInstall) return;
   el.innerHTML = `<div class="install-banner">
-    <div class="ib-icon">📲</div>
+    <div class="ib-icon">����</div>
     <div class="ib-text"><div class="ib-title">Instalar o App</div><div class="ib-sub">Necessário para receber notificações no iPhone</div></div>
     <button class="ib-btn" onclick="instalarPWA()">Instalar</button>
     <button class="ib-close" onclick="dispensarInstall()" aria-label="Fechar">✕</button>

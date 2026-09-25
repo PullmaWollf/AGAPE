@@ -48,8 +48,14 @@ export default envolver(async (req, res) => {
     return responder(res, 200, { ok: true });
   }
   if (acao === 'vincular') {
-    if (!id || !req.body.userId) throw new HttpError(400, 'Usuário ou perfil inválido.');
-    const result = await db.from('users').update({ perfil_id: id }).eq('id', req.body.userId);
+    if (!req.body.userId) throw new HttpError(400, 'Usuário inválido.');
+    const perfilId = id || null;
+    if (perfilId) {
+      const { data: perfil, error: perfilError } = await db.from('perfis_permissao').select('id').eq('id', perfilId).maybeSingle();
+      if (perfilError) throw new Error(perfilError.message);
+      if (!perfil) throw new HttpError(400, 'Perfil inválido.');
+    }
+    const result = await db.from('users').update({ perfil_id: perfilId }).eq('id', req.body.userId);
     if (result.error) throw new Error(result.error.message);
     return responder(res, 200, { ok: true });
   }
