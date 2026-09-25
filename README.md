@@ -65,7 +65,8 @@ Execute os scripts no Supabase SQL Editor nesta ordem:
 7. `supabase/07_perfis_permissoes.sql`
 8. `supabase/08_login_proprio_operacao.sql`
 9. `supabase/09_correcao_final_permissoes.sql`
-10. `supabase/10_notificacoes_conteudo.sql`
+10. `supabase/10_notificacoes_conteudo.sql
+11_funcoes_celula.sql`
 
 Os scripts são incrementais. Execute cada um uma vez no banco correto e confira os resultados antes de avançar.
 
