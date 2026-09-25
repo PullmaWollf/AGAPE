@@ -540,8 +540,11 @@ body{
 
 /* ── Novos componentes (mural com foto, escala por modelo, admin) ── */
 .hint{font-size:.75rem;color:var(--muted);line-height:1.4}
-.esc-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
-.atrib-list{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+  .esc-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  .scale-switcher{display:flex;gap:6px;padding:5px;background:var(--stone-xl);border-radius:14px;margin:0 0 18px;width:max-content;max-width:100%}
+  .scale-switch{border:0;background:transparent;color:var(--muted);padding:10px 18px;border-radius:10px;font-weight:700;cursor:pointer}
+  .scale-switch.active{background:var(--paper);color:var(--stone-d);box-shadow:0 2px 8px rgba(54,43,39,.12)}
+  .atrib-list{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
 .atrib-row{display:flex;gap:8px;align-items:center}
 .atrib-row select{flex:1;min-width:0}
 .btn-add{border:1.5px dashed var(--stone-l);background:transparent;color:var(--stone-d);border-radius:10px;padding:8px 12px;font-size:.8rem;cursor:pointer;width:100%}
@@ -725,7 +728,8 @@ body{
 <!-- ════ ESCALA ════ -->
 <div class="page" id="page-escala">
   <div class="container">
-    <div class="sec-hdr"><h2>Escala de Lanche</h2><p>Responsáveis em cada semana</p></div>
+    <div class="sec-hdr"><h2>Escalas da célula</h2><p>Organize o lanche e as funções em fluxos independentes.</p></div>
+    <div class="scale-switcher" role="tablist" aria-label="Tipo de escala"><button class="scale-switch active" data-scale="lanche" onclick="trocarTipoEscala('lanche', this)">Lanche</button><button class="scale-switch" data-scale="funcoes" onclick="trocarTipoEscala('funcoes', this)">Funções</button></div>
     <div id="notif-banner-escala"></div>
     <div id="minha-vez"></div>
     <div class="esc-toolbar" id="esc-toolbar" style="display:none">
@@ -810,8 +814,9 @@ body{
     <div class="form-card"><h3>Palavra da Célula</h3><p class="hint">Envie somente a palavra atual em PDF, com 2 a 4 páginas.</p><input id="palavra-pdf" type="file" accept="application/pdf" onchange="publicarPalavra(this)"><button class="btn btn-ghost btn-full" type="button" onclick="removerPalavra()">Remover Palavra atual</button></div>
   </div>
 
-    <div class="adm-panel" id="adm-escala-a">
-      <div class="esc-toolbar">
+  <div class="adm-panel" id="adm-escala-a">
+  <div class="scale-switcher" role="tablist" aria-label="Tipo de escala administrativa"><button class="scale-switch active" data-scale="lanche" onclick="trocarTipoEscala('lanche', this)">Lanche</button><button class="scale-switch" data-scale="funcoes" onclick="trocarTipoEscala('funcoes', this)">Funções</button></div>
+  <div class="esc-toolbar">
         <button class="btn btn-primary" style="height:44px;padding:0 18px;border-radius:12px" onclick="abrirGerarMes()">📅 Gerar mês</button>
         <button class="btn btn-ghost" style="height:44px;padding:0 18px;border-radius:12px" onclick="abrirSemana(null)">＋ Semana avulsa</button>
       </div>
@@ -902,9 +907,10 @@ body{
     <h2 id="sem-titulo">Nova semana</h2>
     <input type="hidden" id="sem-id">
 
-    <div class="fld"><label>Data da célula</label><input id="sem-date" type="date"></div>
+  <div class="fld"><label>Tipo de escala</label><select id="sem-tipo"><option value="lanche">Escala de Lanche</option><option value="funcoes">Escala de Funções</option></select></div>
+  <div class="fld"><label>Data da célula</label><input id="sem-date" type="date"></div>
 
-    <div class="fld">
+  <div class="fld">
       <label>Responsáveis</label>
       <div class="atrib-list" id="sem-atribs"></div>
       <button class="btn-add" type="button" onclick="addLinhaAtrib('sem-atribs')">＋ Responsável</button>
