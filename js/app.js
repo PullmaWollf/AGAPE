@@ -542,7 +542,7 @@ async function addPost() {
       image_path: caminho, image_w: img?.w ?? null, image_h: img?.h ?? null, image_bytes: img?.blob.size ?? null,
       media_type: img?.mediaType ?? 'image', media_duration: img?.duration ?? null,
     };
-    let result = await (async () => { const r = await fetch('/api/mural.js', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${S.session?.token || sessionStorage.getItem('agape-session')}` }, body: JSON.stringify({ type: S.postType, content }) }); const j = await r.json().catch(() => ({})); return r.ok ? { data: j.post, error: null } : { data: null, error: new Error(j.erro || `Erro ${r.status}`) }; })();
+    let result = await (async () => { const r = await fetch('/api/mural.js', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${S.session?.token || sessionStorage.getItem('agape-session')}` }, body: JSON.stringify({ type: S.postType, content, image_path: caminho, image_w: img?.w ?? null, image_h: img?.h ?? null, image_bytes: img?.blob.size ?? null, media_type: img?.mediaType ?? null, media_duration: img?.duration ?? null }) }); const j = await r.json().catch(() => ({})); return r.ok ? { data: j.post, error: null } : { data: null, error: new Error(j.erro || `Erro ${r.status}`) }; })();
     // Permite publicar fotos em projetos que ainda não aplicaram a migração de vídeo.
     if (result.error && /media_duration|media_type|schema cache|column.*posts/i.test(result.error.message || '')) {
       const legacyPayload = { ...postPayload };
