@@ -34,9 +34,9 @@ export async function usuarioAutenticado(db, req) {
   }
   if (!authId) throw new HttpError(401, 'sessão inválida ou expirada');
   const { data: perfil, error } = await db
-    .from('users').select('id, name, login, role, created_at, auth_id').eq('auth_id', authId).maybeSingle();
-  if (!perfil) {
-    const fallback = await db.from('users').select('id, name, login, role, created_at, auth_id').eq('id', authId).maybeSingle();
+    .from('users').select('id, name, login, role, created_at, auth_id').eq('id', authId).maybeSingle();
+  if (!perfil && token && db.auth?.getUser) {
+    const fallback = await db.from('users').select('id, name, login, role, created_at, auth_id').eq('auth_id', authId).maybeSingle();
     if (!fallback.error && fallback.data) return { perfil: fallback.data };
   }
   if (error) throw new Error(error.message);
