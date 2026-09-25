@@ -45,7 +45,7 @@ export async function usuarioAutenticado(db, req) {
 }
 
 export async function carregarPermissoes(db, perfil) {
-  if (perfil.role === 'adm') return Object.fromEntries([
+  if (['adm', 'admin', 'administrador'].includes(String(perfil.role || '').toLowerCase())) return Object.fromEntries([
     'gerencial','usuarios','perfis','mural_publicar','mural_excluir','palavra','escala','escala_visualizar','modelos','notificacoes','uploads'
   ].map((chave) => [chave, true]));
   if (!perfil.perfil_id) return {};
@@ -57,7 +57,7 @@ export async function carregarPermissoes(db, perfil) {
 export async function exigirPermissao(db, req, permissao) {
   const u = await usuarioAutenticado(db, req);
   const permissoes = await carregarPermissoes(db, u.perfil);
-  if (u.perfil.role !== 'adm' && permissoes[permissao] !== true) throw new HttpError(403, 'você não tem permissão para isso');
+  if (!['adm', 'admin', 'administrador'].includes(String(u.perfil.role || '').toLowerCase()) && permissoes[permissao] !== true) throw new HttpError(403, 'você não tem permissão para isso');
   return { ...u, permissoes };
 }
 
