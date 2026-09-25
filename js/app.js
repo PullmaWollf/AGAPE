@@ -1218,26 +1218,25 @@ window.addEventListener('appinstalled', () => {
 });
 function renderBannerInstall() {
   const el = $('install-banner-home');
-  if (!el || ehInstalado()) return;
-  if (!S.deferredInstall) {
-    if (!/android|iphone|ipad|ipod/i.test(navigator.userAgent)) return;
-    el.innerHTML = `<div class="install-banner"><div class="ib-icon" aria-hidden="true">＋</div><div class="ib-text"><div class="ib-title">Instalar o App</div><div class="ib-sub">Toque em ⋮ e escolha “Adicionar à tela inicial”</div></div><button class="ib-btn" onclick="mostrarInstrucaoPWA()">Como instalar</button></div>`;
-    return;
-  }
-  el.innerHTML = `<div class="install-banner">
-    <div class="ib-icon" aria-hidden="true">＋</div>
-    <div class="ib-text"><div class="ib-title">Instalar o App</div><div class="ib-sub">Necessário para receber notificações no iPhone</div></div>
-    <button class="ib-btn" onclick="instalarPWA()">Instalar</button>
-    <button class="ib-close" onclick="dispensarInstall()" aria-label="Fechar">✕</button>
+  if (!el || ehInstalado() || sessionStorage.getItem('agape-install-dismissed') === '1') return;
+  const manual = !S.deferredInstall;
+  if (manual && !/android|iphone|ipad|ipod/i.test(navigator.userAgent)) return;
+  el.innerHTML = `<div class="pwa-install-pop" role="dialog" aria-modal="false" aria-labelledby="pwa-install-title">
+    <button class="pwa-install-close" onclick="dispensarInstall()" aria-label="Fechar instalação">×</button>
+    <div class="pwa-install-mark" aria-hidden="true">＋</div>
+    <div class="pwa-install-copy"><h3 id="pwa-install-title">Instale o app da Célula Ágape</h3><p>${manual ? 'Tenha acesso rápido e receba os avisos da célula.' : 'Tenha acesso rápido e receba os avisos da célula.'}</p></div>
+    <button class="pwa-install-action" onclick="${manual ? 'mostrarInstrucaoPWA()' : 'instalarPWA()'}">${manual ? 'Como instalar' : 'Instalar agora'}</button>
   </div>`;
 }
 async function instalarPWA() {
-  if (!S.deferredInstall) return;
-  S.deferredInstall.prompt(); await S.deferredInstall.userChoice; S.deferredInstall = null;
-  $('install-banner-home').innerHTML = '';
+  if (!S.deferredInstall) return mostrarInstrucaoPWA();
+  S.deferredInstall.prompt();
+  const choice = await S.deferredInstall.userChoice;
+  S.deferredInstall = null;
+  if (choice?.outcome === 'accepted') $('install-banner-home').innerHTML = '';
 }
-  function dispensarInstall() { S.deferredInstall = null; $('install-banner-home').innerHTML = ''; }
-  function mostrarInstrucaoPWA() { toast('No Chrome, toque nos três pontos e depois em “Adicionar à tela inicial”.', 'ok'); }
+function dispensarInstall() { sessionStorage.setItem('agape-install-dismissed', '1'); S.deferredInstall = null; $('install-banner-home').innerHTML = ''; }
+function mostrarInstrucaoPWA() { toast('No Chrome, toque em ⋮ e depois em “Adicionar à tela inicial”. No iPhone, toque em Compartilhar e em “Adicionar à Tela de Início”.', 'ok'); }
 
 // ══════════════════════════════════════════
 // EVENTOS GLOBAIS + PARTIDA
