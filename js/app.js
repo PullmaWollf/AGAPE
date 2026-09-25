@@ -22,7 +22,8 @@ const S = {
 };
 
 const $ = (id) => document.getElementById(id);
-const isAdm = () => S.me?.role === 'adm';
+const isAdm = () => S.me?.role === 'adm' || S.me?.permissoes?.gerencial === true;
+const temPermissao = (chave) => Boolean(S.me?.role === 'adm' || S.me?.permissoes?.[chave] === true);
 const hoje = () => hojeISO(CFG.TZ);
 const BADGE = { versiculo: '📖 Versículo', mensagem: '💬 Mensagem', aviso: '📢 Aviso' };
 
@@ -331,7 +332,7 @@ function renderPalavra() {
   el.innerHTML = `<h3>${esc(S.palavra.titulo)}</h3><p>${esc(S.palavra.nome_arquivo)} · ${S.palavra.paginas} páginas</p><iframe title="${esc(S.palavra.titulo)}" src="${esc(url)}#page=1&view=FitH"></iframe><a class="btn btn-ghost btn-full" href="${esc(url)}" target="_blank" rel="noopener">Abrir PDF</a>`;
 }
 async function publicarPalavra(input) {
-  if (!isAdm()) return toast('Somente administradores podem alterar a Palavra da Célula.', 'warn');
+  if (!temPermissao('palavra')) return toast('Você não tem permissão para alterar a Palavra da Célula.', 'warn');
   const file = input.files?.[0]; input.value = '';
   if (!file) return;
   if (file.type !== 'application/pdf' || file.size > 15 * 1024 * 1024) return toast('Envie um PDF de até 15 MB.', 'warn');
@@ -350,7 +351,7 @@ async function publicarPalavra(input) {
 // MURAL
 // ══════════════════════════════════════════
 function selType(btn) {
-  if (btn.dataset.t === 'aviso' && !isAdm()) return toast('Somente o ADM pode postar avisos.', 'warn');
+  if (btn.dataset.t === 'aviso' && !temPermissao('mural_publicar')) return toast('Você não tem permissão para publicar avisos.', 'warn');
   document.querySelectorAll('.type-pill').forEach((p) => p.classList.remove('sel'));
   btn.classList.add('sel'); S.postType = btn.dataset.t;
 }
@@ -367,7 +368,7 @@ function atualizarPills() {
 function urlImagem(path) { return db.storage.from('mural').getPublicUrl(path).data.publicUrl; }
 
 function cardPost(p) {
-  const pode = S.me && (isAdm() || S.me.id === p.author_id);
+  const podeExcluir = S.me && (temPermissao('mural_excluir') || S.me.id === p.author_id);
   const data = p.created_at ? new Date(p.created_at).toLocaleDateString('pt-BR') : '';
   const tipo = BADGE[p.type] ? p.type : 'mensagem';
   const mediaUrl = p.image_path ? urlImagem(p.image_path) : '';
@@ -387,7 +388,7 @@ function cardPost(p) {
     </div>
     ${p.content ? `<div class="post-body${tipo === 'versiculo' ? ' is-versiculo' : ''}">${esc(p.content)}</div>` : ''}
     ${img}
-    ${pode ? `<div class="post-actions"><button class="btn-del-post" onclick="deletarPost('${idSeguro(p.id)}')">🗑 Excluir</button></div>` : ''}
+    ${podeExcluir ? `<div class="post-actions"><button class="btn-del-post" onclick="deletarPost('${idSeguro(p.id)}')">🗑 Excluir</button></div>` : ''}
   </div>`;
 }
 
@@ -465,6 +466,7 @@ async function lerVideo(file) {
 }
 
 async function escolherImagem(input) {
+  if (!temPermissao('uploads')) return toast('Você não tem permissão para enviar imagens ou vídeos.', 'warn');
   const file = input.files?.[0];
   input.value = '';
   if (!file) return;
@@ -496,7 +498,7 @@ async function addPost() {
   if (!S.me || S.publicando) return;
   const content = $('post-text').value.trim();
   if (!content && !S.imgPendente) return toast('Escreva algo ou escolha uma foto ou vídeo.', 'warn');
-  if (S.postType === 'aviso' && !isAdm()) return toast('Somente o ADM pode postar avisos.', 'warn');
+  if (S.postType === 'aviso' && !temPermissao('mural_publicar')) return toast('Você não tem permissão para publicar avisos.', 'warn');
 
   S.publicando = true; $('publish-btn').disabled = true; $('publish-btn').textContent = 'Publicando…';
   let caminho = null;
@@ -1209,7 +1211,7 @@ async function instalarPWA() {
 }
 function dispensarInstall() { S.deferredInstall = null; $('install-banner-home').innerHTML = ''; }
 
-// ══════════════════════════════════════════
+// ═════════════════���════════════════════════
 // EVENTOS GLOBAIS + PARTIDA
 // ══════════════════════════════════════════
 document.addEventListener('click', (e) => {

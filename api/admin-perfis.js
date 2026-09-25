@@ -1,6 +1,6 @@
 import { envolver, responder, HttpError } from './_lib/http.js';
 import { clienteAdmin } from './_lib/supabase.js';
-import { exigirAdmin } from './_lib/auth.js';
+import { exigirPermissao } from './_lib/auth.js';
 
 const PERMISSOES = [
   ['gerencial', 'Abrir o menu Gerencial'], ['usuarios', 'Gerenciar usuários'], ['perfis', 'Gerenciar perfis'],
@@ -19,7 +19,7 @@ export const permissoesDisponiveis = PERMISSOES;
 export default envolver(async (req, res) => {
   if (req.method !== 'POST') throw new HttpError(405, 'método não permitido');
   const db = clienteAdmin(process.env);
-  await exigirAdmin(db, req);
+  await exigirPermissao(db, req, 'perfis');
   const { acao, id } = req.body || {};
   if (acao === 'listar') {
     const [perfis, usuarios] = await Promise.all([
