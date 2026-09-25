@@ -542,8 +542,8 @@ body{
   .hint{font-size:.85rem;color:var(--stone);line-height:1.5}
   .esc-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
   .escala-card{padding:20px;border-radius:18px}
-  .esc-date{font-size:.95rem;color:var(--stone);font-weight:600}
-  .esc-week-label{font-size:1.12rem;color:var(--text);line-height:1.35}
+  .esc-date{font-size:1rem;color:var(--stone-d);font-weight:700;line-height:1.35}
+  .esc-week-label{font-size:1.18rem;color:var(--text);line-height:1.4;font-weight:800}
   .esc-funcoes-lista{display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:12px;overflow:hidden}
   .esc-funcao-row{display:grid;grid-template-columns:minmax(145px,.9fr) minmax(0,1.4fr);gap:14px;align-items:center;padding:12px 14px;background:var(--surface);border-bottom:1px solid var(--border);font-size:.95rem;line-height:1.35}
   .esc-funcao-row:last-child{border-bottom:0}
@@ -603,8 +603,14 @@ body{
 .pb-icon{font-size:1.6rem}
 .pb-label{font-size:.7rem;opacity:.9;text-transform:uppercase;letter-spacing:.03em}
 .pb-name{font-weight:800;font-size:1rem}
-.pb-date{font-size:.78rem;opacity:.9}
-.notif-banner{display:flex;align-items:center;gap:10px;background:var(--stone-xl);border-radius:12px;padding:12px 14px;margin:10px 0}
+  .pb-date{font-size:.78rem;opacity:.9}
+  /* Legibilidade reforçada: o cartão de escala precisa permanecer claro também em telas pequenas. */
+  .prox-banner{background:linear-gradient(135deg,#9f553e,#b96b3f);color:#fff;border:2px solid #85422f;min-height:82px;padding:18px 20px;box-shadow:0 5px 16px rgba(82,43,30,.22)}
+  .prox-banner .pb-icon{font-size:2rem;line-height:1}
+  .prox-banner .pb-label{font-size:.88rem;font-weight:800;letter-spacing:.02em;text-transform:none;color:#fff;opacity:1;margin-bottom:4px}
+  .prox-banner .pb-name{font-size:1.16rem;line-height:1.3;color:#fff;font-weight:800}
+  .prox-banner .pb-date{font-size:.98rem;line-height:1.35;color:#fff;font-weight:600;opacity:1;margin-top:3px}
+  .notif-banner{display:flex;align-items:center;gap:10px;background:var(--stone-xl);border-radius:12px;padding:12px 14px;margin:10px 0}
 .nb-title{font-weight:700;font-size:.85rem}
 .nb-sub{font-size:.75rem;color:var(--muted)}
 .install-banner{display:flex;align-items:center;gap:10px;background:var(--stone-d);color:#fff;border-radius:14px;padding:12px 14px;margin:10px 0}
