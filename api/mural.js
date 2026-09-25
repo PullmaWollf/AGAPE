@@ -1,6 +1,17 @@
 import { envolver, responder, HttpError } from './_lib/http.js';
 import { clienteAdmin } from './_lib/supabase.js';
 import { exigirPermissao, usuarioAutenticado } from './_lib/auth.js';
+import { criarEnviador } from './_lib/push.js';
+import { despachar } from './_lib/dispatcher.js';
+
+async function enviarFilaImediatamente(db) {
+  try {
+    const enviar = criarEnviador({ publica: process.env.VAPID_PUBLIC_KEY, privada: process.env.VAPID_PRIVATE_KEY, assunto: process.env.VAPID_SUBJECT });
+    await despachar({ db, enviar, limite: 100, concorrencia: 8 });
+  } catch (error) {
+    console.error('[mural] envio imediato falhou; cron fará retry:', error.message);
+  }
+}
 
 export default envolver(async (req, res) => {
   const db = clienteAdmin();
@@ -44,6 +55,7 @@ export default envolver(async (req, res) => {
     result = await db.from('posts').insert(legacyPost).select().single();
   }
   if (result.error) throw new Error(result.error.message);
+  await enviarFilaImediatamente(db);
   return responder(res, 201, { ok: true, post: result.data });
 });
 
