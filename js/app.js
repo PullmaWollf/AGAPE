@@ -76,7 +76,7 @@ async function carregarPerfil(session) {
 async function restaurarSessao() {
   const token = sessionStorage.getItem('agape-session');
   const perfil = JSON.parse(sessionStorage.getItem('agape-user') || 'null');
-  if (token && perfil) { S.me = perfil; S.session = { token, user: { id: perfil.auth_id } }; }
+  if (token && perfil) { S.me = perfil; S.session = { token, user: { id: perfil.id } }; }
 }
 
 function erroLogin(msg) {
@@ -91,19 +91,14 @@ async function doLogin() {
     const r = await fetch('/api/auth-login.js', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login, senha }) });
     const data = await r.json().catch(() => ({}));
     if (!r.ok) return erroLogin(r.status === 401 ? 'Login ou senha incorretos.' : 'Não foi possível entrar agora. Tente de novo.');
-    // A sessão própria autoriza as APIs administrativas; a sessão oficial do
-    // Supabase autoriza RLS, Storage, RPCs e notificações no mesmo auth.uid().
-    const supabaseSession = data.supabase_session;
-    if (!supabaseSession?.access_token || !supabaseSession?.refresh_token) {
-      return erroLogin('A sessão do servidor veio incompleta. Tente entrar novamente.');
-    }
-    const { error: supabaseSessionError } = await db.auth.setSession(supabaseSession);
-    if (supabaseSessionError) {
-      return erroLogin('Não foi possível preparar sua sessão. Tente entrar novamente.');
-    }
-    sessionStorage.setItem('agape-session', data.token);
+  // O AGAPE usa sua própria sessão assinada; o Supabase fica apenas como banco.
+  // Não dependemos de Supabase Auth, access_token ou refresh_token no navegador.
+  if (!data.token || !data.usuario?.id) {
+    return erroLogin('O servidor não retornou uma sessão válida. Tente entrar novamente.');
+  }
+  sessionStorage.setItem('agape-session', data.token);
     sessionStorage.setItem('agape-user', JSON.stringify(data.usuario));
-    S.me = data.usuario; S.session = { token: data.token, user: { id: data.usuario.auth_id } };
+    S.me = data.usuario; S.session = { token: data.token, user: { id: data.usuario.id } };
     $('li-user').value = ''; $('li-pass').value = '';
     closeSheet('login-sheet');
     await aposLogin();
