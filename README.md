@@ -1,119 +1,171 @@
-# Célula Ágape — PWA
+# Célula Ágape
 
-Mural com posts (versículo, mensagem, aviso — com foto opcional), escala de
-lanche por semanas do mês com modelos reutilizáveis, e notificações push
-reais em cada aparelho instalado.
+PWA para organizar a rotina da célula: Mural, Palavra da Célula, escala de lanche, perfis de acesso e notificações push.
 
-## O que mudou nesta versão
+## Funcionalidades
 
-- **Escala por modelos**: crie um modelo para cada tamanho de mês (3, 4 ou 5
-  semanas) e gere o mês inteiro em um clique, com opção de rodízio.
-- **Notificações confiáveis**: a fila de envio agora vive no banco
-  (`public.notificacoes`) e é despachada por um agendador dentro do próprio
-  Supabase (a cada minuto), com retentativas e Web Push **criptografado**
-  (a versão antiga mandava o texto sem criptografia — os navegadores
-  descartavam a notificação).
-- **Fotos no mural**: comprimidas no aparelho antes de enviar (limite de
-  300 KB por imagem, para não pesar o plano gratuito do Supabase).
-- **Segurança**: login pelo Supabase Auth (nada de senha em texto puro no
-  banco) e RLS de verdade — antes, qualquer pessoa com a chave pública do
-  site conseguia ler a tabela de usuários e apagar tudo.
+- Login e sessão com Supabase.
+- Mural com versículos, mensagens, avisos, imagens e vídeos.
+- Palavra da Célula publicada e atualizada pela administração.
+- Escala de lanche por semanas, membros, modelos e alarmes configuráveis.
+- Perfis de permissão, incluindo Líder e acesso administrativo.
+- Notificações Web Push por aparelho.
+- Notificações automáticas para:
+  - nova publicação ou atualização da Palavra da Célula;
+  - novo post no Mural;
+  - alarmes configurados da escala de lanche.
+- Instalação como PWA em Android, iPhone e desktop compatível.
 
-## Passo a passo do deploy (nesta ordem)
+## Stack
 
-### 1. Banco (Supabase → SQL Editor)
-Rode:
-1. `supabase/01_schema.sql` — aditivo, pode rodar mais de uma vez sem medo.
-2. **Não rode ainda o `02_seguranca_rls.sql`** — ele só entra no passo 4.
+- HTML, CSS e JavaScript no frontend.
+- Vercel Functions no backend.
+- Supabase Database, Storage e autenticação operacional.
+- `web-push` para notificações criptografadas.
+- Node.js 20 ou superior.
 
-### 2. Variáveis de ambiente (Vercel → Settings → Environment Variables)
-```
-SUPABASE_URL              = https://SEU-PROJETO.supabase.co
-SUPABASE_SERVICE_KEY      = a chave "service_role" (Settings → API) — NUNCA a anon
-VAPID_PUBLIC_KEY          = (gere no passo 3)
-VAPID_PRIVATE_KEY         = (gere no passo 3)
-VAPID_SUBJECT             = mailto:seuemail@exemplo.com
-CRON_SECRET               = uma senha longa aleatória, só sua
-AUTH_EMAIL_DOMAIN         = celulaagape.app   (pode deixar esse valor)
-```
-Gere o par de chaves VAPID localmente:
-```
-npx web-push generate-vapid-keys
-```
-A chave **pública** também precisa estar em `js/config.js`
-(`VAPID_PUBLIC_KEY`) — ela não é segredo, mas precisa ser a mesma dos dois
-lados.
+## Desenvolvimento
 
-### 3. Migrar os usuários para o Supabase Auth
-Com `SUPABASE_URL` e `SUPABASE_SERVICE_KEY` no seu terminal (não precisa ser
-na Vercel — pode rodar do seu computador):
-```
-npm install
-SUPABASE_URL=... SUPABASE_SERVICE_KEY=... node scripts/migrar-usuarios.mjs --dry-run   # confere antes
-SUPABASE_URL=... SUPABASE_SERVICE_KEY=... node scripts/migrar-usuarios.mjs             # executa
-```
-Isso cria uma conta no Supabase Auth para cada usuário existente,
-**mantendo a senha atual** quando ela tiver 6+ caracteres (ex.: a conta
-`admin`/`agape2024` continua funcionando). Se alguém tinha senha mais curta,
-o script gera uma temporária e mostra no final — anote e repasse.
-
-### 4. Deploy do app e trava de segurança
-1. Suba o repositório na Vercel (ou rode `vercel --prod`).
-2. Teste o login com uma conta migrada.
-3. Só então, no SQL Editor: rode `supabase/02_seguranca_rls.sql` (ele se
-   recusa a rodar se sobrar alguém sem conta no Auth — é proposital).
-4. No painel do Supabase, em **Authentication → Providers → Email**,
-   desligue "Allow new users to sign up".
-
-### 5. Agendador das notificações (dentro do Supabase)
-Edite os dois valores marcados `<<< EDITE >>>` em
-`supabase/03_agendador_pg_cron.sql` (a URL do seu app na Vercel e o mesmo
-`CRON_SECRET` do passo 2) e rode o script no SQL Editor. Ele chama
-`/api/cron-alarms` a cada minuto — é o que garante a notificação sair na
-hora certa, mesmo com ninguém de app aberto.
-
-O workflow `.github/workflows/cron-push.yml` continua existindo como
-**reserva** (caso o pg_cron falhe), mas o principal agora é o do Supabase.
-
-### 6. Testar
-No app, entre, vá em **Minha conta** e toque em **Ativar notificações** →
-**Enviar notificação de teste**. Se não chegar, confira `CRON_SECRET`,
-`VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` e, no Supabase, a saída de:
-```sql
-select status, return_message, start_time from cron.job_run_details order by start_time desc limit 5;
-```
-
-## Estrutura
-```
-theagape/
-├── index.html                    ← markup + estilos
-├── js/
-│   ├── config.js                 ← chaves públicas (Supabase URL/anon, VAPID pública)
-│   ├── utils.js                  ← funções puras (datas, escala, imagem) — testadas
-│   └── app.js                    ← toda a lógica do app
-├── sw.js                         ← Service Worker (push + clique na notificação)
-├── manifest.json / vercel.json
-├── api/
-│   ├── cron-alarms.js            ← despachante chamado pelo agendador
-│   ├── admin-users.js            ← criar/excluir/redefinir senha (só ADM)
-│   ├── test-push.js              ← "enviar notificação de teste"
-│   └── _lib/                     ← http, supabase, auth, login, push, dispatcher
-├── supabase/
-│   ├── 01_schema.sql             ← tabelas novas, RPCs, fila de notificações, bucket
-│   ├── 02_seguranca_rls.sql      ← RLS real (rodar só depois da migração)
-│   └── 03_agendador_pg_cron.sql  ← pg_cron a cada minuto
-├── scripts/migrar-usuarios.mjs   ← migra users → Supabase Auth
-└── tests/                        ← 71 testes (SQL real via PGlite + API)
-```
-
-## Rodando os testes
-```
+```bash
 npm install
 npm test
 ```
 
-## Notificações no iPhone
-O iOS só entrega push para apps **instalados na tela de início** (Safari →
-Compartilhar → "Adicionar à Tela de Início" → abrir o app por esse ícone).
-O app mostra um aviso pedindo isso quando detecta iPhone fora do modo
-instalado.
+O projeto é uma aplicação estática com funções serverless. Para desenvolvimento local, sirva a raiz do projeto com um servidor HTTP e configure as variáveis de ambiente necessárias.
+
+## Variáveis da Vercel
+
+Configure estas variáveis no projeto Vercel:
+
+```text
+SUPABASE_URL
+SUPABASE_SERVICE_KEY
+VAPID_PUBLIC_KEY
+VAPID_PRIVATE_KEY
+VAPID_SUBJECT
+CRON_SECRET
+AUTH_EMAIL_DOMAIN
+NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL
+```
+
+`SUPABASE_SERVICE_KEY`, `VAPID_PRIVATE_KEY` e `CRON_SECRET` são segredos e nunca devem ser enviados ao frontend ou commitados no Git.
+
+A chave pública VAPID também deve estar em `js/config.js`, com o mesmo valor de `VAPID_PUBLIC_KEY`.
+
+## Banco de dados
+
+Execute os scripts no Supabase SQL Editor nesta ordem:
+
+1. `supabase/01_schema.sql`
+2. `supabase/02_seguranca_rls.sql`, depois que os usuários estiverem migrados
+3. `supabase/03_agendador_pg_cron.sql`, preenchendo a URL pública do app e o `CRON_SECRET`
+4. `supabase/04_midia_mural.sql`
+5. `supabase/05_mural_palavra_limpeza.sql`
+6. `supabase/06_login_proprio.sql`
+7. `supabase/07_perfis_permissoes.sql`
+8. `supabase/08_login_proprio_operacao.sql`
+9. `supabase/09_correcao_final_permissoes.sql`
+10. `supabase/10_notificacoes_conteudo.sql`
+
+Os scripts são incrementais. Execute cada um uma vez no banco correto e confira os resultados antes de avançar.
+
+O agendador dos alarmes é o `pg_cron` do Supabase. A Vercel não deve receber um cron de execução por minuto em planos Hobby, pois esse intervalo causa falha de deploy.
+
+## Notificações
+
+Cada aparelho precisa:
+
+1. abrir o app em HTTPS;
+2. fazer login;
+3. instalar o PWA quando estiver no iPhone;
+4. tocar em **Ativar notificações**;
+5. permitir notificações no navegador.
+
+Para conferir dispositivos registrados:
+
+```sql
+select id, user_id, endpoint, created_at
+from public.push_subscriptions
+order by created_at desc;
+```
+
+Para conferir a fila:
+
+```sql
+select id, tipo, titulo, status, tentativas, created_at
+from public.notificacoes
+order by created_at desc
+limit 20;
+```
+
+Para conferir as execuções do agendador:
+
+```sql
+select status, return_message, start_time
+from cron.job_run_details
+order by start_time desc
+limit 10;
+```
+
+## Mídia do Mural
+
+Imagens são comprimidas no navegador antes do envio. O backend grava o post e os metadados de mídia; vídeos são mantidos no Storage conforme a configuração do banco.
+
+Se um post aparecer sem mídia, verifique:
+
+- `supabase/04_midia_mural.sql` foi executado;
+- o bucket de mídia existe e está acessível conforme as políticas;
+- `image_path` está preenchido na tabela `posts`;
+- a URL pública ou assinada do Storage está válida.
+
+## Usuários e permissões
+
+O fluxo recomendado é:
+
+1. criar ou migrar os usuários;
+2. criar o perfil em **ADM → Perfis e permissões**;
+3. marcar as permissões;
+4. salvar o perfil;
+5. vincular o perfil ao usuário;
+6. fazer logout e login novamente para renovar a sessão.
+
+O perfil não aparece no usuário até que o vínculo seja salvo. Alterações de permissão não atualizam uma sessão já aberta.
+
+## Instalação do PWA
+
+O app exibe um pop-up de instalação quando o navegador oferece o prompt nativo. Se o navegador não oferecer esse prompt, o mesmo pop-up mostra as instruções manuais.
+
+- Android/Chrome: menu do navegador → **Adicionar à tela inicial**.
+- iPhone/Safari: **Compartilhar** → **Adicionar à Tela de Início**.
+
+No iPhone, notificações push funcionam pelo app instalado na tela inicial, não pela aba comum do Safari.
+
+## Estrutura
+
+```text
+api/                 Funções serverless e bibliotecas backend
+icons/               Ícones do PWA
+js/                  Código do frontend
+scripts/             Scripts operacionais de migração
+supabase/            Migrações SQL incrementais
+tests/               Testes automatizados
+index.html           Aplicação e estilos
+manifest.json        Metadados do PWA
+sw.js                Service Worker
+vercel.json          Configuração de deploy
+```
+
+## Verificação antes do merge
+
+```bash
+node --check api/mural.js
+node --check api/cron-alarms.js
+node --check api/push-device.js
+node --check js/app.js
+node --check js/perfis.js
+node -e "JSON.parse(require('fs').readFileSync('vercel.json', 'utf8'))"
+git diff --check
+npm test
+```
+
+Antes de testar em produção, confirme que o deploy foi concluído, execute as migrações pendentes no Supabase e teste com pelo menos dois aparelhos inscritos para notificações.
