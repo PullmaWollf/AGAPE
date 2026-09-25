@@ -1,7 +1,7 @@
 // ─── Célula Ágape — Service Worker v5 ───
 // Só cuida de push e clique na notificação. Toda a rede vai direto ao Supabase/API
 // (sem cache) para os dados nunca ficarem desatualizados.
-const VERSAO = 'agape-v6';
+const VERSAO = 'agape-v7';
 
 self.addEventListener('install', () => self.skipWaiting());
 
