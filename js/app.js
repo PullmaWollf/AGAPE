@@ -669,9 +669,11 @@ function renderEscala() {
   $('esc-toolbar').style.display = isAdm() ? 'flex' : 'none';
   $('escala-list').innerHTML = htmlEscalaLista(false);
 }
-function renderAdmEscala() {
+  function renderAdmEscala() {
   const el = $('adm-escala-list'); if (el) el.innerHTML = htmlEscalaLista(true);
-}
+  const lista = $('adm-funcoes-lista');
+  if (lista) lista.innerHTML = S.funcoes.map((f) => `<div class="user-row"><div class="user-info"><div class="user-name">${esc(f.nome)}</div></div><button class="btn-sm-icon" onclick="excluirFuncao('${idSeguro(f.id)}')" aria-label="Excluir função">🗑</button></div>`).join('');
+  }
 
 function renderHome() {
   const el = $('prox-home');
@@ -699,7 +701,25 @@ function linhaAtribHtml(userId = '', funcaoId = '') {
     <button class="btn-sm-icon" type="button" onclick="this.closest('.atrib-row').remove()" aria-label="Remover">✕</button>
   </div>`;
 }
-function addLinhaAtrib(containerId) { $(containerId).insertAdjacentHTML('beforeend', linhaAtribHtml()); }
+  function addLinhaAtrib(containerId) { $(containerId).insertAdjacentHTML('beforeend', linhaAtribHtml()); }
+  async function salvarFuncao() {
+    const nome = $('nova-funcao')?.value.trim();
+    if (!nome) return toast('Informe o nome da função.', 'warn');
+    const r = await chamarApi('/api/escala-funcoes.js', { nome });
+    if (r.erro) return toast(r.erro, 'err');
+    $('nova-funcao').value = '';
+    S.funcoes = [...S.funcoes, r.funcao].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+    renderAdmEscala();
+    toast('Função adicionada.');
+  }
+  async function excluirFuncao(id) {
+    if (!confirm('Excluir esta função?')) return;
+    const r = await chamarApi('/api/escala-funcoes.js', { acao: 'excluir', id });
+    if (r.erro) return toast(r.erro, 'err');
+    S.funcoes = S.funcoes.filter((f) => f.id !== id);
+    renderAdmEscala();
+    toast('Função excluída.');
+  }
 function preencherAtribs(containerId, linhas) {
   $(containerId).innerHTML = (linhas.length ? linhas : [{}]).map((l) => linhaAtribHtml(l.user_id, l.funcao_id)).join('');
 }

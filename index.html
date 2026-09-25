@@ -815,6 +815,12 @@ body{
         <button class="btn btn-primary" style="height:44px;padding:0 18px;border-radius:12px" onclick="abrirGerarMes()">📅 Gerar mês</button>
         <button class="btn btn-ghost" style="height:44px;padding:0 18px;border-radius:12px" onclick="abrirSemana(null)">＋ Semana avulsa</button>
       </div>
+      <div class="form-card" style="margin-top:18px">
+        <h3>Funções da célula</h3>
+        <p class="hint">Cadastre as funções e depois vincule cada uma a um usuário na escala.</p>
+        <div class="fld-2"><div class="fld"><label for="nova-funcao">Nome da função</label><input id="nova-funcao" maxlength="80" placeholder="Ex.: 🎤 Louvor"></div><button class="btn btn-primary" style="align-self:end;height:44px" onclick="salvarFuncao()">Adicionar função</button></div>
+        <div id="adm-funcoes-lista"></div>
+      </div>
       <div class="escala-list" id="adm-escala-list"></div>
     </div>
 
