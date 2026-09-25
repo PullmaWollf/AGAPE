@@ -3,12 +3,12 @@
 import { envolver, responder, HttpError } from './_lib/http.js';
 import { clienteAdmin } from './_lib/supabase.js';
 import { exigirAdmin } from './_lib/auth.js';
-import { loginParaEmail, normalizarLogin } from './_lib/login.js';
+import { normalizarLogin } from './_lib/login.js';
+import { hashPassword, verifyPassword, validarSenha } from './_lib/password.js';
 const PERFIS = ['adm', 'membro'];
 
-function validarSenha(s) {
-  if (typeof s !== 'string' || s.length < 6) throw new HttpError(400, 'a senha precisa ter pelo menos 6 caracteres');
-  if (s.length > 72) throw new HttpError(400, 'a senha pode ter no máximo 72 caracteres');
+function validarSenhaOuErro(s) {
+  if (!validarSenha(s)) throw new HttpError(400, 'a senha precisa ter entre 6 e 128 caracteres');
 }
 
 async function buscarUsuario(db, id) {
@@ -37,13 +37,10 @@ export function criarHandler({ env = process.env, criarCliente = clienteAdmin } 
     const { acao } = req.body || {};
 
     if (acao === 'trocar_senha') {
-      validarSenha(req.body.senhaNova);
-      const { error: senhaError } = await db.auth.signInWithPassword({
-        email: loginParaEmail(eu.login),
-        password: String(req.body.senhaAtual ?? ''),
-      });
-      if (senhaError) throw new HttpError(401, 'senha atual incorreta');
-      const { error } = await db.auth.admin.updateUserById(eu.auth_id, { password: req.body.senhaNova });
+      validarSenhaOuErro(req.body.senhaNova);
+      const { data: atual } = await db.from('users').select('pass_hash').eq('id', eu.id).single();
+      if (!atual || !(await verifyPassword(String(req.body.senhaAtual ?? ''), atual.pass_hash))) throw new HttpError(401, 'senha atual incorreta');
+      const { error } = await db.from('users').update({ pass_hash: await hashPassword(req.body.senhaNova) }).eq('id', eu.id);
       if (error) throw new HttpError(400, error.message);
       return responder(res, 200, { ok: true });
     }
@@ -55,18 +52,13 @@ export function criarHandler({ env = process.env, criarCliente = clienteAdmin } 
       if (nome.length < 2 || nome.length > 80) throw new HttpError(400, 'informe o nome (2 a 80 caracteres)');
       if (!/^[a-z0-9._-]{3,30}$/.test(login)) throw new HttpError(400, 'login: 3 a 30 letras minúsculas, números, ponto, hífen ou sublinhado');
       if (!PERFIS.includes(perfil)) throw new HttpError(400, 'perfil inválido');
-      validarSenha(req.body.senha);
+      validarSenhaOuErro(req.body.senha);
 
       const { data: existente } = await db.from('users').select('id').ilike('login', login).maybeSingle();
       if (existente) throw new HttpError(409, 'já existe um usuário com esse login');
 
-      const { data: conta, error: eAuth } = await db.auth.admin.createUser({
-        email: loginParaEmail(login), password: req.body.senha, email_confirm: true, user_metadata: { nome },
-      });
-      if (eAuth) throw new HttpError(400, traduzirAuth(eAuth.message));
-
       const { data: novo, error: eIns } = await db.from('users')
-        .insert({ name: nome, login, role: perfil, auth_id: conta.user.id })
+        .insert({ name: nome, login, role: perfil, pass_hash: await hashPassword(req.body.senha) })
         .select('id, name, login, role').single();
       if (eIns) {
         await db.auth.admin.deleteUser(conta.user.id);   // desfaz para não deixar conta órfã
@@ -81,23 +73,14 @@ export function criarHandler({ env = process.env, criarCliente = clienteAdmin } 
       if (alvo.role === 'adm' && (await contarAdmins(db)) <= 1) throw new HttpError(400, 'não é possível excluir o último administrador');
       const { error } = await db.from('users').delete().eq('id', alvo.id);
       if (error) throw new Error(error.message);
-      if (alvo.auth_id) await db.auth.admin.deleteUser(alvo.auth_id);
       return responder(res, 200, { ok: true });
     }
 
     if (acao === 'redefinir_senha') {
-      validarSenha(req.body.senha);
+      validarSenhaOuErro(req.body.senha);
       const alvo = await buscarUsuario(db, req.body.id);
-      if (alvo.auth_id) {
-        const { error } = await db.auth.admin.updateUserById(alvo.auth_id, { password: req.body.senha });
-        if (error) throw new HttpError(400, traduzirAuth(error.message));
-      } else {   // usuário ainda não migrado: cria a conta agora
-        const { data: conta, error } = await db.auth.admin.createUser({
-          email: loginParaEmail(alvo.login), password: req.body.senha, email_confirm: true,
-        });
-        if (error) throw new HttpError(400, traduzirAuth(error.message));
-        await db.from('users').update({ auth_id: conta.user.id }).eq('id', alvo.id);
-      }
+      const { error } = await db.from('users').update({ pass_hash: await hashPassword(req.body.senha) }).eq('id', alvo.id);
+      if (error) throw new HttpError(400, error.message);
       return responder(res, 200, { ok: true });
     }
 

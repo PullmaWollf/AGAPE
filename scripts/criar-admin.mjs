@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import { createClient } from '@supabase/supabase-js';
 import { pathToFileURL } from 'node:url';
-import { hashSenha } from '../api/_lib/auth.js';
-import { loginParaEmail, normalizarLogin } from '../api/_lib/login.js';
+import { hashPassword } from '../api/_lib/password.js';
+import { normalizarLogin } from '../api/_lib/login.js';
 
 const [,, loginArg, senha, ...nomePartes] = process.argv;
 const login = normalizarLogin(loginArg || '');
@@ -16,32 +16,17 @@ const { SUPABASE_URL, SUPABASE_SERVICE_KEY } = process.env;
 if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) throw new Error('SUPABASE_URL e SUPABASE_SERVICE_KEY precisam estar configuradas.');
 
 const db = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, { auth: { persistSession: false, autoRefreshToken: false } });
-const dominio = process.env.AUTH_EMAIL_DOMAIN || 'celulaagape.app';
-const email = loginParaEmail(login, dominio);
-
 const { data: existente } = await db.from('users').select('id').ilike('login', login).maybeSingle();
 if (existente) throw new Error(`O login "${login}" já existe na tabela users.`);
-
-const { data: conta, error: authError } = await db.auth.admin.createUser({
-  email,
-  password: senha,
-  email_confirm: true,
-  user_metadata: { nome },
-});
-if (authError) throw new Error(`Falha ao criar conta de autenticação: ${authError.message}`);
 
 const { data: usuario, error: dbError } = await db.from('users').insert({
   name: nome,
   login,
   role: 'adm',
-  auth_id: conta.user.id,
-  pass_hash: hashSenha(senha),
+  pass_hash: await hashPassword(senha),
 }).select('id, name, login, role').single();
 
-if (dbError) {
-  await db.auth.admin.deleteUser(conta.user.id);
-  throw new Error(`Falha ao criar usuário no Ágape: ${dbError.message}`);
-}
+if (dbError) throw new Error(`Falha ao criar usuário no Ágape: ${dbError.message}`);
 
 console.log(`Administrador criado: ${usuario.login} (${usuario.name})`);
 console.log('Agora entre no site usando o login e a senha informados.');
