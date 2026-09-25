@@ -34,7 +34,15 @@ export default envolver(async (req, res) => {
   const mediaDuration = Number.isFinite(Number(body.media_duration)) ? Number(body.media_duration) : null;
   if (!content && !imagePath) throw new HttpError(400, 'A publicação precisa ter texto ou mídia.');
   if (content.length > 2000) throw new HttpError(400, 'A publicação precisa ter entre 1 e 2.000 caracteres.');
-  const result = await db.from('posts').insert({ type, content, author_id: auth.perfil.id, author_name: auth.perfil.name, image_path: imagePath, image_w: imageWidth, image_h: imageHeight, image_bytes: imageBytes, media_type: mediaType, media_duration: mediaDuration }).select().single();
+  const fullPost = { type, content, author_id: auth.perfil.id, author_name: auth.perfil.name, image_path: imagePath, image_w: imageWidth, image_h: imageHeight, image_bytes: imageBytes, media_type: mediaType, media_duration: mediaDuration };
+  let result = await db.from('posts').insert(fullPost).select().single();
+  // Permite publicar enquanto a migração opcional de metadados de vídeo ainda não foi aplicada.
+  if (result.error && /media_duration|media_type|schema cache|column.*posts/i.test(result.error.message || '')) {
+    const legacyPost = { ...fullPost };
+    delete legacyPost.media_type;
+    delete legacyPost.media_duration;
+    result = await db.from('posts').insert(legacyPost).select().single();
+  }
   if (result.error) throw new Error(result.error.message);
   return responder(res, 201, { ok: true, post: result.data });
 });
