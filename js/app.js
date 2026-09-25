@@ -679,7 +679,7 @@ function renderEscala() {
   const m = minhaProxima();
   const fns = m ? [...new Set(m.atribuicoes.filter((a) => a.user_id === S.me.id).map(nomeFuncao))].join(', ') : '';
   $('minha-vez').innerHTML = m
-    ? `<div class="prox-banner"><div class="pb-icon">🙋</div><div>
+    ? `<div class="prox-banner"><div class="pb-icon">🤝</div><div>
          <div class="pb-label">Sua próxima vez</div><div class="pb-name">${esc(dataLonga(m.date))}</div>
          <div class="pb-date">${esc(fns)}</div></div></div>` : '';
   $('esc-toolbar').style.display = isAdm() ? 'flex' : 'none';
