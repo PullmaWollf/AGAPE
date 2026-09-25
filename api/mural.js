@@ -24,7 +24,7 @@ export default envolver(async (req, res) => {
   }
   const auth = await usuarioAutenticado(db, req);
   const type = ['versiculo', 'mensagem', 'aviso'].includes(body.type) ? body.type : 'mensagem';
-  if (type === 'aviso') await exigirPermissao(db, req, 'mural_publicar');
+  await exigirPermissao(db, req, 'mural_publicar');
   const content = String(body.content || '').trim();
   if (!content || content.length > 2000) throw new HttpError(400, 'A publicação precisa ter entre 1 e 2.000 caracteres.');
   const result = await db.from('posts').insert({ type, content, author_id: auth.perfil.id, author_name: auth.perfil.name, image_path: null, image_w: null, image_h: null, image_bytes: null }).select().single();

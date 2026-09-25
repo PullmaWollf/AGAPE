@@ -199,11 +199,17 @@ body{
   cursor:pointer;flex-shrink:0;transition:opacity .15s;
 }
 .install-banner .ib-btn:active{opacity:.8}
-.install-banner .ib-close{
+  .install-banner .ib-close{
   width:28px;height:28px;border-radius:50%;border:none;background:rgba(255,255,255,0.15);
   color:var(--cream);cursor:pointer;display:flex;align-items:center;justify-content:center;
   font-size:0.9rem;flex-shrink:0;
-}
+  }
+  .pwa-install-pop{position:relative;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:center;background:linear-gradient(135deg,var(--stone-d),var(--stone));color:var(--cream);border-radius:var(--r);padding:16px;margin-bottom:14px;box-shadow:var(--sh-lg);animation:fadeUp .3s ease}
+  .pwa-install-mark{grid-row:span 2;width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:var(--accent);color:#fff;font-size:1.7rem}
+  .pwa-install-copy{min-width:0;padding-right:22px}.pwa-install-copy h3{font-size:.94rem;font-weight:800}.pwa-install-copy p{font-size:.76rem;opacity:.8;margin-top:3px;line-height:1.35}
+  .pwa-install-action{grid-column:2;justify-self:start;border:0;border-radius:999px;background:var(--accent);color:#fff;padding:9px 15px;font-weight:800;font-size:.78rem;cursor:pointer}
+  .pwa-install-close{position:absolute;right:10px;top:10px;width:26px;height:26px;border:0;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-size:1.1rem;cursor:pointer}
+  @media(max-width:420px){.pwa-install-pop{padding:14px 12px;gap:4px 9px}.pwa-install-action{padding:8px 11px;font-size:.72rem}}
 
 /* ── MURAL ── */
 .compose-card{

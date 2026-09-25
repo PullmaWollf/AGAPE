@@ -8,7 +8,8 @@ export default async function handler(req, res) {
     const db = clienteAdmin();
     const { perfil } = await usuarioAutenticado(db, req);
     const { acao, endpoint, subscription, userAgent } = req.body || {};
-    if (!endpoint) return responder(res, 400, { erro: 'endpoint inválido' });
+    if (!endpoint || endpoint.length > 2048) return responder(res, 400, { erro: 'endpoint inválido' });
+    if (acao !== 'remover' && (!subscription || typeof subscription !== 'string')) return responder(res, 400, { erro: 'assinatura inválida' });
     if (acao === 'remover') {
       const { error } = await db.from('push_subscriptions').delete().eq('endpoint', endpoint).eq('user_id', perfil.id);
       if (error) throw new Error(error.message);

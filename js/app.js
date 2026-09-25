@@ -542,9 +542,7 @@ async function addPost() {
       image_path: caminho, image_w: img?.w ?? null, image_h: img?.h ?? null, image_bytes: img?.blob.size ?? null,
       media_type: img?.mediaType ?? 'image', media_duration: img?.duration ?? null,
     };
-    let result = img
-      ? await db.from('posts').insert(postPayload).select().single()
-      : await (async () => { const r = await fetch('/api/mural.js', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${S.session?.token || sessionStorage.getItem('agape-session')}` }, body: JSON.stringify({ type: S.postType, content }) }); const j = await r.json().catch(() => ({})); return r.ok ? { data: j.post, error: null } : { data: null, error: new Error(j.erro || `Erro ${r.status}`) }; })();
+    let result = await (async () => { const r = await fetch('/api/mural.js', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${S.session?.token || sessionStorage.getItem('agape-session')}` }, body: JSON.stringify({ type: S.postType, content }) }); const j = await r.json().catch(() => ({})); return r.ok ? { data: j.post, error: null } : { data: null, error: new Error(j.erro || `Erro ${r.status}`) }; })();
     // Permite publicar fotos em projetos que ainda não aplicaram a migração de vídeo.
     if (result.error && /media_duration|media_type|schema cache|column.*posts/i.test(result.error.message || '')) {
       const legacyPayload = { ...postPayload };
@@ -587,7 +585,7 @@ function fecharImagem() { $('lightbox').classList.remove('open'); $('lightbox-im
 
 // ══════════════════════════════════════════
 // ESCALA — exibição
-// ══════════════════════════════════════════
+// ═══════════════════════════════════════���══
 function chipsAtrib(atribs) {
   const mostrarFn = S.funcoes.length > 1;
   const porPessoa = new Map();
@@ -767,8 +765,8 @@ async function salvarSemana() {
 
 async function deletarSemana(id) {
   if (!confirm('Excluir esta semana da escala? Os lembretes pendentes serão cancelados.')) return;
-  const { error } = await db.from('escala_semanas').delete().eq('id', id);
-  if (error) return toast(msgErro(error, 'Não foi possível excluir.'), 'err');
+  try { await chamarApi('/api/escala.js', { acao: 'excluir', id }); }
+  catch (error) { return toast(msgErro(error, 'Não foi possível excluir.'), 'err'); }
   await recarregarEscala();
   toast('Semana excluída.');
 }
@@ -1213,33 +1211,32 @@ function renderNotifAdm() {
 
 // ══════════════════════════════════════════
 // INSTALAÇÃO DO PWA
-// ══════════════════════════════════════════
+// ═════════════════════════════════════════���
 window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); S.deferredInstall = e; renderBannerInstall(); });
 window.addEventListener('appinstalled', () => {
   S.deferredInstall = null; $('install-banner-home').innerHTML = ''; toast('App instalado! 🎉');
 });
 function renderBannerInstall() {
   const el = $('install-banner-home');
-  if (!el || ehInstalado()) return;
-  if (!S.deferredInstall) {
-    if (!/android|iphone|ipad|ipod/i.test(navigator.userAgent)) return;
-    el.innerHTML = `<div class="install-banner"><div class="ib-icon" aria-hidden="true">＋</div><div class="ib-text"><div class="ib-title">Instalar o App</div><div class="ib-sub">Toque em ⋮ e escolha “Adicionar à tela inicial”</div></div><button class="ib-btn" onclick="mostrarInstrucaoPWA()">Como instalar</button></div>`;
-    return;
-  }
-  el.innerHTML = `<div class="install-banner">
-    <div class="ib-icon" aria-hidden="true">＋</div>
-    <div class="ib-text"><div class="ib-title">Instalar o App</div><div class="ib-sub">Necessário para receber notificações no iPhone</div></div>
-    <button class="ib-btn" onclick="instalarPWA()">Instalar</button>
-    <button class="ib-close" onclick="dispensarInstall()" aria-label="Fechar">✕</button>
+  if (!el || ehInstalado() || sessionStorage.getItem('agape-install-dismissed') === '1') return;
+  const manual = !S.deferredInstall;
+  if (manual && !/android|iphone|ipad|ipod/i.test(navigator.userAgent)) return;
+  el.innerHTML = `<div class="pwa-install-pop" role="dialog" aria-modal="false" aria-labelledby="pwa-install-title">
+    <button class="pwa-install-close" onclick="dispensarInstall()" aria-label="Fechar instalação">×</button>
+    <div class="pwa-install-mark" aria-hidden="true">＋</div>
+    <div class="pwa-install-copy"><h3 id="pwa-install-title">Instale o app da Célula Ágape</h3><p>${manual ? 'Tenha acesso rápido e receba os avisos da célula.' : 'Tenha acesso rápido e receba os avisos da célula.'}</p></div>
+    <button class="pwa-install-action" onclick="${manual ? 'mostrarInstrucaoPWA()' : 'instalarPWA()'}">${manual ? 'Como instalar' : 'Instalar agora'}</button>
   </div>`;
 }
 async function instalarPWA() {
-  if (!S.deferredInstall) return;
-  S.deferredInstall.prompt(); await S.deferredInstall.userChoice; S.deferredInstall = null;
-  $('install-banner-home').innerHTML = '';
+  if (!S.deferredInstall) return mostrarInstrucaoPWA();
+  S.deferredInstall.prompt();
+  const choice = await S.deferredInstall.userChoice;
+  S.deferredInstall = null;
+  if (choice?.outcome === 'accepted') $('install-banner-home').innerHTML = '';
 }
-  function dispensarInstall() { S.deferredInstall = null; $('install-banner-home').innerHTML = ''; }
-  function mostrarInstrucaoPWA() { toast('No Chrome, toque nos três pontos e depois em “Adicionar à tela inicial”.', 'ok'); }
+function dispensarInstall() { sessionStorage.setItem('agape-install-dismissed', '1'); S.deferredInstall = null; $('install-banner-home').innerHTML = ''; }
+function mostrarInstrucaoPWA() { toast('No Chrome, toque em ⋮ e depois em “Adicionar à tela inicial”. No iPhone, toque em Compartilhar e em “Adicionar à Tela de Início”.', 'ok'); }
 
 // ══════════════════════════════════════════
 // EVENTOS GLOBAIS + PARTIDA
