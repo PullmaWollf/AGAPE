@@ -10,7 +10,7 @@
 --   2. Liga usuários ao Supabase Auth (coluna users.auth_id)
 --   3. Cria modelos de escala (3/4/5 semanas), notificações e config
 --   4. Cria as funções (RPC) usadas pelo app e pelo despachante de push
---   5. Cria o bucket de imagens do mural (limite de 300 KB por arquivo)
+--   5. Cria o bucket de mídia do mural (imagens e vídeos de até 15 MB)
 -- =====================================================================
 
 begin;
@@ -177,7 +177,9 @@ alter table public.posts add column if not exists image_path  text;
 alter table public.posts add column if not exists image_w     int;
 alter table public.posts add column if not exists image_h     int;
 alter table public.posts add column if not exists image_bytes int;
-alter table public.posts alter column content set default '';
+  alter table public.posts add column if not exists media_type text not null default 'image';
+  alter table public.posts add column if not exists media_duration numeric;
+  alter table public.posts alter column content set default '';
 
 -- escala_semanas: aviso no início da semana e origem (modelo)
 update public.escala_semanas set alarm_1d  = false where alarm_1d  is null;
@@ -540,8 +542,14 @@ begin
     end if;
   end if;
   new.content := coalesce(new.content, '');
-  if new.image_path is not null and coalesce(new.image_bytes, 0) > 307200 then
-    raise exception 'imagem acima do limite de 300 KB';
+if new.image_path is not null and new.media_type = 'video' and coalesce(new.image_bytes, 0) > 15728640 then
+  raise exception 'vídeo acima do limite de 15 MB';
+  end if;
+  if new.image_path is not null and new.media_type <> 'video' and coalesce(new.image_bytes, 0) > 307200 then
+  raise exception 'imagem acima do limite de 300 KB';
+  end if;
+  if new.media_type = 'video' and (new.media_duration is null or new.media_duration > 60) then
+  raise exception 'vídeo acima de 1 minuto';
   end if;
   if btrim(new.content) = '' and new.image_path is null then
     raise exception 'post vazio';
@@ -773,13 +781,13 @@ grant execute on function public.salvar_modelo(jsonb)                    to auth
 grant execute on function public.aplicar_modelo(uuid, date[], int, boolean) to authenticated;
 
 -- ---------------------------------------------------------------------
--- 12. Storage: bucket "mural" (público para leitura, 300 KB por arquivo)
+-- 12. Storage: bucket "mural" (público para leitura, imagens e vídeos curtos)
 -- ---------------------------------------------------------------------
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('mural', 'mural', true, 307200, array['image/webp', 'image/jpeg', 'image/png'])
+values ('mural', 'mural', true, 15728640, array['image/webp', 'image/jpeg', 'image/png', 'video/mp4', 'video/webm', 'video/quicktime'])
 on conflict (id) do update
-   set public = true, file_size_limit = 307200,
-       allowed_mime_types = array['image/webp', 'image/jpeg', 'image/png'];
+   set public = true, file_size_limit = 15728640,
+       allowed_mime_types = array['image/webp', 'image/jpeg', 'image/png', 'video/mp4', 'video/webm', 'video/quicktime'];
 
 drop policy if exists mural_leitura on storage.objects;
 create policy mural_leitura on storage.objects for select to public
