@@ -30,11 +30,17 @@ export default async function handler(req, res) {
       const { data: user, error: userError } = await db.from('users').select('id,name').eq('id', item.user_id).maybeSingle();
       if (userError) throw new Error(userError.message);
       if (!user) continue;
-      const funcaoId = item.funcao_id || null;
-      const chave = `${user.id}|${funcaoId || 'lanche'}`;
+  const funcaoId = item.funcao_id || null;
+  let funcaoNome = item.funcao_nome || null;
+  if (funcaoId && !funcaoNome) {
+    const funcao = await db.from('escala_funcoes').select('nome').eq('id', funcaoId).maybeSingle();
+    if (funcao.error) throw new Error(funcao.error.message);
+    funcaoNome = funcao.data?.nome || null;
+  }
+  const chave = `${user.id}|${funcaoId || 'lanche'}`;
       if (unicas.has(chave)) continue;
       unicas.add(chave);
-      const row = { escala_id: semana.id, user_id: user.id, user_name: user.name, funcao_id: funcaoId, funcao_nome: item.funcao_nome || (tipo === 'funcoes' ? 'Função' : 'Lanche') };
+      const row = { escala_id: semana.id, user_id: user.id, user_name: user.name, funcao_id: funcaoId, funcao_nome: funcaoNome || (tipo === 'funcoes' ? 'Função' : 'Lanche') };
       const inserted = await db.from('escala_atribuicoes').insert(row);
       if (inserted.error) throw new Error(inserted.error.message);
     }

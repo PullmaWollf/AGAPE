@@ -22,8 +22,12 @@ const S = {
 };
 
 const $ = (id) => document.getElementById(id);
-const isAdm = () => S.me?.role === 'adm' || S.me?.permissoes?.gerencial === true;
-const temPermissao = (chave) => Boolean(S.me?.role === 'adm' || S.me?.permissoes?.[chave] === true);
+  const perfilAdm = (perfil) => ['adm', 'admin', 'administrador'].includes(String(perfil?.role || '').toLowerCase());
+  const nomeFuncao = (atribuicao) => atribuicao?.funcao_nome && atribuicao.funcao_nome !== 'Função'
+    ? atribuicao.funcao_nome
+    : S.funcoes.find((funcao) => funcao.id === atribuicao?.funcao_id)?.nome || atribuicao?.funcao_nome || 'Atribuição';
+  const isAdm = () => perfilAdm(S.me) || S.me?.permissoes?.gerencial === true;
+  const temPermissao = (chave) => Boolean(perfilAdm(S.me) || S.me?.permissoes?.[chave] === true);
 const hoje = () => hojeISO(CFG.TZ);
 const BADGE = { versiculo: '📖 Versículo', mensagem: '💬 Mensagem', aviso: '📢 Aviso' };
 
@@ -585,7 +589,7 @@ function abrirMidia(url, tipo = 'image') {
 }
 function fecharImagem() { $('lightbox').classList.remove('open'); $('lightbox-img').src = ''; $('lightbox-video').pause(); $('lightbox-video').src = ''; }
 
-// ═════════════════════════════════════��════
+// ═════════════════════════════════════���════
 // ESCALA — exibição
 // ═══════════════════════════════════════���══
 function chipsAtrib(atribs) {
@@ -626,7 +630,7 @@ function cardSemana(s, ctx, admin) {
     <div class="esc-funcoes-lista">
       ${Object.entries(s.atribuicoes.reduce((grupos, a) => {
         const chave = a.funcao_id || a.funcao_nome || 'sem-funcao';
-        (grupos[chave] ||= { nome: a.funcao_nome || 'Atribuição', pessoas: [] }).pessoas.push(a.user_name);
+        (grupos[chave] ||= { nome: nomeFuncao(a), pessoas: [] }).pessoas.push(a.user_name);
         return grupos;
       }, {})).map(([, grupo]) => `<div class="esc-funcao-row"><span class="esc-funcao-nome">${esc(grupo.nome)}</span><span class="esc-funcao-pessoas">${esc([...new Set(grupo.pessoas)].join(', '))}</span></div>`).join('')}
     </div>
@@ -673,7 +677,7 @@ function trocarTipoEscala(tipo, btn) {
 
 function renderEscala() {
   const m = minhaProxima();
-  const fns = m ? [...new Set(m.atribuicoes.filter((a) => a.user_id === S.me.id).map((a) => a.funcao_nome))].join(', ') : '';
+  const fns = m ? [...new Set(m.atribuicoes.filter((a) => a.user_id === S.me.id).map(nomeFuncao))].join(', ') : '';
   $('minha-vez').innerHTML = m
     ? `<div class="prox-banner"><div class="pb-icon">🙋</div><div>
          <div class="pb-label">Sua próxima vez</div><div class="pb-name">${esc(dataLonga(m.date))}</div>
@@ -699,7 +703,7 @@ function renderHome() {
   const titulo = S.me && minhas.length ? 'Minhas funções nesta semana' : 'Próxima escala da célula';
   const semanas = (S.me && minhas.length ? minhas : [p]).slice(0, 4).map((s) => {
     const minhasAtribuicoes = S.me ? s.atribuicoes.filter((a) => a.user_id === S.me.id) : s.atribuicoes;
-    const linhas = minhasAtribuicoes.map((a) => `<li><strong>${esc(a.funcao_nome || 'Atribuição')}</strong><span>${esc(a.user_name || '—')}</span></li>`).join('');
+    const linhas = minhasAtribuicoes.map((a) => `<li><strong>${esc(nomeFuncao(a))}</strong><span>${esc(a.user_name || '—')}</span></li>`).join('');
     return `<div class="home-escala-dia"><div class="pb-date">${esc(dataLonga(s.date))}</div><ul>${linhas || '<li><span>Escala da célula disponível</span></li>'}</ul></div>`;
   }).join('');
   el.innerHTML = `<div class="home-escala-card" onclick="goPage('escala')" style="cursor:pointer">
