@@ -480,14 +480,28 @@ async function addPost() {
       const pastaUsuario = S.me.auth_id || S.session.user.id;
       caminho = `${pastaUsuario}/${novoId()}.${img.ext}`;
       const up = await db.storage.from('mural').upload(caminho, img.blob, { contentType: img.mime, cacheControl: '31536000', upsert: false });
-      if (up.error) throw up.error;
+      if (up.error) {
+        if (/mime type.*not supported|not supported/i.test(up.error.message || '') && img.mediaType === 'video') {
+          throw new Error('O Storage ainda não foi atualizado para vídeos. Execute no Supabase o bloco Storage do supabase/01_schema.sql e tente novamente.');
+        }
+        throw up.error;
+      }
     }
-    const { data, error } = await db.from('posts').insert({
+    const postPayload = {
       type: S.postType, content, author_id: S.me.id, author_name: S.me.name,
       image_path: caminho, image_w: img?.w ?? null, image_h: img?.h ?? null, image_bytes: img?.blob.size ?? null,
       media_type: img?.mediaType ?? 'image', media_duration: img?.duration ?? null,
-    }).select().single();
-    if (error) { if (caminho) db.storage.from('mural').remove([caminho]); throw error; }
+    };
+    let result = await db.from('posts').insert(postPayload).select().single();
+    // Permite publicar fotos em projetos que ainda não aplicaram a migração de vídeo.
+    if (result.error && /media_duration|media_type|schema cache|column.*posts/i.test(result.error.message || '')) {
+      const legacyPayload = { ...postPayload };
+      delete legacyPayload.media_type;
+      delete legacyPayload.media_duration;
+      result = await db.from('posts').insert(legacyPayload).select().single();
+    }
+    if (result.error) { if (caminho) db.storage.from('mural').remove([caminho]); throw result.error; }
+    const { data } = result;
     if (!S.posts.find((x) => x.id === data.id)) S.posts.unshift(data);
     $('post-text').value = ''; removerImagemPendente();
     renderPosts(); renderAdmPosts();
