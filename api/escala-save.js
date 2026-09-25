@@ -9,7 +9,8 @@ export default async function handler(req, res) {
     const { permissoes, perfil } = await exigirPermissao(db, req, 'escala');
     const p = req.body?.dados || {};
     if (!p.date) throw new HttpError(400, 'informe a data da célula');
-    const dados = { date: p.date, alarm_ts: p.alarm_local || null, alarm_1d: Boolean(p.alarm_1d), alarm_3h: Boolean(p.alarm_3h), alarm_30m: Boolean(p.alarm_30m), alarm_semana: Boolean(p.alarm_semana) };
+    const tipo = p.tipo === 'funcoes' ? 'funcoes' : 'lanche';
+    const dados = { tipo, date: p.date, alarm_ts: p.alarm_local || null, alarm_1d: Boolean(p.alarm_1d), alarm_3h: Boolean(p.alarm_3h), alarm_30m: Boolean(p.alarm_30m), alarm_semana: Boolean(p.alarm_semana) };
     let semana;
     if (p.id) {
       const result = await db.from('escala_semanas').update(dados).eq('id', p.id).select().single();
@@ -23,12 +24,17 @@ export default async function handler(req, res) {
       semana = result.data;
     }
     const atribuicoes = Array.isArray(p.atribuicoes) ? p.atribuicoes : [];
+    const unicas = new Set();
     for (const item of atribuicoes) {
       if (!item.user_id) continue;
       const { data: user, error: userError } = await db.from('users').select('id,name').eq('id', item.user_id).maybeSingle();
       if (userError) throw new Error(userError.message);
       if (!user) continue;
-      const row = { escala_id: semana.id, user_id: user.id, user_name: user.name, funcao_id: item.funcao_id || null, funcao_nome: item.funcao_nome || 'Lanche' };
+      const funcaoId = item.funcao_id || null;
+      const chave = `${user.id}|${funcaoId || 'lanche'}`;
+      if (unicas.has(chave)) continue;
+      unicas.add(chave);
+      const row = { escala_id: semana.id, user_id: user.id, user_name: user.name, funcao_id: funcaoId, funcao_nome: item.funcao_nome || (tipo === 'funcoes' ? 'Função' : 'Lanche') };
       const inserted = await db.from('escala_atribuicoes').insert(row);
       if (inserted.error) throw new Error(inserted.error.message);
     }

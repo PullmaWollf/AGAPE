@@ -14,7 +14,7 @@ const db = supabase.createClient(CFG.SUPA_URL, CFG.SUPA_KEY, {
 
 const S = {
   me: null, session: null,
-  posts: [], semanas: [], funcoes: [],
+  posts: [], semanas: [], funcoes: [], escalaTipo: 'lanche',
   users: [], modelos: [], config: {}, dispositivos: [], notifs: [], uso: null,
   perfis: [], permissoes: [],
   postType: 'versiculo', imgPendente: null, publicando: false, palavra: null,
@@ -642,7 +642,7 @@ function htmlEscalaLista(admin) {
   const prox = proximaSemana(S.semanas, h);
   const ctx = { hoje: h, proxId: prox?.id };
   const mesAtual = h.slice(0, 7);
-  const grupos = agruparPorMes(S.semanas);
+  const grupos = agruparPorMes(S.semanas.filter((s) => (s.tipo || 'lanche') === S.escalaTipo));
   const atuais = grupos.filter((g) => g.chave >= mesAtual);
   const passados = grupos.filter((g) => g.chave < mesAtual).reverse();
   const blocoMes = (g) => `
@@ -657,6 +657,12 @@ function minhaProxima() {
   const h = hoje();
   return S.semanas.filter((s) => s.date >= h && s.atribuicoes.some((a) => a.user_id === S.me.id))
     .sort((a, b) => a.date.localeCompare(b.date))[0] || null;
+}
+
+function trocarTipoEscala(tipo, btn) {
+  S.escalaTipo = tipo === 'funcoes' ? 'funcoes' : 'lanche';
+  document.querySelectorAll('.scale-switch').forEach((b) => b.classList.toggle('active', b.dataset.scale === S.escalaTipo));
+  renderEscalaTudo();
 }
 
 function renderEscala() {
@@ -748,6 +754,7 @@ function abrirSemana(id) {
   const s = id ? S.semanas.find((x) => x.id === id) : null;
   $('sem-titulo').textContent = s ? 'Editar semana' : 'Nova semana avulsa';
   $('sem-id').value = s?.id || '';
+  $('sem-tipo').value = s?.tipo || 'lanche';
   $('sem-date').value = s?.date || proximaDataCelula();
   preencherAtribs('sem-atribs', (s?.atribuicoes || []).map((a) => ({ user_id: a.user_id, funcao_id: a.funcao_id })));
   const temAlarme = !!(s && (s.alarm_ts || s.alarm_semana));
@@ -773,7 +780,7 @@ async function salvarSemana() {
   await comBotao($('sem-btn'), async () => {
   try {
     await chamarApi('/api/escala-save.js', { dados: {
-      id: $('sem-id').value || null, date,
+      id: $('sem-id').value || null, tipo: $('sem-tipo').value, date,
       alarm_local: on && dt ? dt : null,
       alarm_semana: on && $('sem-alarm-semana').checked, alarm_1d: d1, alarm_3h: h3, alarm_30m: m30,
       atribuicoes,
