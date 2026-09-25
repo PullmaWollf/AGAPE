@@ -375,7 +375,8 @@ body{
   font-size:0.8rem;font-weight:600;color:var(--muted);cursor:pointer;transition:all .18s;
 }
 .adm-tab.active{background:var(--stone-d);color:var(--cream)}
-.adm-panel{display:none}
+  .perm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;margin:14px 0}.perm-item{display:flex;align-items:center;gap:8px;padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--bg);font-size:.82rem}.perm-item input{accent-color:var(--accent)}
+  .adm-panel{display:none}
 .adm-panel.active{display:block}
 .form-card{
   background:var(--surface);border-radius:var(--r);border:1px solid var(--border);
@@ -759,11 +760,25 @@ body{
     <div class="sec-hdr"><h2>Painel ADM</h2><p>Gerencie sua célula</p></div>
     <div class="adm-tabs">
       <button class="adm-tab active" onclick="admTab('usuarios',this)">Usuários</button>
+      <button class="adm-tab" onclick="admTab('perfis',this)">Perfis e permissões</button>
       <button class="adm-tab" onclick="admTab('posts',this)">Posts</button>
   <button class="adm-tab" onclick="admTab('palavra',this)">Palavra</button>
       <button class="adm-tab" onclick="admTab('escala-a',this)">Escala</button>
       <button class="adm-tab" onclick="admTab('modelos',this)">Modelos</button>
       <button class="adm-tab" onclick="admTab('notif',this)">Notificações</button>
+    </div>
+
+    <div class="adm-panel" id="adm-perfis">
+      <div class="form-card">
+        <h3>Perfis de permissão</h3>
+        <p class="hint">Crie modelos como Líder, LT ou Membro e escolha exatamente o que cada perfil pode fazer.</p>
+        <input type="hidden" id="perm-profile-id">
+        <div class="fld-2"><div class="fld"><label>Nome do perfil</label><input id="perm-profile-name" placeholder="Ex.: Líder"></div><div class="fld"><label>Descrição</label><input id="perm-profile-description" placeholder="Responsabilidades do perfil"></div></div>
+        <div id="perm-checks" class="perm-grid"></div>
+        <button class="btn btn-primary btn-full" onclick="salvarPerfilPermissao()">Salvar perfil</button>
+      </div>
+      <div class="form-card"><h3>Perfis cadastrados</h3><div id="perm-profile-list"></div></div>
+      <div class="form-card"><h3>Vincular perfil aos usuários</h3><div id="perm-user-list"></div></div>
     </div>
 
     <div class="adm-panel active" id="adm-usuarios">
@@ -775,7 +790,7 @@ body{
         </div>
         <div class="fld-2">
           <div class="fld"><label>Senha</label><input id="new-pass" type="password" placeholder="mín. 6 caracteres"></div>
-          <div class="fld"><label>Perfil</label><select id="new-role"><option value="membro">Membro</option><option value="adm">ADM</option></select></div>
+          <div class="fld"><label>Perfil de acesso</label><select id="new-role"><option value="membro">Membro</option><option value="adm">ADM</option></select></div>
         </div>
         <button class="btn btn-primary btn-full" id="new-user-btn" onclick="addUser()">Adicionar</button>
       </div>
@@ -1007,6 +1022,7 @@ body{
 <div class="toast" id="toast"></div>
 <script src="/js/utils.js"></script>
 <script src="/js/config.js"></script>
-<script src="/js/app.js" defer></script>
+  <script src="/js/app.js" defer></script>
+  <script src="/js/perfis.js" defer></script>
 </body>
 </html>

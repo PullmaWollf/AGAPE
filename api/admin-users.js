@@ -36,6 +36,12 @@ export function criarHandler({ env = process.env, criarCliente = clienteAdmin } 
     const { perfil: eu } = await exigirAdmin(db, req);
     const { acao } = req.body || {};
 
+    if (acao === 'listar') {
+      const { data, error } = await db.from('users').select('id,name,login,role,perfil_id,created_at').order('name');
+      if (error) throw new Error(error.message);
+      return responder(res, 200, { ok: true, usuarios: data || [] });
+    }
+
     if (acao === 'trocar_senha') {
       validarSenhaOuErro(req.body.senhaNova);
       const { data: atual } = await db.from('users').select('pass_hash').eq('id', eu.id).single();
@@ -58,12 +64,9 @@ export function criarHandler({ env = process.env, criarCliente = clienteAdmin } 
       if (existente) throw new HttpError(409, 'já existe um usuário com esse login');
 
       const { data: novo, error: eIns } = await db.from('users')
-        .insert({ name: nome, login, role: perfil, pass_hash: await hashPassword(req.body.senha) })
+        .insert({ name: nome, login, role: perfil, perfil_id: req.body.perfilId || null, pass_hash: await hashPassword(req.body.senha) })
         .select('id, name, login, role').single();
-      if (eIns) {
-        await db.auth.admin.deleteUser(conta.user.id);   // desfaz para não deixar conta órfã
-        throw new Error(eIns.message);
-      }
+      if (eIns) throw new Error(eIns.message);
       return responder(res, 200, { ok: true, usuario: novo });
     }
 

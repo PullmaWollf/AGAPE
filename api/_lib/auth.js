@@ -34,9 +34,9 @@ export async function usuarioAutenticado(db, req) {
   }
   if (!authId) throw new HttpError(401, 'sessão inválida ou expirada');
   const { data: perfil, error } = await db
-    .from('users').select('id, name, login, role, created_at, auth_id').eq('id', authId).maybeSingle();
+    .from('users').select('id, name, login, role, perfil_id, created_at, auth_id').eq('id', authId).maybeSingle();
   if (!perfil && token && db.auth?.getUser) {
-    const fallback = await db.from('users').select('id, name, login, role, created_at, auth_id').eq('auth_id', authId).maybeSingle();
+    const fallback = await db.from('users').select('id, name, login, role, perfil_id, created_at, auth_id').eq('auth_id', authId).maybeSingle();
     if (!fallback.error && fallback.data) return { perfil: fallback.data };
   }
   if (error) throw new Error(error.message);
@@ -44,8 +44,23 @@ export async function usuarioAutenticado(db, req) {
   return { perfil };
 }
 
-export async function exigirAdmin(db, req) {
+export async function carregarPermissoes(db, perfil) {
+  if (perfil.role === 'adm') return Object.fromEntries([
+    'gerencial','usuarios','perfis','mural_publicar','mural_excluir','palavra','escala','escala_visualizar','modelos','notificacoes','uploads'
+  ].map((chave) => [chave, true]));
+  if (!perfil.perfil_id) return {};
+  const { data, error } = await db.from('perfis_permissao').select('permissoes').eq('id', perfil.perfil_id).maybeSingle();
+  if (error) throw new Error(error.message);
+  return data?.permissoes || {};
+}
+
+export async function exigirPermissao(db, req, permissao) {
   const u = await usuarioAutenticado(db, req);
-  if (u.perfil.role !== 'adm') throw new HttpError(403, 'apenas administradores');
-  return u;
+  const permissoes = await carregarPermissoes(db, u.perfil);
+  if (u.perfil.role !== 'adm' && permissoes[permissao] !== true) throw new HttpError(403, 'você não tem permissão para isso');
+  return { ...u, permissoes };
+}
+
+export async function exigirAdmin(db, req) {
+  return exigirPermissao(db, req, 'gerencial');
 }
