@@ -78,7 +78,16 @@ async function carregarPerfil(session) {
 async function restaurarSessao() {
   const token = sessionStorage.getItem('agape-session');
   const perfil = JSON.parse(sessionStorage.getItem('agape-user') || 'null');
-  if (token && perfil) { S.me = perfil; S.session = { token, user: { id: perfil.id } }; }
+  if (!token || !perfil) return;
+  S.me = perfil; S.session = { token, user: { id: perfil.id } };
+  try {
+    const resposta = await fetch('/api/auth-session.js', { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+    const atual = await resposta.json();
+    if (!resposta.ok || !atual.usuario) throw new Error(atual.erro || 'sessão expirada');
+    S.me = atual.usuario; sessionStorage.setItem('agape-user', JSON.stringify(S.me));
+  } catch (_) {
+    sessionStorage.removeItem('agape-session'); sessionStorage.removeItem('agape-user'); S.me = null; S.session = null;
+  }
 }
 
 function erroLogin(msg) {
@@ -184,7 +193,7 @@ async function trocarSenha() {
   });
 }
 
-// ═════════════���════════════════════════════
+// ══════════════════════════════════════════
 // CARGA DE DADOS
 // ══════════════════════════════════════════
 function montarSemanas(semanas, atribs) {
@@ -328,7 +337,7 @@ function admTab(id, btn) {
 function renderPalavra() {
   const el = $('palavra-celula-view'); if (!el) return;
   if (!S.palavra) { el.innerHTML = '<div class="empty">A Palavra da Célula ainda não foi publicada.</div>'; return; }
-  const url = db.storage.from('palavra-celula').getPublicUrl(S.palavra.arquivo_path).data.publicUrl;
+  const url = `${db.storage.from('palavra-celula').getPublicUrl(S.palavra.arquivo_path).data.publicUrl}?v=${encodeURIComponent(S.palavra.atualizado_em || Date.now())}`;
   el.innerHTML = `<h3>${esc(S.palavra.titulo)}</h3><p>${esc(S.palavra.nome_arquivo)} · ${S.palavra.paginas} páginas</p><iframe title="${esc(S.palavra.titulo)}" src="${esc(url)}#page=1&view=FitH"></iframe><a class="btn btn-ghost btn-full" href="${esc(url)}" target="_blank" rel="noopener">Abrir PDF</a>`;
 }
 async function publicarPalavra(input) {
@@ -338,13 +347,24 @@ async function publicarPalavra(input) {
   if (file.type !== 'application/pdf' || file.size > 15 * 1024 * 1024) return toast('Envie um PDF de até 15 MB.', 'warn');
   const paginas = Number(prompt('Quantas páginas o PDF possui? (2 a 4)', '2'));
   if (!Number.isInteger(paginas) || paginas < 2 || paginas > 4) return toast('A Palavra precisa ter de 2 a 4 páginas.', 'warn');
-  const path = `${S.session.user.id}/palavra-semana.pdf`;
+  const path = `${S.me.id}/palavra-${Date.now()}-${novoId()}.pdf`;
   const up = await db.storage.from('palavra-celula').upload(path, file, { contentType: 'application/pdf', upsert: true });
   if (up.error) return toast(msgErro(up.error, 'Não foi possível enviar o PDF.'), 'err');
+  const caminhoAnterior = S.palavra?.arquivo_path;
   const row = { id: true, titulo: 'Palavra da Célula', arquivo_path: path, nome_arquivo: file.name, paginas, atualizado_por: S.me.id, atualizado_em: new Date().toISOString() };
   const saved = await db.from('palavra_celula').upsert(row).select().single();
   if (saved.error) return toast(msgErro(saved.error, 'Não foi possível salvar a Palavra.'), 'err');
+  if (caminhoAnterior && caminhoAnterior !== path) await db.storage.from('palavra-celula').remove([caminhoAnterior]);
   S.palavra = saved.data; renderPalavra(); toast('Palavra da Célula atualizada.');
+}
+async function removerPalavra() {
+  if (!temPermissao('palavra') || !S.palavra) return toast(!S.palavra ? 'Não há Palavra publicada.' : 'Você não tem permissão para remover a Palavra.', 'warn');
+  if (!confirm('Remover a Palavra da Célula atual?')) return;
+  const antiga = S.palavra.arquivo_path;
+  const removed = await db.from('palavra_celula').delete().eq('id', true);
+  if (removed.error) return toast(msgErro(removed.error, 'Não foi possível remover a Palavra.'), 'err');
+  await db.storage.from('palavra-celula').remove([antiga]);
+  S.palavra = null; renderPalavra(); toast('Palavra removida.');
 }
 
 // ══════════════════════════════════════════
@@ -728,13 +748,14 @@ async function salvarSemana() {
   const atribuicoes = lerAtribs('sem-atribs');
   if (!atribuicoes.length && !confirm('Nenhuma pessoa foi escolhida — ninguém será notificado. Salvar assim mesmo?')) return;
   await comBotao($('sem-btn'), async () => {
-    const { error } = await db.rpc('salvar_semana', { p: {
+  try {
+    await chamarApi('/api/escala-save.js', { dados: {
       id: $('sem-id').value || null, date,
       alarm_local: on && dt ? dt : null,
       alarm_semana: on && $('sem-alarm-semana').checked, alarm_1d: d1, alarm_3h: h3, alarm_30m: m30,
       atribuicoes,
     } });
-    if (error) return toast(msgErro(error, 'Não foi possível salvar.'), 'err');
+  } catch (error) { return toast(msgErro(error, 'Não foi possível salvar.'), 'err'); }
     closeSheet('semana-sheet');
     await recarregarEscala();
     toast('Semana salva ✅');
@@ -1057,9 +1078,7 @@ async function sincronizarPush({ silencioso = true } = {}) {
     // Inscrição feita com outra chave VAPID nunca receberia nada: refaz.
     if (sub && !mesmaChave(sub.options?.applicationServerKey, chave)) { await sub.unsubscribe(); sub = null; }
     if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: chave });
-    const { error } = await db.rpc('registrar_dispositivo', {
-      p_endpoint: sub.endpoint, p_subscription: JSON.stringify(sub.toJSON()), p_user_agent: navigator.userAgent.slice(0, 200) });
-    if (error) throw error;
+    await chamarApi('/api/push-device.js', { acao: 'salvar', endpoint: sub.endpoint, subscription: JSON.stringify(sub.toJSON()), userAgent: navigator.userAgent.slice(0, 200) });
     S.pushOk = true;
     renderBannerNotif(); renderStatusNotif();
     return { ok: true };
@@ -1088,7 +1107,7 @@ async function removerDispositivoAtual() {
   if (!suportaPush() || !S.me) return;
   const reg = await navigator.serviceWorker.getRegistration();
   const sub = await reg?.pushManager.getSubscription();
-  if (sub) await db.rpc('remover_dispositivo', { p_endpoint: sub.endpoint });
+  if (sub) await chamarApi('/api/push-device.js', { acao: 'remover', endpoint: sub.endpoint });
 }
 
 async function testarNotificacao(userId) {
@@ -1200,7 +1219,7 @@ function renderBannerInstall() {
   const el = $('install-banner-home');
   if (!el || !S.deferredInstall) return;
   el.innerHTML = `<div class="install-banner">
-    <div class="ib-icon">����</div>
+    <div class="ib-icon" aria-hidden="true">＋</div>
     <div class="ib-text"><div class="ib-title">Instalar o App</div><div class="ib-sub">Necessário para receber notificações no iPhone</div></div>
     <button class="ib-btn" onclick="instalarPWA()">Instalar</button>
     <button class="ib-close" onclick="dispensarInstall()" aria-label="Fechar">✕</button>
@@ -1213,7 +1232,7 @@ async function instalarPWA() {
 }
 function dispensarInstall() { S.deferredInstall = null; $('install-banner-home').innerHTML = ''; }
 
-// ═════════════════���════════════════════════
+// ══════════════════════════════════════════
 // EVENTOS GLOBAIS + PARTIDA
 // ══════════════════════════════════════════
 document.addEventListener('click', (e) => {
