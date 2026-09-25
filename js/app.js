@@ -205,7 +205,7 @@ function montarSemanas(semanas, atribs) {
 
 async function carregarPublico() {
   const [p, s, a, f, palavra] = await Promise.all([
-    db.from('posts').select('*').order('created_at', { ascending: false }).limit(100),
+    fetch('/api/mural.js').then(async (r) => { const j = await r.json(); if (!r.ok) throw new Error(j.erro || 'Falha no mural'); return { data: j.posts || [], error: null }; }),
     db.from('escala_semanas').select('*').order('date', { ascending: true }),
     db.from('escala_atribuicoes').select('id,escala_id,user_id,user_name,funcao_id,funcao_nome'),
     db.from('escala_funcoes').select('id,nome').order('nome'),
@@ -542,7 +542,9 @@ async function addPost() {
       image_path: caminho, image_w: img?.w ?? null, image_h: img?.h ?? null, image_bytes: img?.blob.size ?? null,
       media_type: img?.mediaType ?? 'image', media_duration: img?.duration ?? null,
     };
-    let result = await db.from('posts').insert(postPayload).select().single();
+    let result = img
+      ? await db.from('posts').insert(postPayload).select().single()
+      : await (async () => { const r = await fetch('/api/mural.js', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${S.session?.token || sessionStorage.getItem('agape-session')}` }, body: JSON.stringify({ type: S.postType, content }) }); const j = await r.json().catch(() => ({})); return r.ok ? { data: j.post, error: null } : { data: null, error: new Error(j.erro || `Erro ${r.status}`) }; })();
     // Permite publicar fotos em projetos que ainda não aplicaram a migração de vídeo.
     if (result.error && /media_duration|media_type|schema cache|column.*posts/i.test(result.error.message || '')) {
       const legacyPayload = { ...postPayload };
@@ -563,7 +565,8 @@ async function addPost() {
 async function deletarPost(id) {
   const p = S.posts.find((x) => x.id === id);
   if (!p || !confirm('Excluir esta publicação?')) return;
-  const { error } = await db.from('posts').delete().eq('id', id);
+  let error = null;
+  try { const r = await fetch('/api/mural.js', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${S.session?.token || sessionStorage.getItem('agape-session')}` }, body: JSON.stringify({ acao: 'excluir', id }) }); const j = await r.json().catch(() => ({})); if (!r.ok) error = new Error(j.erro || `Erro ${r.status}`); } catch (e) { error = e; }
   if (error) return toast(msgErro(error, 'Não foi possível excluir.'), 'err');
   if (p.image_path) db.storage.from('mural').remove([p.image_path]).catch(() => {});
   S.posts = S.posts.filter((x) => x.id !== id);
@@ -1217,7 +1220,12 @@ window.addEventListener('appinstalled', () => {
 });
 function renderBannerInstall() {
   const el = $('install-banner-home');
-  if (!el || !S.deferredInstall) return;
+  if (!el || ehInstalado()) return;
+  if (!S.deferredInstall) {
+    if (!/android|iphone|ipad|ipod/i.test(navigator.userAgent)) return;
+    el.innerHTML = `<div class="install-banner"><div class="ib-icon" aria-hidden="true">＋</div><div class="ib-text"><div class="ib-title">Instalar o App</div><div class="ib-sub">Toque em ⋮ e escolha “Adicionar à tela inicial”</div></div><button class="ib-btn" onclick="mostrarInstrucaoPWA()">Como instalar</button></div>`;
+    return;
+  }
   el.innerHTML = `<div class="install-banner">
     <div class="ib-icon" aria-hidden="true">＋</div>
     <div class="ib-text"><div class="ib-title">Instalar o App</div><div class="ib-sub">Necessário para receber notificações no iPhone</div></div>
@@ -1230,7 +1238,8 @@ async function instalarPWA() {
   S.deferredInstall.prompt(); await S.deferredInstall.userChoice; S.deferredInstall = null;
   $('install-banner-home').innerHTML = '';
 }
-function dispensarInstall() { S.deferredInstall = null; $('install-banner-home').innerHTML = ''; }
+  function dispensarInstall() { S.deferredInstall = null; $('install-banner-home').innerHTML = ''; }
+  function mostrarInstrucaoPWA() { toast('No Chrome, toque nos três pontos e depois em “Adicionar à tela inicial”.', 'ok'); }
 
 // ══════════════════════════════════════════
 // EVENTOS GLOBAIS + PARTIDA
