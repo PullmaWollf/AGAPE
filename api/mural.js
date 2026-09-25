@@ -26,8 +26,15 @@ export default envolver(async (req, res) => {
   const type = ['versiculo', 'mensagem', 'aviso'].includes(body.type) ? body.type : 'mensagem';
   await exigirPermissao(db, req, 'mural_publicar');
   const content = String(body.content || '').trim();
-  if (!content || content.length > 2000) throw new HttpError(400, 'A publicação precisa ter entre 1 e 2.000 caracteres.');
-  const result = await db.from('posts').insert({ type, content, author_id: auth.perfil.id, author_name: auth.perfil.name, image_path: null, image_w: null, image_h: null, image_bytes: null }).select().single();
+  const imagePath = body.image_path ? String(body.image_path).slice(0, 500) : null;
+  const mediaType = body.media_type === 'video' ? 'video' : (imagePath ? 'image' : null);
+  const imageBytes = Number.isFinite(Number(body.image_bytes)) ? Number(body.image_bytes) : null;
+  const imageWidth = Number.isFinite(Number(body.image_w)) ? Number(body.image_w) : null;
+  const imageHeight = Number.isFinite(Number(body.image_h)) ? Number(body.image_h) : null;
+  const mediaDuration = Number.isFinite(Number(body.media_duration)) ? Number(body.media_duration) : null;
+  if (!content && !imagePath) throw new HttpError(400, 'A publicação precisa ter texto ou mídia.');
+  if (content.length > 2000) throw new HttpError(400, 'A publicação precisa ter entre 1 e 2.000 caracteres.');
+  const result = await db.from('posts').insert({ type, content, author_id: auth.perfil.id, author_name: auth.perfil.name, image_path: imagePath, image_w: imageWidth, image_h: imageHeight, image_bytes: imageBytes, media_type: mediaType, media_duration: mediaDuration }).select().single();
   if (result.error) throw new Error(result.error.message);
   return responder(res, 201, { ok: true, post: result.data });
 });
