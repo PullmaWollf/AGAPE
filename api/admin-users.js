@@ -36,6 +36,12 @@ export function criarHandler({ env = process.env, criarCliente = clienteAdmin } 
     const { perfil: eu } = await exigirAdmin(db, req);
     const { acao } = req.body || {};
 
+    if (acao === 'listar') {
+      const { data, error } = await db.from('users').select('id,name,login,role,perfil_id,created_at').order('name');
+      if (error) throw new Error(error.message);
+      return responder(res, 200, { ok: true, usuarios: data || [] });
+    }
+
     if (acao === 'trocar_senha') {
       validarSenhaOuErro(req.body.senhaNova);
       const { data: atual } = await db.from('users').select('pass_hash').eq('id', eu.id).single();

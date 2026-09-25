@@ -221,14 +221,14 @@ async function recarregarEscala() {
 
 async function carregarAdmin() {
   const [u, m, c, d, uso] = await Promise.all([
-    db.from('users').select(COLS_USER).order('name'),
+  chamarApi('/api/admin-users.js', { acao: 'listar' }),
     db.from('escala_modelos').select('*, escala_modelo_itens(*)').order('semanas').order('nome'),
     db.from('config').select('chave,valor'),
     db.rpc('dispositivos_por_usuario'),
     db.rpc('uso_imagens'),
   ]);
-  if (u.error) throw u.error;
-  S.users = u.data;
+  if (u.erro) throw new Error(u.erro);
+  S.users = u.usuarios || [];
   S.modelos = (m.data || []).map((x) => ({ ...x, itens: x.escala_modelo_itens || [] }));
   S.config = Object.fromEntries((c.data || []).map((x) => [x.chave, x.valor]));
   S.dispositivos = d.data || [];
