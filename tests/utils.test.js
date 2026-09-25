@@ -102,7 +102,7 @@ describe('compressão de imagem (planejamento)', () => {
   });
   test('o limite do JS é o mesmo do SQL', async () => {
     const texto = sql('01_schema.sql');
-    assert.match(texto, /file_size_limit[\s\S]*?307200/);
+    assert.match(texto, /file_size_limit[\s\S]*?15728640/);
     assert.match(texto, /> 307200/);
   });
 });

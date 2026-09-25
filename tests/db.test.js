@@ -414,7 +414,7 @@ describe('02_seguranca_rls.sql — quem pode o quê', () => {
     await comoUsuario(db, ADM, async () => assert.equal((await db.query(`delete from storage.objects where name like '${MB1}/%' returning id`)).rows.length, 1));
     const b = (await q(db, `select public, file_size_limit, allowed_mime_types from storage.buckets where id='mural'`))[0];
     assert.equal(b.public, true);
-    assert.equal(Number(b.file_size_limit), 307200);
+    assert.equal(Number(b.file_size_limit), 15728640);
   });
 });
 

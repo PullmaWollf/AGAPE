@@ -342,10 +342,11 @@ function cardPost(p) {
   const pode = S.me && (isAdm() || S.me.id === p.author_id);
   const data = p.created_at ? new Date(p.created_at).toLocaleDateString('pt-BR') : '';
   const tipo = BADGE[p.type] ? p.type : 'mensagem';
+  const mediaUrl = p.image_path ? urlImagem(p.image_path) : '';
   const img = p.image_path
-    ? `<img class="post-img" loading="lazy" decoding="async" alt="Imagem publicada por ${esc(p.author_name)}"
-         src="${esc(urlImagem(p.image_path))}" data-full="${esc(urlImagem(p.image_path))}"
-         ${p.image_w && p.image_h ? `width="${Number(p.image_w)}" height="${Number(p.image_h)}"` : ''}>`
+    ? (p.media_type === 'video'
+      ? `<div class="post-media"><video class="post-img" controls playsinline preload="metadata" src="${esc(mediaUrl)}" aria-label="Vídeo publicado por ${esc(p.author_name)}"></video><button class="media-expand" onclick="abrirMidia('${esc(mediaUrl)}','video')" aria-label="Expandir vídeo">⤢</button></div>`
+      : `<div class="post-media"><img class="post-img" loading="lazy" decoding="async" alt="Imagem publicada por ${esc(p.author_name)}" src="${esc(mediaUrl)}" data-full="${esc(mediaUrl)}" ${p.image_w && p.image_h ? `width="${Number(p.image_w)}" height="${Number(p.image_h)}"` : ''}><button class="media-expand" onclick="abrirMidia('${esc(mediaUrl)}','image')" aria-label="Expandir imagem">⤢</button></div>`)
     : '';
   return `<div class="post-card">
     <div class="post-top">
@@ -418,22 +419,42 @@ async function comprimirImagem(file) {
   return { ...melhor, mime: melhor.blob.type || mime, ext: melhor.blob.type === 'image/webp' ? 'webp' : 'jpg' };
 }
 
+async function lerVideo(file) {
+  if (!file.type.startsWith('video/')) throw new Error('Escolha uma imagem ou vídeo.');
+  if (file.size > 15 * 1024 * 1024) throw new Error('Vídeo muito grande (máximo 15 MB).');
+  const url = URL.createObjectURL(file);
+  try {
+    const duration = await new Promise((resolve, reject) => {
+      const video = document.createElement('video');
+      video.preload = 'metadata';
+      video.onloadedmetadata = () => resolve(video.duration);
+      video.onerror = () => reject(new Error('Não foi possível ler esse vídeo.'));
+      video.src = url;
+    });
+    if (!Number.isFinite(duration) || duration > 60.5) throw new Error('O vídeo precisa ter no máximo 1 minuto.');
+    return { blob: file, mime: file.type, ext: file.type === 'video/webm' ? 'webm' : file.type === 'video/quicktime' ? 'mov' : 'mp4', mediaType: 'video', duration, previewUrl: url };
+  } catch (e) { URL.revokeObjectURL(url); throw e; }
+}
+
 async function escolherImagem(input) {
   const file = input.files?.[0];
   input.value = '';
   if (!file) return;
-  $('img-btn').disabled = true; $('img-btn').textContent = '⏳ Compactando…';
+  const button = $('img-btn');
+  button.disabled = true; button.textContent = '⏳ Preparando…';
   try {
-    const r = await comprimirImagem(file);
+    const r = file.type.startsWith('video/') ? await lerVideo(file) : { ...(await comprimirImagem(file)), mediaType: 'image', duration: null, previewUrl: URL.createObjectURL(file) };
     removerImagemPendente();
-    S.imgPendente = { ...r, previewUrl: URL.createObjectURL(r.blob) };
-    $('img-preview').innerHTML = `
-      <img src="${esc(S.imgPendente.previewUrl)}" alt="Pré-visualização">
-      <span class="img-info">${r.w}×${r.h} · ${formatarBytes(r.blob.size)}</span>
-      <button class="img-x" onclick="removerImagemPendente()" aria-label="Remover imagem">✕</button>`;
+    S.imgPendente = r;
+    const preview = r.mediaType === 'video'
+      ? `<video src="${esc(r.previewUrl)}" controls playsinline preload="metadata" aria-label="Pré-visualização do vídeo"></video>`
+      : `<img src="${esc(r.previewUrl)}" alt="Pré-visualização da imagem">`;
+    $('img-preview').innerHTML = `${preview}
+      <span class="img-info">${r.mediaType === 'video' ? `${Math.ceil(r.duration)}s · ` : `${r.w}×${r.h} · `}${formatarBytes(r.blob.size)}</span>
+      <button class="img-x" onclick="removerImagemPendente()" aria-label="Remover mídia">✕</button>`;
     $('img-preview').style.display = 'block';
-  } catch (e) { toast(msgErro(e, 'Não foi possível usar essa imagem.'), 'err'); }
-  finally { $('img-btn').disabled = false; $('img-btn').textContent = '📷 Foto'; }
+  } catch (e) { toast(msgErro(e, 'Não foi possível usar essa mídia.'), 'err'); }
+  finally { button.disabled = false; button.textContent = '📷 Foto ou vídeo'; }
 }
 function removerImagemPendente() {
   if (S.imgPendente?.previewUrl) URL.revokeObjectURL(S.imgPendente.previewUrl);
@@ -446,7 +467,7 @@ const novoId = () => (crypto.randomUUID ? crypto.randomUUID() : `${Date.now().to
 async function addPost() {
   if (!S.me || S.publicando) return;
   const content = $('post-text').value.trim();
-  if (!content && !S.imgPendente) return toast('Escreva algo ou escolha uma foto.', 'warn');
+  if (!content && !S.imgPendente) return toast('Escreva algo ou escolha uma foto ou vídeo.', 'warn');
   if (S.postType === 'aviso' && !isAdm()) return toast('Somente o ADM pode postar avisos.', 'warn');
 
   S.publicando = true; $('publish-btn').disabled = true; $('publish-btn').textContent = 'Publicando…';
@@ -464,6 +485,7 @@ async function addPost() {
     const { data, error } = await db.from('posts').insert({
       type: S.postType, content, author_id: S.me.id, author_name: S.me.name,
       image_path: caminho, image_w: img?.w ?? null, image_h: img?.h ?? null, image_bytes: img?.blob.size ?? null,
+      media_type: img?.mediaType ?? 'image', media_duration: img?.duration ?? null,
     }).select().single();
     if (error) { if (caminho) db.storage.from('mural').remove([caminho]); throw error; }
     if (!S.posts.find((x) => x.id === data.id)) S.posts.unshift(data);
@@ -485,8 +507,16 @@ async function deletarPost(id) {
   toast('Publicação excluída.');
 }
 
-function abrirImagem(url) { $('lightbox-img').src = url; $('lightbox').classList.add('open'); }
-function fecharImagem() { $('lightbox').classList.remove('open'); $('lightbox-img').src = ''; }
+function abrirImagem(url) { abrirMidia(url, 'image'); }
+function abrirMidia(url, tipo = 'image') {
+  const box = $('lightbox');
+  $('lightbox-img').style.display = tipo === 'image' ? 'block' : 'none';
+  $('lightbox-video').style.display = tipo === 'video' ? 'block' : 'none';
+  if (tipo === 'image') $('lightbox-img').src = url;
+  else { $('lightbox-video').src = url; $('lightbox-video').play().catch(() => {}); }
+  box.classList.add('open');
+}
+function fecharImagem() { $('lightbox').classList.remove('open'); $('lightbox-img').src = ''; $('lightbox-video').pause(); $('lightbox-video').src = ''; }
 
 // ══════════════════════════════════════════
 // ESCALA — exibição
@@ -1103,7 +1133,7 @@ function renderNotifAdm() {
       ${x.ultimo_erro && x.status !== 'enviada' ? `<div class="hint" style="color:var(--danger)">${esc(x.ultimo_erro)}</div>` : ''}
     </div>`;
   }).join('') || '<div class="hint">Nenhuma notificação registrada ainda.</div>';
-  const uso = S.uso ? `${S.uso.arquivos} foto(s) · ${formatarBytes(Number(S.uso.bytes))} usados no mural` : '';
+  const uso = S.uso ? `${S.uso.arquivos} mídia(s) · ${formatarBytes(Number(S.uso.bytes))} usados no mural` : '';
   el.innerHTML = `
     <div class="form-card"><h3>Aparelhos que recebem avisos</h3>
       <div class="hint" style="margin:-8px 0 8px">Quem está “sem aparelho” não recebe nada — peça para abrir o app instalado e tocar em “Ativar notificações”.</div>
