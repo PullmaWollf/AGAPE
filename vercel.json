@@ -29,7 +29,6 @@
     }
   ],
   "crons": [
-    { "path": "/api/cron-alarms", "schedule": "* * * * *" },
     { "path": "/api/cron-limpeza-mural", "schedule": "0 3 1 * *" }
   ],
   "rewrites": [
