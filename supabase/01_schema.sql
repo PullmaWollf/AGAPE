@@ -542,7 +542,7 @@ begin
     end if;
   end if;
   new.content := coalesce(new.content, '');
-if new.image_path is not null and new.media_type = 'video' and coalesce(new.image_bytes, 0) > 15728640 then
+if new.image_path is not null and new.media_type = 'video' and coalesce(new.image_bytes, 0) > 104857600 then
   raise exception 'vídeo acima do limite de 15 MB';
   end if;
   if new.image_path is not null and new.media_type <> 'video' and coalesce(new.image_bytes, 0) > 307200 then
@@ -784,9 +784,9 @@ grant execute on function public.aplicar_modelo(uuid, date[], int, boolean) to a
 -- 12. Storage: bucket "mural" (público para leitura, imagens e vídeos curtos)
 -- ---------------------------------------------------------------------
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('mural', 'mural', true, 15728640, array['image/webp', 'image/jpeg', 'image/png', 'video/mp4', 'video/webm', 'video/quicktime'])
+values ('mural', 'mural', true, 104857600, array['image/webp', 'image/jpeg', 'image/png', 'video/mp4', 'video/webm', 'video/quicktime'])
 on conflict (id) do update
-   set public = true, file_size_limit = 15728640,
+   set public = true, file_size_limit = 104857600,
        allowed_mime_types = array['image/webp', 'image/jpeg', 'image/png', 'video/mp4', 'video/webm', 'video/quicktime'];
 
 drop policy if exists mural_leitura on storage.objects;

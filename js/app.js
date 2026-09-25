@@ -16,7 +16,7 @@ const S = {
   me: null, session: null,
   posts: [], semanas: [], funcoes: [],
   users: [], modelos: [], config: {}, dispositivos: [], notifs: [], uso: null,
-  postType: 'versiculo', imgPendente: null, publicando: false,
+  postType: 'versiculo', imgPendente: null, publicando: false, palavra: null,
   deferredInstall: null, pushOk: false,
 };
 
@@ -198,14 +198,17 @@ function montarSemanas(semanas, atribs) {
 }
 
 async function carregarPublico() {
-  const [p, s, a, f] = await Promise.all([
+  const [p, s, a, f, palavra] = await Promise.all([
     db.from('posts').select('*').order('created_at', { ascending: false }).limit(100),
     db.from('escala_semanas').select('*').order('date', { ascending: true }),
     db.from('escala_atribuicoes').select('id,escala_id,user_id,user_name,funcao_id,funcao_nome'),
     db.from('escala_funcoes').select('id,nome').order('nome'),
+    db.from('palavra_celula').select('titulo,arquivo_path,nome_arquivo,paginas,atualizado_em').maybeSingle(),
   ]);
   for (const r of [p, s, a, f]) if (r.error) throw r.error;
   S.posts = p.data; S.funcoes = f.data;
+  S.palavra = palavra.error ? null : palavra.data;
+  renderPalavra();
   montarSemanas(s.data, a.data);
 }
 
@@ -316,6 +319,29 @@ function admTab(id, btn) {
   if (id === 'notif') carregarNotifAdm();
   if (id === 'modelos') renderModelos();
   if (id === 'usuarios') atualizarDispositivos();
+  if (id === 'palavra') renderPalavra();
+}
+
+function renderPalavra() {
+  const el = $('palavra-celula-view'); if (!el) return;
+  if (!S.palavra) { el.innerHTML = '<div class="empty">A Palavra da Célula ainda não foi publicada.</div>'; return; }
+  const url = db.storage.from('palavra-celula').getPublicUrl(S.palavra.arquivo_path).data.publicUrl;
+  el.innerHTML = `<h3>${esc(S.palavra.titulo)}</h3><p>${esc(S.palavra.nome_arquivo)} · ${S.palavra.paginas} páginas</p><iframe title="${esc(S.palavra.titulo)}" src="${esc(url)}#page=1&view=FitH"></iframe><a class="btn btn-ghost btn-full" href="${esc(url)}" target="_blank" rel="noopener">Abrir PDF</a>`;
+}
+async function publicarPalavra(input) {
+  if (!isAdm()) return toast('Somente administradores podem alterar a Palavra da Célula.', 'warn');
+  const file = input.files?.[0]; input.value = '';
+  if (!file) return;
+  if (file.type !== 'application/pdf' || file.size > 15 * 1024 * 1024) return toast('Envie um PDF de até 15 MB.', 'warn');
+  const paginas = Number(prompt('Quantas páginas o PDF possui? (2 a 4)', '2'));
+  if (!Number.isInteger(paginas) || paginas < 2 || paginas > 4) return toast('A Palavra precisa ter de 2 a 4 páginas.', 'warn');
+  const path = `${S.session.user.id}/palavra-semana.pdf`;
+  const up = await db.storage.from('palavra-celula').upload(path, file, { contentType: 'application/pdf', upsert: true });
+  if (up.error) return toast(msgErro(up.error, 'Não foi possível enviar o PDF.'), 'err');
+  const row = { id: true, titulo: 'Palavra da Célula', arquivo_path: path, nome_arquivo: file.name, paginas, atualizado_por: S.me.id, atualizado_em: new Date().toISOString() };
+  const saved = await db.from('palavra_celula').upsert(row).select().single();
+  if (saved.error) return toast(msgErro(saved.error, 'Não foi possível salvar a Palavra.'), 'err');
+  S.palavra = saved.data; renderPalavra(); toast('Palavra da Célula atualizada.');
 }
 
 // ══════════════════════════════════════════
@@ -421,7 +447,7 @@ async function comprimirImagem(file) {
 
 async function lerVideo(file) {
   if (!file.type.startsWith('video/')) throw new Error('Escolha uma imagem ou vídeo.');
-  if (file.size > 15 * 1024 * 1024) throw new Error('Vídeo muito grande (máximo 15 MB).');
+  if (file.size > 100 * 1024 * 1024) throw new Error('Vídeo muito grande (máximo 100 MB).');
   const url = URL.createObjectURL(file);
   try {
     const duration = await new Promise((resolve, reject) => {
@@ -482,7 +508,7 @@ async function addPost() {
       const up = await db.storage.from('mural').upload(caminho, img.blob, { contentType: img.mime, cacheControl: '31536000', upsert: false });
       if (up.error) {
         if (/mime type.*not supported|not supported/i.test(up.error.message || '') && img.mediaType === 'video') {
-          throw new Error('O Storage ainda não foi atualizado para vídeos. Execute no Supabase o bloco Storage do supabase/01_schema.sql e tente novamente.');
+          throw new Error('O Storage ainda não foi atualizado para vídeos. Execute a migração supabase/05_mural_palavra_limpeza.sql no Supabase e tente novamente.');
         }
         throw up.error;
       }
