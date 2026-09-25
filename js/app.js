@@ -585,7 +585,7 @@ function abrirMidia(url, tipo = 'image') {
 }
 function fecharImagem() { $('lightbox').classList.remove('open'); $('lightbox-img').src = ''; $('lightbox-video').pause(); $('lightbox-video').src = ''; }
 
-// ══════════════════════════════════════════
+// ═════════════════════════════════════��════
 // ESCALA — exibição
 // ═══════════════════════════════════════���══
 function chipsAtrib(atribs) {
@@ -623,7 +623,13 @@ function cardSemana(s, ctx, admin) {
       </div>
       ${badge}
     </div>
-    <div class="esc-members">${chipsAtrib(s.atribuicoes)}</div>
+    <div class="esc-funcoes-lista">
+      ${Object.entries(s.atribuicoes.reduce((grupos, a) => {
+        const chave = a.funcao_id || a.funcao_nome || 'sem-funcao';
+        (grupos[chave] ||= { nome: a.funcao_nome || 'Atribuição', pessoas: [] }).pessoas.push(a.user_name);
+        return grupos;
+      }, {})).map(([, grupo]) => `<div class="esc-funcao-row"><span class="esc-funcao-nome">${esc(grupo.nome)}</span><span class="esc-funcao-pessoas">${esc([...new Set(grupo.pessoas)].join(', '))}</span></div>`).join('')}
+    </div>
     ${admin ? `<div class="esc-footer">
       <div class="alarm-indicator${alarme ? ' set' : ''}"><div class="alarm-dot"></div><span>${alarme ? '🔔 ' + esc(alarme) : 'Sem lembretes'}</span></div>
       <div class="esc-actions">
@@ -683,13 +689,21 @@ function renderEscala() {
 
 function renderHome() {
   const el = $('prox-home');
-  const p = proximaSemana(S.semanas, hoje());
+  if (!el) return;
+  const h = hoje();
+  const minhas = S.me
+    ? S.semanas.filter((s) => s.date >= h && s.atribuicoes.some((a) => a.user_id === S.me.id)).sort((a, b) => a.date.localeCompare(b.date))
+    : [];
+  const p = minhas[0] || proximaSemana(S.semanas, h);
   if (!p) { el.innerHTML = ''; return; }
-  const nomes = [...new Set(p.atribuicoes.map((a) => primeiroNome(a.user_name)))].join(' & ') || '—';
-  el.innerHTML = `<div class="prox-banner" onclick="goPage('escala')" style="cursor:pointer">
-    <div class="pb-icon">🧁</div>
-    <div><div class="pb-label">Próximo lanche</div><div class="pb-name">${esc(nomes)}</div>
-    <div class="pb-date">${esc(dataLonga(p.date))}</div></div></div>`;
+  const titulo = S.me && minhas.length ? 'Minhas funções nesta semana' : 'Próxima escala da célula';
+  const semanas = (S.me && minhas.length ? minhas : [p]).slice(0, 4).map((s) => {
+    const minhasAtribuicoes = S.me ? s.atribuicoes.filter((a) => a.user_id === S.me.id) : s.atribuicoes;
+    const linhas = minhasAtribuicoes.map((a) => `<li><strong>${esc(a.funcao_nome || 'Atribuição')}</strong><span>${esc(a.user_name || '—')}</span></li>`).join('');
+    return `<div class="home-escala-dia"><div class="pb-date">${esc(dataLonga(s.date))}</div><ul>${linhas || '<li><span>Escala da célula disponível</span></li>'}</ul></div>`;
+  }).join('');
+  el.innerHTML = `<div class="home-escala-card" onclick="goPage('escala')" style="cursor:pointer">
+    <div class="pb-label">${titulo}</div>${semanas}</div>`;
 }
 
 // ══════════════════════════════════════════
@@ -833,6 +847,7 @@ function renderModelos() {
 }
 
 async function salvarConfig() {
+  if (!isAdm() && !temPermissao('modelos')) return toast('Você não tem permissão para alterar o padrão da célula.', 'warn');
   const linhas = [
     { chave: 'celula_dia_semana', valor: $('cfg-dia').value },
     { chave: 'celula_hora', valor: $('cfg-hora').value || '19:30' },
@@ -870,7 +885,7 @@ function escolherSemanasModelo(n) {
 }
 
 function abrirModelo(id, semanasPadrao) {
-  if (!isAdm()) return;
+  if (!isAdm() && !temPermissao('modelos')) return toast('Você não tem permissão para editar modelos.', 'warn');
   const m = id ? S.modelos.find((x) => x.id === id) : null;
   _modSemanas = m?.semanas || semanasPadrao || 4;
   $('mod-titulo').textContent = m ? 'Editar modelo' : 'Novo modelo de escala';
@@ -887,6 +902,7 @@ function abrirModelo(id, semanasPadrao) {
 }
 
 async function salvarModelo() {
+  if (!isAdm() && !temPermissao('modelos')) return toast('Você não tem permissão para salvar modelos.', 'warn');
   const nome = $('mod-nome').value.trim();
   if (!nome) return toast('Dê um nome ao modelo.', 'warn');
   const itens = lerModeloDoDom();
@@ -906,6 +922,7 @@ async function salvarModelo() {
 }
 
 async function deletarModelo(id) {
+  if (!isAdm() && !temPermissao('modelos')) return toast('Você não tem permissão para excluir modelos.', 'warn');
   if (!confirm('Excluir este modelo? As escalas já geradas continuam como estão.')) return;
   const { error } = await db.from('escala_modelos').delete().eq('id', id);
   if (error) return toast(msgErro(error), 'err');
@@ -917,7 +934,7 @@ async function deletarModelo(id) {
 const _mes = { datas: [], rot: 0 };
 
 function abrirGerarMes(modeloId) {
-  if (!isAdm()) return;
+  if (!isAdm() && !temPermissao('modelos')) return toast('Você não tem permissão para usar modelos.', 'warn');
   if (!S.modelos.length) { toast('Crie um modelo primeiro.', 'warn'); abrirModelo(null, 4); return; }
   const dia = Number(S.config.celula_dia_semana ?? 5);
   const h = hoje(); const [a, m] = h.split('-').map(Number);

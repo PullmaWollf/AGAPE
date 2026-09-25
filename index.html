@@ -539,7 +539,23 @@ body{
 }
 
 /* ── Novos componentes (mural com foto, escala por modelo, admin) ── */
-.hint{font-size:.75rem;color:var(--muted);line-height:1.4}
+  .hint{font-size:.85rem;color:var(--stone);line-height:1.5}
+  .esc-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+  .escala-card{padding:20px;border-radius:18px}
+  .esc-date{font-size:.95rem;color:var(--stone);font-weight:600}
+  .esc-week-label{font-size:1.12rem;color:var(--text);line-height:1.35}
+  .esc-funcoes-lista{display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+  .esc-funcao-row{display:grid;grid-template-columns:minmax(145px,.9fr) minmax(0,1.4fr);gap:14px;align-items:center;padding:12px 14px;background:var(--surface);border-bottom:1px solid var(--border);font-size:.95rem;line-height:1.35}
+  .esc-funcao-row:last-child{border-bottom:0}
+  .esc-funcao-nome{font-weight:700;color:var(--stone-d)}
+  .esc-funcao-pessoas{color:var(--text);font-weight:500}
+  .home-escala-card{background:var(--surface);border:1px solid var(--accent);border-radius:18px;padding:18px;box-shadow:var(--sh)}
+  .home-escala-dia{margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+  .home-escala-dia ul{list-style:none;display:flex;flex-direction:column;gap:7px;margin-top:8px}
+  .home-escala-dia li{display:flex;justify-content:space-between;gap:14px;font-size:.95rem;line-height:1.4}
+  .home-escala-dia li span{color:var(--stone)}
+  .home-escala-dia li strong{color:var(--text)}
+  .scale-switch{font-size:.95rem;padding:11px 18px}
   .esc-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
   .scale-switcher{display:flex;gap:6px;padding:5px;background:var(--stone-xl);border-radius:14px;margin:0 0 18px;width:max-content;max-width:100%}
   .scale-switch{border:0;background:transparent;color:var(--muted);padding:10px 18px;border-radius:10px;font-weight:700;cursor:pointer}
