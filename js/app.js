@@ -542,9 +542,7 @@ async function addPost() {
       image_path: caminho, image_w: img?.w ?? null, image_h: img?.h ?? null, image_bytes: img?.blob.size ?? null,
       media_type: img?.mediaType ?? 'image', media_duration: img?.duration ?? null,
     };
-    let result = img
-      ? await db.from('posts').insert(postPayload).select().single()
-      : await (async () => { const r = await fetch('/api/mural.js', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${S.session?.token || sessionStorage.getItem('agape-session')}` }, body: JSON.stringify({ type: S.postType, content }) }); const j = await r.json().catch(() => ({})); return r.ok ? { data: j.post, error: null } : { data: null, error: new Error(j.erro || `Erro ${r.status}`) }; })();
+    let result = await (async () => { const r = await fetch('/api/mural.js', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${S.session?.token || sessionStorage.getItem('agape-session')}` }, body: JSON.stringify({ type: S.postType, content }) }); const j = await r.json().catch(() => ({})); return r.ok ? { data: j.post, error: null } : { data: null, error: new Error(j.erro || `Erro ${r.status}`) }; })();
     // Permite publicar fotos em projetos que ainda não aplicaram a migração de vídeo.
     if (result.error && /media_duration|media_type|schema cache|column.*posts/i.test(result.error.message || '')) {
       const legacyPayload = { ...postPayload };
@@ -587,7 +585,7 @@ function fecharImagem() { $('lightbox').classList.remove('open'); $('lightbox-im
 
 // ══════════════════════════════════════════
 // ESCALA — exibição
-// ══════════════════════════════════════════
+// ═══════════════════════════════════════���══
 function chipsAtrib(atribs) {
   const mostrarFn = S.funcoes.length > 1;
   const porPessoa = new Map();
@@ -767,8 +765,8 @@ async function salvarSemana() {
 
 async function deletarSemana(id) {
   if (!confirm('Excluir esta semana da escala? Os lembretes pendentes serão cancelados.')) return;
-  const { error } = await db.from('escala_semanas').delete().eq('id', id);
-  if (error) return toast(msgErro(error, 'Não foi possível excluir.'), 'err');
+  try { await chamarApi('/api/escala.js', { acao: 'excluir', id }); }
+  catch (error) { return toast(msgErro(error, 'Não foi possível excluir.'), 'err'); }
   await recarregarEscala();
   toast('Semana excluída.');
 }
@@ -1213,7 +1211,7 @@ function renderNotifAdm() {
 
 // ══════════════════════════════════════════
 // INSTALAÇÃO DO PWA
-// ══════════════════════════════════════════
+// ═════════════════════════════════════════���
 window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); S.deferredInstall = e; renderBannerInstall(); });
 window.addEventListener('appinstalled', () => {
   S.deferredInstall = null; $('install-banner-home').innerHTML = ''; toast('App instalado! 🎉');
