@@ -16,6 +16,7 @@ const S = {
   me: null, session: null,
   posts: [], semanas: [], funcoes: [],
   users: [], modelos: [], config: {}, dispositivos: [], notifs: [], uso: null,
+  perfis: [], permissoes: [],
   postType: 'versiculo', imgPendente: null, publicando: false, palavra: null,
   deferredInstall: null, pushOk: false,
 };
@@ -231,7 +232,12 @@ async function carregarAdmin() {
   S.config = Object.fromEntries((c.data || []).map((x) => [x.chave, x.valor]));
   S.dispositivos = d.data || [];
   S.uso = uso.data || null;
-}
+  try {
+    const perfis = await chamarApi('/api/admin-perfis', { acao: 'listar' });
+    S.perfis = perfis.perfis || []; S.permissoes = perfis.permissoes || [];
+    S.users = (perfis.usuarios || S.users).map((user) => ({ ...user, perfil_id: user.perfil_id }));
+  } catch (e) { console.warn('[v0] perfis:', e); }
+  }
 
 // ══════════════════════════════════════════
 // INÍCIO
@@ -301,7 +307,7 @@ function goPage(id) {
   $('fab-escala').classList.toggle('show', id === 'escala' && isAdm());
   if (id === 'mural') renderPosts();
   if (id === 'escala') { renderEscala(); renderBannerNotif(); }
-  if (id === 'adm') { renderUsers(); renderAdmPosts(); renderAdmEscala(); renderModelos(); }
+  if (id === 'adm') { renderUsers(); renderAdmPosts(); renderAdmEscala(); renderModelos(); renderPerfis(); }
   if (id === 'home') { renderHome(); renderBannerInstall(); renderBannerNotif(); }
   window.scrollTo({ top: 0 });
 }
@@ -314,6 +320,7 @@ function admTab(id, btn) {
   if (id === 'notif') carregarNotifAdm();
   if (id === 'modelos') renderModelos();
   if (id === 'usuarios') atualizarDispositivos();
+  if (id === 'perfis') renderPerfis();
   if (id === 'palavra') renderPalavra();
 }
 
@@ -1213,5 +1220,11 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharImag
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && S.me) sincronizarPush({ silencioso: true });
 });
+
+window.S = S;
+window.chamarApi = chamarApi;
+window.carregarAdmin = carregarAdmin;
+window.toast = toast;
+window.msgErro = msgErro;
 
 iniciar();
