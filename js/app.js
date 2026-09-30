@@ -57,10 +57,12 @@ async function comBotao(btn, fn) {
 
 async function chamarApi(caminho, corpo) {
   const token = S.session?.token || localStorage.getItem('agape-session');
-  if (!token) throw new Error('Sessão expirada. Entre novamente.');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers.Authorization = `Bearer ${token}`;
   const r = await fetch(caminho, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    credentials: 'include',
+    headers,
     body: JSON.stringify(corpo || {}),
   });
   const j = await r.json().catch(() => ({}));
@@ -82,15 +84,20 @@ async function carregarPerfil(session) {
 async function restaurarSessao() {
   const token = localStorage.getItem('agape-session');
   const perfil = JSON.parse(localStorage.getItem('agape-user') || 'null');
-  if (!token || !perfil) return;
-  S.me = perfil; S.session = { token, user: { id: perfil.id } };
+  if (perfil) { S.me = perfil; S.session = { token: token || null, user: { id: perfil.id } }; }
   try {
-    const resposta = await fetch('/api/auth-session.js', { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const resposta = await fetch('/api/auth-session.js', { method: 'POST', credentials: 'include', headers });
     const atual = await resposta.json();
-    if (!resposta.ok || !atual.usuario) throw new Error(atual.erro || 'sessão expirada');
-    S.me = atual.usuario; localStorage.setItem('agape-user', JSON.stringify(S.me));
-  } catch (_) {
-    localStorage.removeItem('agape-session'); localStorage.removeItem('agape-user'); S.me = null; S.session = null;
+    if (!resposta.ok || !atual.usuario) throw new Error('sessão expirada');
+    if (atual.token) localStorage.setItem('agape-session', atual.token);
+    S.me = atual.usuario;
+    S.session = { token: atual.token || token || null, user: { id: atual.usuario.id } };
+    localStorage.setItem('agape-user', JSON.stringify(S.me));
+  } catch (erro) {
+    if (erro?.message === 'sessão expirada' || erro?.message === 'sessão inválida ou expirada') {
+      localStorage.removeItem('agape-session'); localStorage.removeItem('agape-user'); S.me = null; S.session = null;
+    }
   }
 }
 
@@ -103,7 +110,7 @@ async function doLogin() {
   $('login-err').style.display = 'none';
   if (!login.trim() || !senha) return erroLogin('Informe login e senha.');
   await comBotao($('li-btn'), async () => {
-    const r = await fetch('/api/auth-login.js', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login, senha }) });
+    const r = await fetch('/api/auth-login.js', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login, senha }) });
     const data = await r.json().catch(() => ({}));
     if (!r.ok) return erroLogin(r.status === 401 ? 'Login ou senha incorretos.' : 'Não foi possível entrar agora. Tente de novo.');
   // O AGAPE usa sua própria sessão assinada; o Supabase fica apenas como banco.
@@ -129,6 +136,7 @@ async function aposLogin() {
 
 async function doLogout() {
   await removerDispositivoAtual().catch(() => {});
+  await fetch('/api/auth-logout.js', { method: 'POST', credentials: 'include' }).catch(() => {});
   await db.auth.signOut().catch(() => {});
   localStorage.removeItem('agape-session');
   localStorage.removeItem('agape-user');

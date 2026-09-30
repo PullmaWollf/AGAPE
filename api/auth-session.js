@@ -1,6 +1,6 @@
 import { clienteAdmin } from './_lib/supabase.js';
 import { usuarioAutenticado, carregarPermissoes } from './_lib/auth.js';
-import { responder, HttpError } from './_lib/http.js';
+import { responder, HttpError, tokenDaRequisicao } from './_lib/http.js';
 
 export default async function handler(req, res) {
   try {
@@ -8,7 +8,7 @@ export default async function handler(req, res) {
     const db = clienteAdmin();
     const { perfil } = await usuarioAutenticado(db, req);
     const permissoes = await carregarPermissoes(db, perfil);
-    return responder(res, 200, { ok: true, usuario: { ...perfil, permissoes } });
+    return responder(res, 200, { ok: true, token: tokenDaRequisicao(req), usuario: { ...perfil, permissoes } });
   } catch (error) {
     return responder(res, error.status || 500, { ok: false, erro: error.message || 'sessão inválida' });
   }

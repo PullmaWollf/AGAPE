@@ -6,6 +6,8 @@ import { exigirAdmin } from './_lib/auth.js';
 import { normalizarLogin } from './_lib/login.js';
 import { hashPassword, verifyPassword, validarSenha } from './_lib/password.js';
 
+const PERFIS = ['adm', 'admin', 'administrador', 'membro'];
+
 function validarSenhaOuErro(s) {
   if (!validarSenha(s)) throw new HttpError(400, 'a senha precisa ter entre 6 e 128 caracteres');
 }
