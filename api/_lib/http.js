@@ -25,7 +25,14 @@ export function segredoValido(req, esperado) {
 
 export function tokenDaRequisicao(req) {
   const cab = String(req.headers?.authorization || '');
-  return cab.startsWith('Bearer ') ? cab.slice(7).trim() : '';
+  if (cab.startsWith('Bearer ')) return cab.slice(7).trim();
+  const cookies = String(req.headers?.cookie || '').split(';').map((item) => item.trim());
+  const valor = cookies.find((item) => item.startsWith('agape-session='))?.slice('agape-session='.length) || '';
+  try { return decodeURIComponent(valor); } catch (_) { return ''; }
+}
+
+export function cookieSessao(token, maxAge = 60 * 60 * 24 * 30) {
+  return `agape-session=${encodeURIComponent(token)}; Max-Age=${maxAge}; Path=/; HttpOnly; SameSite=Lax${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`;
 }
 
 // Executa o handler convertendo HttpError em resposta limpa e ocultando erros internos.

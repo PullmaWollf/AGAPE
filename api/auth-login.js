@@ -1,4 +1,4 @@
-import { envolver, responder, HttpError } from './_lib/http.js';
+import { envolver, responder, HttpError, cookieSessao } from './_lib/http.js';
 import { clienteAdmin } from './_lib/supabase.js';
 import { criarSessao, carregarPermissoes } from './_lib/auth.js';
 import { normalizarLogin } from './_lib/login.js';
@@ -20,9 +20,11 @@ export default envolver(async (req, res) => {
   }
 
   const permissoes = await carregarPermissoes(db, perfil);
+  const token = criarSessao(perfil);
+  res.setHeader('Set-Cookie', cookieSessao(token));
   return responder(res, 200, {
     ok: true,
-    token: criarSessao(perfil),
+    token,
     usuario: { id: perfil.id, name: perfil.name, login: perfil.login, role: perfil.role, perfil_id: perfil.perfil_id, permissoes, auth_id: perfil.auth_id, created_at: perfil.created_at },
   });
 });

@@ -2,7 +2,7 @@
   "name": "Célula Ágape",
   "short_name": "Ágape",
   "description": "App da Célula Ágape — Igreja Videira Aparecida de Goiânia",
-  "start_url": "/?source=pwa",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#f5ede4",
   "theme_color": "#4a4040",
