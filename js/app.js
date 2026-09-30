@@ -89,10 +89,13 @@ async function restaurarSessao() {
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     const resposta = await fetch('/api/auth-session.js', { method: 'POST', credentials: 'include', headers });
     const atual = await resposta.json();
-    if (!resposta.ok || !atual.usuario) throw new Error(atual.erro || 'sessão expirada');
-    S.me = atual.usuario; localStorage.setItem('agape-user', JSON.stringify(S.me));
+    if (!resposta.ok || !atual.usuario) throw new Error('sessão expirada');
+    if (atual.token) localStorage.setItem('agape-session', atual.token);
+    S.me = atual.usuario;
+    S.session = { token: atual.token || token || null, user: { id: atual.usuario.id } };
+    localStorage.setItem('agape-user', JSON.stringify(S.me));
   } catch (erro) {
-    if (erro?.message === 'sessão expirada') {
+    if (erro?.message === 'sessão expirada' || erro?.message === 'sessão inválida ou expirada') {
       localStorage.removeItem('agape-session'); localStorage.removeItem('agape-user'); S.me = null; S.session = null;
     }
   }
