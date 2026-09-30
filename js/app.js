@@ -56,7 +56,7 @@ async function comBotao(btn, fn) {
 }
 
 async function chamarApi(caminho, corpo) {
-  const token = S.session?.token || sessionStorage.getItem('agape-session');
+  const token = S.session?.token || localStorage.getItem('agape-session');
   if (!token) throw new Error('Sessão expirada. Entre novamente.');
   const r = await fetch(caminho, {
     method: 'POST',
@@ -80,17 +80,17 @@ async function carregarPerfil(session) {
 }
 
 async function restaurarSessao() {
-  const token = sessionStorage.getItem('agape-session');
-  const perfil = JSON.parse(sessionStorage.getItem('agape-user') || 'null');
+  const token = localStorage.getItem('agape-session');
+  const perfil = JSON.parse(localStorage.getItem('agape-user') || 'null');
   if (!token || !perfil) return;
   S.me = perfil; S.session = { token, user: { id: perfil.id } };
   try {
     const resposta = await fetch('/api/auth-session.js', { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
     const atual = await resposta.json();
     if (!resposta.ok || !atual.usuario) throw new Error(atual.erro || 'sessão expirada');
-    S.me = atual.usuario; sessionStorage.setItem('agape-user', JSON.stringify(S.me));
+    S.me = atual.usuario; localStorage.setItem('agape-user', JSON.stringify(S.me));
   } catch (_) {
-    sessionStorage.removeItem('agape-session'); sessionStorage.removeItem('agape-user'); S.me = null; S.session = null;
+    localStorage.removeItem('agape-session'); localStorage.removeItem('agape-user'); S.me = null; S.session = null;
   }
 }
 
@@ -111,8 +111,8 @@ async function doLogin() {
   if (!data.token || !data.usuario?.id) {
     return erroLogin('O servidor não retornou uma sessão válida. Tente entrar novamente.');
   }
-  sessionStorage.setItem('agape-session', data.token);
-    sessionStorage.setItem('agape-user', JSON.stringify(data.usuario));
+  localStorage.setItem('agape-session', data.token);
+    localStorage.setItem('agape-user', JSON.stringify(data.usuario));
     S.me = data.usuario; S.session = { token: data.token, user: { id: data.usuario.id } };
     $('li-user').value = ''; $('li-pass').value = '';
     closeSheet('login-sheet');
@@ -130,8 +130,9 @@ async function aposLogin() {
 async function doLogout() {
   await removerDispositivoAtual().catch(() => {});
   await db.auth.signOut().catch(() => {});
-  sessionStorage.removeItem('agape-session');
-  sessionStorage.removeItem('agape-user');
+  localStorage.removeItem('agape-session');
+  localStorage.removeItem('agape-user');
+  localStorage.removeItem('agape-page');
   S.me = null; S.session = null; S.users = []; S.modelos = []; S.dispositivos = []; S.notifs = []; S.pushOk = false;
   closeSheet('conta-sheet');
   goPage('home');
@@ -145,7 +146,7 @@ function atualizarAuth() {
     const adm = isAdm();
     nr.innerHTML = `
       <button class="user-chip" onclick="abrirConta()" aria-label="Minha conta">
-        <div class="u-avatar">${esc(inicial(S.me.name))}</div>
+        <div class="u-avatar">${S.me.avatar_url ? `<img src="${esc(S.me.avatar_url)}" alt="Foto de ${esc(S.me.name)}">` : esc(inicial(S.me.name))}</div>
         ${adm ? '<span class="adm-pip">ADM</span>' : ''}
       </button>
       <button class="btn btn-ghost" onclick="doLogout()">Sair</button>`;
@@ -179,6 +180,14 @@ function abrirConta() {
   ['conta-senha-atual', 'conta-senha-nova', 'conta-senha-conf'].forEach((i) => ($(i).value = ''));
   renderStatusNotif();
   openSheet('conta-sheet');
+}
+
+async function salvarAvatar(event) {
+  const file = event.target.files?.[0]; if (!file) return;
+  if (!/^image\/(jpeg|png|webp)$/.test(file.type) || file.size > 500 * 1024) return toast('Escolha uma imagem JPG, PNG ou WebP de até 500 KB.', 'warn');
+  const data = await new Promise((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(r.result); r.onerror = reject; r.readAsDataURL(file); });
+  try { const resposta = await chamarApi('/api/profile-avatar.js', { data }); S.me.avatar_url = resposta.avatar_url; localStorage.setItem('agape-user', JSON.stringify(S.me)); atualizarAuth(); toast('Foto do perfil atualizada.'); }
+  catch (e) { toast(msgErro(e, 'Não foi possível salvar a foto.'), 'err'); }
 }
 
 async function trocarSenha() {
@@ -274,8 +283,8 @@ async function iniciar() {
   renderTudo();
   ligarRealtime();
   sincronizarPush({ silencioso: true });
-  const pagina = new URL(location.href).searchParams.get('page');
-  if (pagina && $('page-' + pagina)) goPage(pagina);
+  const pagina = new URL(location.href).searchParams.get('page') || localStorage.getItem('agape-page') || 'home';
+  if ($('page-' + pagina)) goPage(pagina);
 }
 
 async function tentarNovamente() {
@@ -313,6 +322,7 @@ function renderEscalaTudo() { renderEscala(); renderAdmEscala(); renderHome(); }
 // NAVEGAÇÃO
 // ══════════════════════════════════════════
 function goPage(id) {
+  localStorage.setItem('agape-page', id);
   document.querySelectorAll('.page').forEach((p) => p.classList.remove('active'));
   $('page-' + id).classList.add('active');
   document.querySelectorAll('.tab-btn').forEach((b) => b.classList.toggle('active', b.dataset.page === id));
@@ -546,7 +556,7 @@ async function addPost() {
       image_path: caminho, image_w: img?.w ?? null, image_h: img?.h ?? null, image_bytes: img?.blob.size ?? null,
       media_type: img?.mediaType ?? 'image', media_duration: img?.duration ?? null,
     };
-    const response = await fetch('/api/mural.js', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${S.session?.token || sessionStorage.getItem('agape-session')}` }, body: JSON.stringify({ type: S.postType, content, image_path: caminho, image_w: img?.w ?? null, image_h: img?.h ?? null, image_bytes: img?.blob.size ?? null, media_type: img?.mediaType ?? null, media_duration: img?.duration ?? null }) });
+    const response = await fetch('/api/mural.js', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${S.session?.token || localStorage.getItem('agape-session')}` }, body: JSON.stringify({ type: S.postType, content, image_path: caminho, image_w: img?.w ?? null, image_h: img?.h ?? null, image_bytes: img?.blob.size ?? null, media_type: img?.mediaType ?? null, media_duration: img?.duration ?? null }) });
     const payload = await response.json().catch(() => ({}));
     const result = response.ok && payload.post ? { data: payload.post, error: null } : { data: null, error: new Error(payload.erro || `Erro ${response.status}`) };
     // Permite publicar fotos em projetos que ainda não aplicaram a migração de vídeo.
@@ -570,7 +580,7 @@ async function deletarPost(id) {
   const p = S.posts.find((x) => x.id === id);
   if (!p || !confirm('Excluir esta publicação?')) return;
   let error = null;
-  try { const r = await fetch('/api/mural.js', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${S.session?.token || sessionStorage.getItem('agape-session')}` }, body: JSON.stringify({ acao: 'excluir', id }) }); const j = await r.json().catch(() => ({})); if (!r.ok) error = new Error(j.erro || `Erro ${r.status}`); } catch (e) { error = e; }
+  try { const r = await fetch('/api/mural.js', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${S.session?.token || localStorage.getItem('agape-session')}` }, body: JSON.stringify({ acao: 'excluir', id }) }); const j = await r.json().catch(() => ({})); if (!r.ok) error = new Error(j.erro || `Erro ${r.status}`); } catch (e) { error = e; }
   if (error) return toast(msgErro(error, 'Não foi possível excluir.'), 'err');
   if (p.image_path) db.storage.from('mural').remove([p.image_path]).catch(() => {});
   S.posts = S.posts.filter((x) => x.id !== id);
@@ -589,7 +599,7 @@ function abrirMidia(url, tipo = 'image') {
 }
 function fecharImagem() { $('lightbox').classList.remove('open'); $('lightbox-img').src = ''; $('lightbox-video').pause(); $('lightbox-video').src = ''; }
 
-// ═════════════════════════════════════���════
+// ═════════════════════���═══════════════���════
 // ESCALA — exibição
 // ═══════════════════════════════════════���══
 function chipsAtrib(atribs) {
@@ -1207,7 +1217,7 @@ function renderStatusNotif() {
     </div>`;
 }
 
-// ══════════════════════════════════════════
+// ══════════════════════════════════��═══════
 // PAINEL DE NOTIFICAÇÕES (ADM)
 // ══════════════════════════════════════════
 const KIND = { semana: 'início da semana', '1d': '1 dia antes', '3h': '3 h antes', '30m': '30 min antes', main: 'lembrete principal', aviso: 'aviso do mural' };
@@ -1268,7 +1278,7 @@ window.addEventListener('appinstalled', () => {
 });
 function renderBannerInstall() {
   const el = $('install-banner-home');
-  if (!el || ehInstalado() || sessionStorage.getItem('agape-install-dismissed') === '1') return;
+  if (!el || ehInstalado() || localStorage.getItem('agape-install-dismissed') === '1') return;
   const manual = !S.deferredInstall;
   if (manual && !/android|iphone|ipad|ipod/i.test(navigator.userAgent)) return;
   el.innerHTML = `<div class="pwa-install-pop" role="dialog" aria-modal="false" aria-labelledby="pwa-install-title">
@@ -1285,7 +1295,7 @@ async function instalarPWA() {
   S.deferredInstall = null;
   if (choice?.outcome === 'accepted') $('install-banner-home').innerHTML = '';
 }
-function dispensarInstall() { sessionStorage.setItem('agape-install-dismissed', '1'); S.deferredInstall = null; $('install-banner-home').innerHTML = ''; }
+function dispensarInstall() { localStorage.setItem('agape-install-dismissed', '1'); S.deferredInstall = null; $('install-banner-home').innerHTML = ''; }
 function mostrarInstrucaoPWA() { toast('No Chrome, toque em ⋮ e depois em “Adicionar à tela inicial”. No iPhone, toque em Compartilhar e em “Adicionar à Tela de Início”.', 'ok'); }
 
 // ══════════════════════════════════════════

@@ -637,7 +637,7 @@ body{
   .lightbox video{display:none;background:#000}
 .lightbox-x{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.15);color:#fff;border:none;width:38px;height:38px;border-radius:50%;font-size:1.1rem;cursor:pointer}
 .user-chip{display:flex;align-items:center;gap:4px;background:none;border:none;cursor:pointer;padding:4px}
-.u-avatar{width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700}
+.u-avatar{width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;overflow:hidden}.u-avatar img{width:100%;height:100%;object-fit:cover}
 .adm-pip{background:var(--stone-d);color:#fff;font-size:.6rem;font-weight:800;padding:2px 6px;border-radius:999px}
 .role-tag{font-size:.68rem;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--stone-xl);color:var(--stone-d);white-space:nowrap}
 .role-tag.role-adm{background:var(--accent);color:#fff}
@@ -650,8 +650,35 @@ body{
   window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
 </script>
 <script defer src="/_vercel/insights/script.js"></script>
-</style>
-</head>
+  /* ── REFINOS VISUAIS E PERFORMANCE ── */
+  :focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 70%,white);outline-offset:3px}
+  button,a,input,select,textarea{font:inherit}
+  button:disabled{cursor:not-allowed;opacity:.58}
+  .top-nav{box-shadow:0 2px 18px rgba(74,64,64,.06);backdrop-filter:saturate(1.15) blur(12px)}
+  .nav-logo-text{font-size:1.28rem}
+  .u-avatar{overflow:hidden;border:2px solid var(--surface);box-shadow:0 0 0 1px var(--border)}
+  .u-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+  .btn,.btn-sm-icon,.tab-btn,.quick-card,.post-card,.escala-card,.form-card,.loc-card{touch-action:manipulation}
+  .btn:hover{filter:brightness(1.04);transform:translateY(-1px)}
+  .quick-card:hover,.post-card:hover,.escala-card:hover{box-shadow:0 8px 24px rgba(100,70,60,.12);transform:translateY(-2px)}
+  .quick-card,.post-card,.escala-card{transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+  .page.active{animation:fadeUp .18s ease both}
+  img{content-visibility:auto}
+  @media(min-width:640px){
+    .container{max-width:920px;padding:32px 28px 24px}
+    .hero{min-height:300px;border-radius:0 0 28px 28px}
+    .quick-grid{grid-template-columns:repeat(4,1fr);gap:16px;margin:22px 0}
+    .quick-card{min-height:138px;padding:22px 18px}
+    .posts-list,.escala-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+    .post-card,.escala-card{margin:0}
+    .form-card,.compose-card{padding:22px}
+    .loc-card{margin-bottom:22px}
+  }
+  @media(prefers-reduced-motion:reduce){
+    *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  }
+  </style>
+  </head>
 <body>
 
 </head>
@@ -904,6 +931,7 @@ body{
     <div class="sheet-handle"></div>
     <h2 id="conta-nome">Minha conta</h2>
     <div class="hint" id="conta-login" style="margin-top:-8px"></div>
+    <div class="form-card" style="margin-top:14px"><h3>Foto do perfil</h3><input id="conta-avatar" type="file" accept="image/jpeg,image/png,image/webp" onchange="salvarAvatar(event)"><div class="hint">Use uma imagem de até 500 KB.</div></div>
 
     <div class="form-card" style="margin-top:14px">
       <h3>Notificações</h3>
