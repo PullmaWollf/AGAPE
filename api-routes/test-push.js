@@ -1,9 +1,9 @@
 // "Enviar notificação de teste". O usuário testa os próprios aparelhos;
 // o ADM pode testar os de qualquer pessoa (passando userId).
-import { envolver, responder, HttpError } from '../_lib/http.js';
-import { clienteAdmin } from '../_lib/supabase.js';
-import { usuarioAutenticado } from '../_lib/auth.js';
-import { criarEnviador } from '../_lib/push.js';
+import { envolver, responder, HttpError } from '../api/_lib/http.js';
+import { clienteAdmin } from '../api/_lib/supabase.js';
+import { usuarioAutenticado } from '../api/_lib/auth.js';
+import { criarEnviador } from '../api/_lib/push.js';
 
 export function criarHandler({ env = process.env, criarCliente = clienteAdmin, fabricaEnviador = criarEnviador } = {}) {
   return envolver(async (req, res) => {

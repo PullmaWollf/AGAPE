@@ -1,8 +1,8 @@
-import { envolver, responder, HttpError } from '../_lib/http.js';
-import { clienteAdmin } from '../_lib/supabase.js';
-import { exigirPermissao, usuarioAutenticado } from '../_lib/auth.js';
-import { criarEnviador } from '../_lib/push.js';
-import { despachar } from '../_lib/dispatcher.js';
+import { envolver, responder, HttpError } from '../api/_lib/http.js';
+import { clienteAdmin } from '../api/_lib/supabase.js';
+import { exigirPermissao, usuarioAutenticado } from '../api/_lib/auth.js';
+import { criarEnviador } from '../api/_lib/push.js';
+import { despachar } from '../api/_lib/dispatcher.js';
 
 async function enviarFilaImediatamente(db) {
   try {
