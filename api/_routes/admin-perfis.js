@@ -1,6 +1,6 @@
-import { envolver, responder, HttpError } from './_lib/http.js';
-import { clienteAdmin } from './_lib/supabase.js';
-import { exigirPermissao } from './_lib/auth.js';
+import { envolver, responder, HttpError } from '../_lib/http.js';
+import { clienteAdmin } from '../_lib/supabase.js';
+import { exigirPermissao } from '../_lib/auth.js';
 
 const PERMISSOES = [
   ['gerencial', 'Abrir o menu Gerencial'], ['usuarios', 'Gerenciar usuários'], ['perfis', 'Gerenciar perfis'],

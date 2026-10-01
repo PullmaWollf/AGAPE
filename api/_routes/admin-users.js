@@ -1,10 +1,10 @@
 // Gestão de usuários (só ADM). Usa a chave de serviço porque criar/excluir contas
 // no Supabase Auth e trocar senhas não pode ser feito pelo navegador.
-import { envolver, responder, HttpError } from './_lib/http.js';
-import { clienteAdmin } from './_lib/supabase.js';
-import { exigirAdmin } from './_lib/auth.js';
-import { normalizarLogin } from './_lib/login.js';
-import { hashPassword, verifyPassword, validarSenha } from './_lib/password.js';
+import { envolver, responder, HttpError } from '../_lib/http.js';
+import { clienteAdmin } from '../_lib/supabase.js';
+import { exigirAdmin } from '../_lib/auth.js';
+import { normalizarLogin } from '../_lib/login.js';
+import { hashPassword, verifyPassword, validarSenha } from '../_lib/password.js';
 
 const PERFIS = ['adm', 'admin', 'administrador', 'membro'];
 

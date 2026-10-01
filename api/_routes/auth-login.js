@@ -1,8 +1,8 @@
-import { envolver, responder, HttpError, cookieSessao } from './_lib/http.js';
-import { clienteAdmin } from './_lib/supabase.js';
-import { criarSessao, carregarPermissoes } from './_lib/auth.js';
-import { normalizarLogin } from './_lib/login.js';
-import { verifyPassword } from './_lib/password.js';
+import { envolver, responder, HttpError, cookieSessao } from '../_lib/http.js';
+import { clienteAdmin } from '../_lib/supabase.js';
+import { criarSessao, carregarPermissoes } from '../_lib/auth.js';
+import { normalizarLogin } from '../_lib/login.js';
+import { verifyPassword } from '../_lib/password.js';
 
 export default envolver(async (req, res) => {
   if (req.method !== 'POST') throw new HttpError(405, 'método não permitido');

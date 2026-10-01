@@ -1,6 +1,6 @@
-import { clienteAdmin } from './_lib/supabase.js';
-import { usuarioAutenticado } from './_lib/auth.js';
-import { responder } from './_lib/http.js';
+import { clienteAdmin } from '../_lib/supabase.js';
+import { usuarioAutenticado } from '../_lib/auth.js';
+import { responder } from '../_lib/http.js';
 
 export default async function handler(req, res) {
   try {

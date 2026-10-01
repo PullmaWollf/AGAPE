@@ -1,10 +1,10 @@
 // Despachante de notificações. Chamado a cada minuto pelo pg_cron do Supabase
 // (03_agendador_pg_cron.sql) e, como reserva, pelo GitHub Actions.
 // Também aceita o cron nativo da Vercel (que envia Authorization: Bearer CRON_SECRET).
-import { envolver, responder, segredoValido, HttpError } from './_lib/http.js';
-import { clienteAdmin } from './_lib/supabase.js';
-import { criarEnviador } from './_lib/push.js';
-import { despachar } from './_lib/dispatcher.js';
+import { envolver, responder, segredoValido, HttpError } from '../_lib/http.js';
+import { clienteAdmin } from '../_lib/supabase.js';
+import { criarEnviador } from '../_lib/push.js';
+import { despachar } from '../_lib/dispatcher.js';
 
 export function criarHandler({ env = process.env, criarCliente = clienteAdmin, fabricaEnviador = criarEnviador, despacho = despachar } = {}) {
   return envolver(async (req, res) => {
