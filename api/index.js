@@ -31,8 +31,9 @@ const rotas = {
 };
 
 export default async function handler(req, res) {
-  const partes = String(req.url || '').split('?')[0].split('/').filter(Boolean);
-  const nome = partes[0] === 'api' ? partes[1] : partes[0];
+  const url = new URL(req.url || '/', 'http://localhost');
+  const partes = url.pathname.split('/').filter(Boolean);
+  const nome = url.searchParams.get('route') || (partes[0] === 'api' ? partes[1] : partes[0]);
   const rota = rotas[nome];
   if (!rota) return res.status(404).json({ ok: false, erro: 'rota não encontrada' });
   return rota(req, res);
