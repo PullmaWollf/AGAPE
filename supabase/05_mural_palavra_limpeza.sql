@@ -4,7 +4,7 @@
 alter table public.posts add column if not exists media_type text not null default 'image';
 alter table public.posts add column if not exists media_duration numeric;
 
-update storage.buckets set file_size_limit = 104857600,
+update storage.buckets set file_size_limit = 15728640,
   allowed_mime_types = array['image/webp','image/jpeg','image/png','video/mp4','video/webm','video/quicktime']
 where id = 'mural';
 
@@ -36,7 +36,7 @@ declare videos integer; limite integer;
 begin
   if new.media_type = 'video' then
     if coalesce(new.media_duration,0) > 60 then raise exception 'Vídeo deve ter no máximo 1 minuto'; end if;
-    if coalesce(new.image_bytes,0) > 104857600 then raise exception 'Vídeo acima de 100 MB'; end if;
+    if coalesce(new.image_bytes,0) > 15728640 then raise exception 'Vídeo acima de 100 MB'; end if;
     select count(*) into videos from public.posts where author_id = new.author_id and media_type = 'video' and id <> new.id;
     select case when exists(select 1 from public.users where id=new.author_id and role='adm') then 3 else 1 end into limite;
     if videos >= limite then raise exception 'Limite de vídeos deste usuário atingido'; end if;

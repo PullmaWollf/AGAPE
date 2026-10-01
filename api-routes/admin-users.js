@@ -3,7 +3,7 @@
 import { envolver, responder, HttpError } from '../api/_lib/http.js';
 import { clienteAdmin } from '../api/_lib/supabase.js';
 import { exigirAdmin } from '../api/_lib/auth.js';
-import { normalizarLogin } from '../api/_lib/login.js';
+import { normalizarLogin, loginParaEmail } from '../api/_lib/login.js';
 import { hashPassword, verifyPassword, validarSenha } from '../api/_lib/password.js';
 
 const PERFIS = ['adm', 'admin', 'administrador', 'membro'];
@@ -56,21 +56,27 @@ export function criarHandler({ env = process.env, criarCliente = clienteAdmin } 
       const nome = String(req.body.nome ?? '').trim();
       const login = normalizarLogin(req.body.login);
       const perfilId = String(req.body.perfilId || '').trim();
+      const perfilLegado = String(req.body.perfil || '').trim();
+      const roleSolicitada = perfilLegado === 'adm' || perfilLegado === 'admin' || perfilLegado === 'administrador' ? 'adm' : 'membro';
       if (nome.length < 2 || nome.length > 80) throw new HttpError(400, 'informe o nome (2 a 80 caracteres)');
       if (!/^[a-z0-9._-]{3,30}$/.test(login)) throw new HttpError(400, 'login: 3 a 30 letras minúsculas, números, ponto, hífen ou sublinhado');
-      if (!perfilId) throw new HttpError(400, 'selecione um perfil de acesso');
-      const { data: perfilAcesso, error: perfilError } = await db.from('perfis_permissao').select('id,nome,permissoes').eq('id', perfilId).maybeSingle();
-      if (perfilError) throw new Error(perfilError.message);
-      if (!perfilAcesso) throw new HttpError(400, 'perfil de acesso inválido');
+      if (perfilLegado && !PERFIS.includes(perfilLegado)) throw new HttpError(400, 'perfil inválido');
+      if (perfilId) {
+        const { data: perfilAcesso, error: perfilError } = await db.from('perfis_permissao').select('id,nome,permissoes').eq('id', perfilId).maybeSingle();
+        if (perfilError) throw new Error(perfilError.message);
+        if (!perfilAcesso) throw new HttpError(400, 'perfil de acesso inválido');
+      }
       validarSenhaOuErro(req.body.senha);
-
       const { data: existente } = await db.from('users').select('id').ilike('login', login).maybeSingle();
       if (existente) throw new HttpError(409, 'já existe um usuário com esse login');
-
+      const email = loginParaEmail(login, env.AUTH_EMAIL_DOMAIN);
+      const conta = await db.auth.admin.createUser({ email, password: req.body.senha, email_confirm: true });
+      if (conta.error) throw new HttpError(409, traduzirAuth(conta.error.message));
+      const authId = conta.data.user.id;
       const { data: novo, error: eIns } = await db.from('users')
-        .insert({ name: nome, login, role: 'membro', perfil_id: perfilId, pass_hash: await hashPassword(req.body.senha) })
+        .insert({ name: nome, login, role: roleSolicitada, perfil_id: perfilId || null, auth_id: authId, pass_hash: null })
         .select('id, name, login, role, perfil_id').single();
-      if (eIns) throw new Error(eIns.message);
+      if (eIns) { await db.auth.admin.deleteUser(authId); throw new Error(eIns.message); }
       return responder(res, 200, { ok: true, usuario: novo });
     }
 
@@ -80,13 +86,24 @@ export function criarHandler({ env = process.env, criarCliente = clienteAdmin } 
       if (alvo.role === 'adm' && (await contarAdmins(db)) <= 1) throw new HttpError(400, 'não é possível excluir o último administrador');
       const { error } = await db.from('users').delete().eq('id', alvo.id);
       if (error) throw new Error(error.message);
+      if (alvo.auth_id) await db.auth.admin.deleteUser(alvo.auth_id);
       return responder(res, 200, { ok: true });
     }
 
     if (acao === 'redefinir_senha') {
       validarSenhaOuErro(req.body.senha);
       const alvo = await buscarUsuario(db, req.body.id);
-      const { error } = await db.from('users').update({ pass_hash: await hashPassword(req.body.senha) }).eq('id', alvo.id);
+      let authId = alvo.auth_id;
+      if (!authId) {
+        const conta = await db.auth.admin.createUser({ email: loginParaEmail(alvo.login, env.AUTH_EMAIL_DOMAIN), password: req.body.senha, email_confirm: true });
+        if (conta.error) throw new HttpError(400, traduzirAuth(conta.error.message));
+        authId = conta.data.user.id;
+        const vinculo = await db.from('users').update({ auth_id: authId }).eq('id', alvo.id);
+        if (vinculo.error) throw new Error(vinculo.error.message);
+      }
+      const atualizacaoAuth = await db.auth.admin.updateUserById(authId, { password: req.body.senha });
+      if (atualizacaoAuth.error) throw new HttpError(400, atualizacaoAuth.error.message);
+      const { error } = await db.from('users').update({ pass_hash: null }).eq('id', alvo.id);
       if (error) throw new HttpError(400, error.message);
       return responder(res, 200, { ok: true });
     }
