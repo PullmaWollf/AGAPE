@@ -32,6 +32,7 @@
     { "path": "/api/cron-limpeza-mural", "schedule": "0 3 1 * *" }
   ],
   "rewrites": [
+    { "source": "/api/:route*", "destination": "/api/index?route=:route*" },
     { "source": "/((?!icons|sw.js|manifest.json|api).*)", "destination": "/index.html" }
   ]
 }
