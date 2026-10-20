@@ -39,6 +39,12 @@ export function cookieSessao(token, maxAge = 60 * 60 * 24 * 30) {
 export function envolver(handler) {
   return async (req, res) => {
     try {
+      if (!['GET', 'HEAD', 'OPTIONS'].includes(String(req.method || '').toUpperCase())) {
+        const origem = req.headers?.origin;
+        const host = req.headers?.['x-forwarded-host'] || req.headers?.host;
+        const proto = req.headers?.['x-forwarded-proto'] || 'https';
+        if (origem && host && origem !== `${proto}://${host}`) throw new HttpError(403, 'origem não permitida');
+      }
       return await handler(req, res);
     } catch (e) {
       if (e instanceof HttpError) return responder(res, e.status, { ok: false, erro: e.message });
