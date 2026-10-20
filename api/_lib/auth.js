@@ -2,6 +2,9 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { HttpError, tokenDaRequisicao } from './http.js';
 
+// Sessões persistentes: até um ano sem uso; renovação em cada reabertura do app.
+// Nunca armazenamos a senha em cookies, localStorage ou no PWA.
+export const SESSION_TTL_SECONDS = 365 * 24 * 60 * 60;
 const segredo = () => {
   const chave = process.env.AUTH_SESSION_SECRET || process.env.SUPABASE_SERVICE_KEY;
   if (!chave) throw new Error('Configure AUTH_SESSION_SECRET ou SUPABASE_SERVICE_KEY no servidor');
@@ -14,7 +17,7 @@ export function criarSessao(perfil) {
   const corpo = codificar({
     sub: perfil.id,
     v: Number(perfil.session_version || 0),
-    exp: Date.now() + 1000 * 60 * 60 * 24 * 14,
+    exp: Date.now() + SESSION_TTL_SECONDS * 1000,
   });
   return `${corpo}.${assinatura(corpo)}`;
 }
