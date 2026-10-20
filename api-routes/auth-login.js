@@ -1,6 +1,6 @@
 import { envolver, responder, HttpError, cookieSessao } from '../api/_lib/http.js';
 import { clienteAdmin } from '../api/_lib/supabase.js';
-import { criarSessao, carregarPermissoes } from '../api/_lib/auth.js';
+import { criarSessao, carregarPermissoes, SESSION_TTL_SECONDS } from '../api/_lib/auth.js';
 import { normalizarLogin } from '../api/_lib/login.js';
 import { verifyPassword } from '../api/_lib/password.js';
 
@@ -18,7 +18,7 @@ export default envolver(async (req, res) => {
     throw new HttpError(401, 'login ou senha inválidos');
   }
   const permissoes = await carregarPermissoes(db, perfil);
-  res.setHeader('Set-Cookie', cookieSessao(criarSessao(perfil), 60 * 60 * 24 * 14));
+  res.setHeader('Set-Cookie', cookieSessao(criarSessao(perfil), SESSION_TTL_SECONDS));
   const { pass_hash, session_version, ...usuario } = perfil;
   return responder(res, 200, { ok: true, usuario: { ...usuario, permissoes } });
 });
