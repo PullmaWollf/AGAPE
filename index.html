@@ -583,12 +583,6 @@ body{
   .notif-banner{display:flex;align-items:center;gap:10px;background:var(--stone-xl);border-radius:12px;padding:12px 14px;margin:10px 0}
 .nb-title{font-weight:700;font-size:.85rem}
 .nb-sub{font-size:.75rem;color:var(--muted)}
-.install-banner{display:flex;align-items:center;gap:10px;background:var(--stone-d);color:#fff;border-radius:14px;padding:12px 14px;margin:10px 0}
-.ib-icon{font-size:1.5rem}
-.ib-title{font-weight:700;font-size:.85rem}
-.ib-sub{font-size:.72rem;opacity:.85}
-.ib-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-weight:700;font-size:.8rem;cursor:pointer}
-.ib-close{background:none;border:none;color:#fff;opacity:.7;font-size:1rem;cursor:pointer;padding:4px}
 .login-err{display:none;background:#fbe4e2;color:#7a1e17;border-radius:10px;padding:10px 12px;font-size:.82rem;margin-bottom:10px}
 .img-preview{position:relative;margin-top:8px;display:none}
 .img-preview img,.img-preview video{width:100%;max-height:280px;object-fit:contain;border-radius:14px;display:block;background:#201b1c}
@@ -645,32 +639,10 @@ body{
     *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
   }
 
-/* PWA: toque confortável e instruções contextuais por dispositivo. */
-.pwa-install-pop {grid-template-columns:52px minmax(0,1fr);gap:8px 14px;padding:18px;border:1px solid rgba(255,255,255,.2)}
-.pwa-install-mark {width:52px;height:52px}
-.pwa-install-copy h3 {font-size:1rem;line-height:1.3}
-.pwa-install-copy p {font-size:.82rem;line-height:1.5}
-.pwa-install-action {min-height:44px;padding:10px 18px;font-size:.85rem;touch-action:manipulation}
-.pwa-install-close {width:36px;height:36px;right:8px;top:8px}
-.pwa-help-link {display:inline-flex;gap:8px;align-items:center;justify-content:space-between;border:1px solid var(--border);background:var(--surface);color:var(--stone-d);border-radius:12px;padding:11px 14px;margin:0 0 16px;font-size:.84rem;font-weight:700;cursor:pointer;min-height:44px;width:100%;text-align:left}
-.pwa-help-link:hover {border-color:var(--accent)}
-.pwa-help-link[hidden],.pwa-install-global[hidden] {display:none!important}
 .pwa-install-global{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:40px;border:1px solid var(--accent);color:var(--stone-d);background:var(--surface);border-radius:999px;padding:8px 12px;font-weight:800;font-size:.79rem;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px #00000012;flex-shrink:0}
 .pwa-install-global:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 @media(max-width:440px){.pwa-install-global{padding:8px;min-height:42px;font-size:.76rem}.pwa-install-global span{display:none}}
 .pwa-auth-hint {color:var(--muted);font-size:.79rem;line-height:1.5;margin:0 0 14px}
-.pwa-guide {max-width:540px;max-height:min(88dvh,760px);overflow:auto;padding:26px 22px;position:relative}
-.pwa-guide-close {position:absolute;right:14px;top:12px;border:0;background:var(--stone-xl);color:var(--stone-d);border-radius:50%;height:38px;width:38px;cursor:pointer}
-.pwa-guide-icon {font-size:2rem;margin-bottom:8px}
-.pwa-guide h2 {margin:0 42px 8px 0;line-height:1.2}
-.pwa-guide-intro {color:var(--muted);line-height:1.55;font-size:.92rem}
-.pwa-guide-steps {margin:20px 0;padding:0;list-style:none;counter-reset:instalar;display:grid;gap:12px}
-.pwa-guide-steps li {counter-increment:instalar;display:flex;align-items:flex-start;gap:12px;line-height:1.5;background:var(--bg);padding:12px;border-radius:12px;font-size:.9rem}
-.pwa-guide-steps li::before {content:counter(instalar);display:grid;place-items:center;flex:0 0 30px;height:30px;background:var(--accent);color:#fff;border-radius:50%;font-weight:700}
-.pwa-guide-note {font-size:.81rem;color:var(--muted);line-height:1.55}
-.pwa-guide-actions {display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:20px}
-.pwa-guide-actions .btn {min-height:44px}
-@media(max-width:480px){.pwa-install-pop{padding:14px 12px;grid-template-columns:44px minmax(0,1fr);gap:7px 9px}.pwa-install-mark{width:44px;height:44px}.pwa-install-copy{padding-right:22px}.pwa-install-action{grid-column:1/-1;justify-self:stretch}.pwa-guide{padding:24px 18px}.pwa-guide-actions>*{flex:1}}
   </style>
 <script defer src="/_vercel/insights/script.js"></script>
 <link rel="stylesheet" href="/css/agape-modern.css?v=20261020">
