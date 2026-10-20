@@ -34,7 +34,7 @@ export default async function handler(req, res) {
   const url = new URL(req.url || '/', 'http://localhost');
   const partes = url.pathname.split('/').filter(Boolean);
   const bruto = url.searchParams.get('route') || (partes[0] === 'api' ? partes[1] : partes[0]);
-  const nome = String(bruto || '').replace(/\\.js$/, '');
+  const nome = String(bruto || '').replace(/\.js$/, '');
   const rota = rotas[nome];
   if (!rota) return res.status(404).json({ ok: false, erro: 'rota não encontrada' });
   return rota(req, res);
