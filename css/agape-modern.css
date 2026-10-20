@@ -37,15 +37,36 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .install-howto-kicker{text-transform:uppercase;letter-spacing:.10em;color:#28718f;font-size:.70rem;font-weight:800;margin:0 0 4px}
 .install-howto-header h2{font-family:'DM Sans',system-ui,sans-serif;font-weight:800;letter-spacing:-.025em;line-height:1.23;color:#1d354c;font-size:clamp(1.23rem,3vw,1.65rem)}
 .install-howto-header p:last-child{font-size:.88rem;color:#5d7285;line-height:1.5;margin:8px 0 0}
-.install-howto-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-.install-howto-card{background:#fff;border:1px solid #dce7ef;border-radius:17px;padding:20px;box-shadow:0 3px 10px rgba(28,61,89,.04)}
+.install-howto-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;max-width:680px}
+.install-howto-card{min-width:0;background:#fff;border:1px solid #dce7ef;border-radius:17px;padding:20px;box-shadow:0 3px 10px rgba(28,61,89,.04)}
 .install-device-heading{display:flex;align-items:center;gap:11px;padding-bottom:14px;border-bottom:1px solid #ebf0f5;margin-bottom:15px}
 .install-device-mark{display:grid;place-items:center;width:44px;height:44px;flex:0 0 44px;border-radius:13px;background:#eaf4f9;font-size:1.4rem}
 .install-device-heading h3{font-family:'DM Sans',system-ui,sans-serif;font-weight:800;font-size:1.06rem;color:#23364a;margin:0}
 .install-device-heading p{font-size:.75rem;color:#60768b;margin:3px 0 0}
 .install-howto-list{list-style:none;counter-reset:instalacao;display:grid;gap:14px;margin:0;padding:0}
-.install-howto-list li{counter-increment:instalacao;display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;font-size:.86rem;line-height:1.55;color:#3f5368;overflow-wrap:anywhere}
-.install-howto-list li:before{content:counter(instalacao);display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#286f91;color:white;font-size:.81rem;font-weight:800}
+.install-howto-list li{
+  counter-increment:instalacao;
+  display:flex;
+  flex-direction:row;
+  align-items:flex-start;
+  gap:12px;
+  min-width:0;
+  font-size:.92rem;
+  line-height:1.55;
+  color:#3f5368;
+  word-break:normal;
+  overflow-wrap:normal;
+}
+.install-step-text{
+  flex:1 1 auto;
+  display:block;
+  min-width:0;
+  line-height:1.55;
+  overflow-wrap:break-word;
+  word-break:normal;
+  white-space:normal;
+}
+.install-howto-list li:before{content:counter(instalacao);display:grid;place-items:center;flex:0 0 30px;width:30px;height:30px;border-radius:50%;background:#286f91;color:white;font-size:.81rem;font-weight:800}
 .install-howto-list strong{color:#173e56;font-weight:800}
 .install-howto-tip{margin:18px 0 0;padding:14px 16px;border-radius:13px;background:#e2f0f6;color:#34576e;font-size:.82rem;line-height:1.55}
 .install-howto-tip strong{color:#174563}
@@ -59,3 +80,53 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   .nav-right .btn{height:40px;padding:0 10px;font-size:.78rem}
 }
 @media(max-width:680px){.install-howto{padding:17px 14px;margin:20px 0 28px;border-radius:19px}.install-howto-header{gap:12px}.install-howto-symbol{width:43px;height:43px;flex-basis:43px;font-size:1.4rem}.install-howto-grid{grid-template-columns:1fr;gap:12px}.install-howto-card{padding:17px}.install-howto-header h2{font-size:1.27rem}.install-howto-tip{padding:13px 12px}}
+
+/* Separação real entre site e PWA instalado: guia de download só no navegador. */
+@media (display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui) {
+  #como-instalar,
+  #pwa-install-global { display:none!important; }
+}
+html.agape-installed #como-instalar,
+html.agape-installed #pwa-install-global,
+#como-instalar[hidden],
+#pwa-install-global[hidden],
+.install-howto-card[hidden] { display:none!important; }
+
+/* Um dispositivo por vez: reduz o comprimento da página sem perder as orientações. */
+.install-howto-picker{
+  display:inline-flex;
+  max-width:100%;
+  gap:4px;
+  padding:4px;
+  margin:0 0 16px;
+  border:1px solid #dbe8ef;
+  border-radius:13px;
+  background:#e8f1f7;
+}
+.install-platform-btn{
+  min-height:42px;
+  border:0;
+  border-radius:10px;
+  padding:10px 19px;
+  background:transparent;
+  color:#42617a;
+  cursor:pointer;
+  font-size:.87rem;
+  font-weight:750;
+}
+.install-platform-btn.active,
+.install-platform-btn[aria-pressed="true"]{
+  background:#fff;
+  color:#155170;
+  box-shadow:0 2px 7px rgba(15,72,105,.13);
+}
+.install-platform-btn:focus-visible{outline:2px solid #147aa6;outline-offset:1px}
+.install-howto-list strong{overflow-wrap:break-word;word-break:normal}
+@media(max-width:480px){
+  .install-howto{padding:16px 12px;margin:18px 0 24px}
+  .install-howto-card{padding:16px 14px}
+  .install-howto-list{gap:12px}
+  .install-howto-list li{font-size:.87rem;gap:10px;line-height:1.5}
+  .install-platform-btn{padding:9px 13px}
+  .install-howto-tip{font-size:.78rem}
+}
