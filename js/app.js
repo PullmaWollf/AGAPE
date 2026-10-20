@@ -1325,14 +1325,24 @@ window.addEventListener('appinstalled', () => {
   toast('Ágape instalado! Abra pelo ícone do seu dispositivo. 🎉');
 });
 window.addEventListener('pageshow', () => renderBannerInstall());
+window.addEventListener('DOMContentLoaded', () => renderBannerInstall());
+function acionarInstalacaoPWA() {
+  // O menu global nunca depende do evento Chrome: se ele não existir, abre o guia.
+  if (ehInstalado()) return toast('Ágape já está instalado neste aparelho.');
+  if (S.deferredInstall) return instalarPWA();
+  return mostrarInstrucaoPWA();
+}
 
 function renderBannerInstall() {
   const el = $('install-banner-home');
   const ajuda = $('pwa-install-help');
+  const global = $('pwa-install-global');
   if (!el) return;
   const instalado = ehInstalado();
   if (ajuda) ajuda.hidden = instalado;
+  if (global) global.hidden = instalado;
   if (instalado) { el.innerHTML = ''; return; }
+  // Dispensa somente o banner; o botão global segue sempre disponível.
   if (Date.now() < Number(localStorage.getItem('agape-install-hide-until') || 0)) {
     el.innerHTML = '';
     return;

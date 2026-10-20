@@ -685,6 +685,10 @@ body{
 .pwa-install-close {width:36px;height:36px;right:8px;top:8px}
 .pwa-help-link {display:inline-flex;gap:8px;align-items:center;justify-content:space-between;border:1px solid var(--border);background:var(--surface);color:var(--stone-d);border-radius:12px;padding:11px 14px;margin:0 0 16px;font-size:.84rem;font-weight:700;cursor:pointer;min-height:44px;width:100%;text-align:left}
 .pwa-help-link:hover {border-color:var(--accent)}
+.pwa-help-link[hidden],.pwa-install-global[hidden] {display:none!important}
+.pwa-install-global{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:40px;border:1px solid var(--accent);color:var(--stone-d);background:var(--surface);border-radius:999px;padding:8px 12px;font-weight:800;font-size:.79rem;cursor:pointer;white-space:nowrap;box-shadow:0 2px 8px #00000012;flex-shrink:0}
+.pwa-install-global:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media(max-width:440px){.pwa-install-global{padding:8px;min-height:42px;font-size:.76rem}.pwa-install-global span{display:none}}
 .pwa-auth-hint {color:var(--muted);font-size:.79rem;line-height:1.5;margin:0 0 14px}
 .pwa-guide {max-width:540px;max-height:min(88dvh,760px);overflow:auto;padding:26px 22px;position:relative}
 .pwa-guide-close {position:absolute;right:14px;top:12px;border:0;background:var(--stone-xl);color:var(--stone-d);border-radius:50%;height:38px;width:38px;cursor:pointer}
@@ -716,6 +720,7 @@ body{
     <button onclick="goPage('local')">Localização</button>
     <button onclick="goPage('adm')" id="dl-adm" style="display:none">ADM</button>
   </div>
+  <button type="button" id="pwa-install-global" class="pwa-install-global" onclick="acionarInstalacaoPWA()" aria-label="Instalar aplicativo Ágape">📲 <span>Instalar app</span></button>
   <div class="nav-right" id="nav-right">
     <button class="btn btn-primary" onclick="openSheet('login-sheet')">Entrar</button>
   </div>
