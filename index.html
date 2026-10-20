@@ -10,6 +10,17 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Ágape">
 <link rel="manifest" href="/manifest.json">
+<script>
+  // Detecta o modo instalado antes da pintura: o guia nunca aparece no app.
+  (function () {
+    var instalado = (window.matchMedia && (
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.matchMedia('(display-mode: fullscreen)').matches ||
+      window.matchMedia('(display-mode: minimal-ui)').matches
+    )) || navigator.standalone === true;
+    if (instalado) document.documentElement.classList.add('agape-installed');
+  })();
+</script>
 <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192.png">
 <link rel="icon" href="/icons/icon-128.ico" type="image/ico" />
 <title>App Célula Ágape</title>
@@ -645,7 +656,7 @@ body{
 .pwa-auth-hint {color:var(--muted);font-size:.79rem;line-height:1.5;margin:0 0 14px}
   </style>
 <script defer src="/_vercel/insights/script.js"></script>
-<link rel="stylesheet" href="/css/agape-modern.css?v=20261020">
+<link rel="stylesheet" href="/css/agape-modern.css?v=20261020b">
 </head>
 <body>
 
@@ -709,32 +720,36 @@ body{
         <div>
           <p class="install-howto-kicker">Seu Ágape sempre por perto</p>
           <h2 id="install-howto-title">Como instalar o aplicativo</h2>
-          <p>Sem janelas automáticas. Instale diretamente pelo menu do navegador do seu celular.</p>
+          <p>Escolha seu celular e siga quatro passos rápidos. Nenhum pop-up automático.</p>
         </div>
       </div>
+      <div class="install-howto-picker" role="group" aria-label="Escolha seu dispositivo">
+        <button type="button" class="install-platform-btn active" data-install-platform="android" aria-pressed="true" onclick="selecionarGuiaInstalacao('android')">Android</button>
+        <button type="button" class="install-platform-btn" data-install-platform="ios" aria-pressed="false" onclick="selecionarGuiaInstalacao('ios')">iPhone / iPad</button>
+      </div>
       <div class="install-howto-grid">
-        <article class="install-howto-card">
+        <article class="install-howto-card" data-install-guide="android">
           <div class="install-device-heading">
             <span class="install-device-mark" aria-hidden="true">🤖</span>
             <div><h3>Android</h3><p>Google Chrome</p></div>
           </div>
           <ol class="install-howto-list">
-            <li>Abra <strong>celula-agape.vercel.app</strong> no <strong>Chrome</strong>.</li>
-            <li>Toque nos <strong>três pontinhos (⋮)</strong> do Chrome, no canto superior.</li>
-            <li>Selecione <strong>Instalar aplicativo</strong> ou <strong>Adicionar à tela inicial</strong>.</li>
-            <li>Confirme em <strong>Instalar</strong> e abra o ícone <strong>Ágape</strong> na tela inicial.</li>
+            <li><span class="install-step-text">Abra <strong>celula-agape.vercel.app</strong> no <strong>Chrome</strong>.</span></li>
+            <li><span class="install-step-text">Toque nos <strong>três pontinhos (⋮)</strong> do Chrome, no canto superior.</span></li>
+            <li><span class="install-step-text">Selecione <strong>Instalar aplicativo</strong> ou <strong>Adicionar à tela inicial</strong>.</span></li>
+            <li><span class="install-step-text">Confirme em <strong>Instalar</strong> e abra o ícone <strong>Ágape</strong> na tela inicial.</span></li>
           </ol>
         </article>
-        <article class="install-howto-card">
+        <article class="install-howto-card" data-install-guide="ios" hidden>
           <div class="install-device-heading">
             <span class="install-device-mark" aria-hidden="true">🍎</span>
             <div><h3>iPhone / iPad</h3><p>Safari</p></div>
           </div>
           <ol class="install-howto-list">
-            <li>Abra <strong>celula-agape.vercel.app</strong> no <strong>Safari</strong>.</li>
-            <li>Toque no botão <strong>Compartilhar</strong> (quadrado com uma seta para cima).</li>
-            <li>Role o menu e escolha <strong>Adicionar à Tela de Início</strong>.</li>
-            <li>Confirme em <strong>Adicionar</strong> e abra o ícone <strong>Ágape</strong> na tela inicial.</li>
+            <li><span class="install-step-text">Abra <strong>celula-agape.vercel.app</strong> no <strong>Safari</strong>.</span></li>
+            <li><span class="install-step-text">Toque no botão <strong>Compartilhar</strong> (quadrado com uma seta para cima).</span></li>
+            <li><span class="install-step-text">Role o menu e escolha <strong>Adicionar à Tela de Início</strong>.</span></li>
+            <li><span class="install-step-text">Confirme em <strong>Adicionar</strong> e abra o ícone <strong>Ágape</strong> na tela inicial.</span></li>
           </ol>
         </article>
       </div>

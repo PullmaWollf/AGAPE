@@ -1250,11 +1250,41 @@ function renderNotifAdm() {
 // Chrome/Android instala pelo menu de três pontos; iOS pelo Compartilhar.
 // O passo a passo permanece visível na página inicial.
 // ══════════════════════════════════════════
+function emModoAplicativo() {
+  return ehInstalado() || ['fullscreen', 'minimal-ui'].some((modo) =>
+    window.matchMedia && window.matchMedia(`(display-mode: ${modo})`).matches);
+}
+
+function atualizarModoAplicativo() {
+  const instalado = emModoAplicativo();
+  document.documentElement.classList.toggle('agape-installed', instalado);
+  const instrucoes = $('como-instalar');
+  const atalho = $('pwa-install-global');
+  if (instrucoes) instrucoes.hidden = instalado;
+  if (atalho) atalho.hidden = instalado;
+}
+
+function selecionarGuiaInstalacao(plataforma) {
+  const selecionado = plataforma === 'ios' ? 'ios' : 'android';
+  document.querySelectorAll('[data-install-guide]').forEach((elemento) => {
+    elemento.hidden = elemento.dataset.installGuide !== selecionado;
+  });
+  document.querySelectorAll('[data-install-platform]').forEach((botao) => {
+    const ativo = botao.dataset.installPlatform === selecionado;
+    botao.classList.toggle('active', ativo);
+    botao.setAttribute('aria-pressed', String(ativo));
+  });
+}
+
 function mostrarInstrucaoPWA() {
+  if (emModoAplicativo()) return;
   if (!$('page-home')?.classList.contains('active')) goPage('home');
   const alvo = $('como-instalar');
   if (!alvo) return;
-  alvo.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  requestAnimationFrame(() => alvo.scrollIntoView({
+    behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+    block: 'start'
+  }));
 }
 function acionarInstalacaoPWA() {
   mostrarInstrucaoPWA();
@@ -1278,4 +1308,14 @@ window.carregarAdmin = carregarAdmin;
 window.toast = toast;
 window.msgErro = msgErro;
 
+// A apresentação instalada é distinta da versão no navegador.
+atualizarModoAplicativo();
+selecionarGuiaInstalacao(ehIOS() ? 'ios' : 'android');
+window.addEventListener('pageshow', atualizarModoAplicativo);
+if (window.matchMedia) {
+  ['standalone', 'fullscreen', 'minimal-ui'].forEach((modo) => {
+    const query = window.matchMedia(`(display-mode: ${modo})`);
+    query.addEventListener?.('change', atualizarModoAplicativo);
+  });
+}
 iniciar();
