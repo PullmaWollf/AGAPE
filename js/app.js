@@ -1333,11 +1333,35 @@ function acionarInstalacaoPWA() {
   return mostrarInstrucaoPWA();
 }
 
+async function diagnosticarInstalacaoPWA() {
+  const el = $('pwa-install-status');
+  if (!el) return;
+  if (ehInstalado()) { el.textContent = 'Ágape já está instalado neste dispositivo.'; return; }
+  if (!window.isSecureContext) { el.textContent = 'Instalação bloqueada: abra o Ágape pelo endereço HTTPS oficial.'; return; }
+  if (!('serviceWorker' in navigator)) { el.textContent = 'Seu navegador não oferece suporte à instalação completa. Veja as instruções abaixo.'; return; }
+  try {
+    const reg = await navigator.serviceWorker.getRegistration('/');
+    if (!reg || !reg.active) {
+      el.textContent = 'Preparando o aplicativo para instalação…';
+      navigator.serviceWorker.ready.then(() => {
+        if (el.isConnected) el.textContent = 'Ágape preparado. Toque em Instalar app ou veja as instruções do navegador.';
+      }).catch(() => {});
+      return;
+    }
+    el.textContent = S.deferredInstall
+      ? 'Pronto para instalar! Toque no botão Instalar app.'
+      : 'Aplicativo preparado. Use Instalar app ou o menu do navegador para adicionar à tela inicial.';
+  } catch (erro) {
+    el.textContent = 'Não foi possível conferir a instalação. Veja as instruções do seu navegador.';
+    console.warn('[pwa] diagnostico', erro);
+  }
+}
 function renderBannerInstall() {
   const el = $('install-banner-home');
   const ajuda = $('pwa-install-help');
   const global = $('pwa-install-global');
   if (!el) return;
+  diagnosticarInstalacaoPWA().catch(() => {});
   const instalado = ehInstalado();
   if (ajuda) ajuda.hidden = instalado;
   if (global) global.hidden = instalado;
