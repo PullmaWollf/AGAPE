@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Ágape">
 <link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192.png">
 <link rel="icon" href="/icons/icon-128.ico" type="image/ico" />
 <title>App Célula Ágape</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -646,10 +647,7 @@ body{
 .notif-linha{padding:10px 0;border-bottom:1px solid var(--stone-xl)}
 .notif-linha:last-child{border-bottom:none}
 @media(min-width:640px){.esc-toolbar{justify-content:flex-start}}
-<script>
-  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
-</script>
-<script defer src="/_vercel/insights/script.js"></script>
+
   /* ── REFINOS VISUAIS E PERFORMANCE ── */
   :focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 70%,white);outline-offset:3px}
   button,a,input,select,textarea{font:inherit}
@@ -677,13 +675,31 @@ body{
   @media(prefers-reduced-motion:reduce){
     *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
   }
+
+/* PWA: toque confortável e instruções contextuais por dispositivo. */
+.pwa-install-pop {grid-template-columns:52px minmax(0,1fr);gap:8px 14px;padding:18px;border:1px solid rgba(255,255,255,.2)}
+.pwa-install-mark {width:52px;height:52px}
+.pwa-install-copy h3 {font-size:1rem;line-height:1.3}
+.pwa-install-copy p {font-size:.82rem;line-height:1.5}
+.pwa-install-action {min-height:44px;padding:10px 18px;font-size:.85rem;touch-action:manipulation}
+.pwa-install-close {width:36px;height:36px;right:8px;top:8px}
+.pwa-help-link {display:inline-flex;gap:8px;align-items:center;justify-content:space-between;border:1px solid var(--border);background:var(--surface);color:var(--stone-d);border-radius:12px;padding:11px 14px;margin:0 0 16px;font-size:.84rem;font-weight:700;cursor:pointer;min-height:44px;width:100%;text-align:left}
+.pwa-help-link:hover {border-color:var(--accent)}
+.pwa-auth-hint {color:var(--muted);font-size:.79rem;line-height:1.5;margin:0 0 14px}
+.pwa-guide {max-width:540px;max-height:min(88dvh,760px);overflow:auto;padding:26px 22px;position:relative}
+.pwa-guide-close {position:absolute;right:14px;top:12px;border:0;background:var(--stone-xl);color:var(--stone-d);border-radius:50%;height:38px;width:38px;cursor:pointer}
+.pwa-guide-icon {font-size:2rem;margin-bottom:8px}
+.pwa-guide h2 {margin:0 42px 8px 0;line-height:1.2}
+.pwa-guide-intro {color:var(--muted);line-height:1.55;font-size:.92rem}
+.pwa-guide-steps {margin:20px 0;padding:0;list-style:none;counter-reset:instalar;display:grid;gap:12px}
+.pwa-guide-steps li {counter-increment:instalar;display:flex;align-items:flex-start;gap:12px;line-height:1.5;background:var(--bg);padding:12px;border-radius:12px;font-size:.9rem}
+.pwa-guide-steps li::before {content:counter(instalar);display:grid;place-items:center;flex:0 0 30px;height:30px;background:var(--accent);color:#fff;border-radius:50%;font-weight:700}
+.pwa-guide-note {font-size:.81rem;color:var(--muted);line-height:1.55}
+.pwa-guide-actions {display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;margin-top:20px}
+.pwa-guide-actions .btn {min-height:44px}
+@media(max-width:480px){.pwa-install-pop{padding:14px 12px;grid-template-columns:44px minmax(0,1fr);gap:7px 9px}.pwa-install-mark{width:44px;height:44px}.pwa-install-copy{padding-right:22px}.pwa-install-action{grid-column:1/-1;justify-self:stretch}.pwa-guide{padding:24px 18px}.pwa-guide-actions>*{flex:1}}
   </style>
-  </head>
-<body>
-
-</head>
-<body>
-
+<script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 
@@ -732,7 +748,8 @@ body{
     </div>
   </div>
   <div class="container">
-    <div id="install-banner-home"></div>
+    <div id="install-banner-home" aria-live="polite"></div>
+    <button type="button" class="pwa-help-link" id="pwa-install-help" onclick="mostrarInstrucaoPWA()">📲 Como instalar o Ágape no celular ou computador <span aria-hidden="true">→</span></button>
     <div id="prox-home"></div>
     <div class="quick-grid">
       <div class="quick-card" onclick="goPage('mural')"><div class="qc-icon">📖</div><div class="qc-title">Mural</div><div class="qc-sub">Versículos e mensagens</div></div>
@@ -912,16 +929,33 @@ body{
   <div class="sheet">
     <div class="sheet-handle"></div>
     <h2>Entrar na Célula</h2>
-    <div class="login-err" id="login-err" style="display:none">Login ou senha incorretos.</div>
-    <div class="fld"><label>Login</label>
-      <input id="li-user" type="text" placeholder="seu.login" autocomplete="username" inputmode="text"
-        onkeydown="if(event.key==='Enter')document.getElementById('li-pass').focus()">
+    <form id="agape-login-form" method="post" action="/api/auth-login" onsubmit="event.preventDefault();doLogin()">
+      <div class="login-err" id="login-err" role="alert" style="display:none">Login ou senha incorretos.</div>
+      <div class="fld"><label for="li-user">Login</label>
+        <input id="li-user" name="username" type="text" placeholder="seu.login" autocomplete="username" inputmode="text" autocapitalize="none" spellcheck="false" required>
+      </div>
+      <div class="fld"><label for="li-pass">Senha</label>
+        <input id="li-pass" name="password" type="password" placeholder="••••••" autocomplete="current-password" required>
+      </div>
+      <p class="pwa-auth-hint">Você continua conectado ao fechar o app. A senha pode ser salva pelo gerenciador do seu dispositivo.</p>
+      <button type="submit" class="btn btn-primary btn-full" id="li-btn">Entrar</button>
+    </form>
+  </div>
+</div>
+
+<!-- Ajuda de instalação específica para cada navegador e dispositivo -->
+<div class="sheet-overlay" id="install-guide-sheet" role="dialog" aria-modal="true" aria-labelledby="pwa-guide-title" onclick="sheetBg(event,'install-guide-sheet')">
+  <div class="sheet pwa-guide">
+    <button class="pwa-guide-close" type="button" onclick="closeSheet('install-guide-sheet')" aria-label="Fechar instruções">✕</button>
+    <div class="pwa-guide-icon" aria-hidden="true">📲</div>
+    <h2 id="pwa-guide-title">Instalar o Ágape</h2>
+    <p id="pwa-guide-intro" class="pwa-guide-intro">Abra o aplicativo no navegador do seu dispositivo.</p>
+    <ol id="pwa-guide-steps" class="pwa-guide-steps"></ol>
+    <p id="pwa-guide-note" class="pwa-guide-note"></p>
+    <div class="pwa-guide-actions">
+      <button type="button" class="btn btn-ghost" onclick="copiarLinkPWA()">Copiar endereço</button>
+      <button type="button" class="btn btn-primary" onclick="closeSheet('install-guide-sheet')">Entendi</button>
     </div>
-    <div class="fld"><label>Senha</label>
-      <input id="li-pass" type="password" placeholder="••••••" autocomplete="current-password"
-        onkeydown="if(event.key==='Enter')doLogin()">
-    </div>
-    <button class="btn btn-primary btn-full" id="li-btn" onclick="doLogin()">Entrar</button>
   </div>
 </div>
 

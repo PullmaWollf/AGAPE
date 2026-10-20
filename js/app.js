@@ -1246,33 +1246,149 @@ function renderNotifAdm() {
 }
 
 // ══════════════════════════════════════════
-// INSTALAÇÃO DO PWA
-// ════��════════════════════════════════════���
-window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); S.deferredInstall = e; renderBannerInstall(); });
-window.addEventListener('appinstalled', () => {
-  S.deferredInstall = null; $('install-banner-home').innerHTML = ''; toast('App instalado! 🎉');
+// INSTALAÇÃO DO PWA — prompt nativo e orientações por plataforma.
+// ══════════════════════════════════════════
+const LINK_CANONICO_AGAPE = 'https://celula-agape.vercel.app/';
+const PRAZO_SILENCIO_INSTALL = 7 * 24 * 60 * 60 * 1000;
+
+function instrucoesPWA() {
+  const ua = navigator.userAgent.toLowerCase();
+  const ios = ehIOS();
+  const android = /android/i.test(ua);
+  const mac = /macintosh|mac os x/.test(ua) && !ios;
+  const firefox = /firefox|fxios/.test(ua);
+  const samsung = /samsungbrowser/.test(ua);
+  const interno = /instagram|fban|fbav|fb_iab|whatsapp|telegram|line\//.test(ua) || /;\s*wv\)/.test(ua);
+  if (interno) return {
+    intro: 'Você abriu o Ágape dentro de outro aplicativo. O navegador interno pode bloquear a instalação.',
+    steps: [
+      'Toque no menu deste aplicativo (geralmente ⋮ ou •••) e escolha “Abrir no navegador”.',
+      ios ? 'No iPhone, prefira o Safari.' : 'No Android, prefira Chrome ou Samsung Internet.',
+      'No navegador, abra o menu e selecione “Adicionar à Tela de Início” ou “Instalar aplicativo”.',
+      'Abra o ícone instalado e faça login uma vez.',
+    ],
+    note: 'Se não encontrar a opção, copie o endereço abaixo e cole no navegador.',
+  };
+  if (ios) return {
+    intro: 'No iPhone/iPad, use o menu Compartilhar do navegador para adicionar o Ágape à tela inicial.',
+    steps: [
+      'Abra o endereço do Ágape no Safari.',
+      'Toque em Compartilhar (quadrado com seta para cima).',
+      'Role as opções e toque em “Adicionar à Tela de Início”.',
+      'Confirme “Adicionar” e abra o ícone Ágape.',
+      'Faça login pelo ícone instalado; os dados do app podem ser separados dos do navegador.',
+    ],
+    note: 'O iOS não suporta o botão de instalação automática do site. Em versões recentes, outros navegadores também oferecem Adicionar à Tela de Início.',
+  };
+  if (android) return {
+    intro: 'No Android, o app pode ser instalado ou adicionado como atalho pelo menu do navegador.',
+    steps: [
+      samsung ? 'Abra o Ágape no Samsung Internet.' : 'Abra o Ágape no Chrome para ter a melhor experiência de instalação.',
+      samsung ? 'Toque no menu ≡ → “Adicionar página a” → “Tela inicial”.' : 'Toque em ⋮ e escolha “Instalar aplicativo” ou “Adicionar à tela inicial”.',
+      'Confirme a instalação ou o atalho na tela inicial.',
+      'Abra o ícone Ágape e faça login uma vez.',
+    ],
+    note: 'Em alguns navegadores, o Android cria um atalho em vez de um aplicativo independente.',
+  };
+  if (mac && /safari/.test(ua) && !/chrome|chromium|edg/.test(ua)) return {
+    intro: 'No Mac, o Safari permite adicionar o Ágape ao Dock.',
+    steps: ['Abra o Ágape no Safari.', 'No menu Arquivo, escolha “Adicionar ao Dock”.', 'Confirme e abra o Ágape pelo Dock.'],
+    note: 'Chrome e Edge também oferecem a opção de instalar pelo menu.',
+  };
+  if (firefox) return {
+    intro: 'O Firefox para computador não oferece a instalação nativa de PWA do Chrome/Edge.',
+    steps: ['Copie o endereço do Ágape.', 'Abra-o no Chrome ou Microsoft Edge.', 'No menu, escolha “Instalar Ágape” ou “Instalar este site como aplicativo”.'],
+    note: 'O site funciona no Firefox; instalar como aplicativo depende do navegador.',
+  };
+  return {
+    intro: 'No computador, instale pelo Chrome ou Microsoft Edge.',
+    steps: [
+      'Abra o Ágape no Chrome ou Microsoft Edge.',
+      'Procure o ícone de instalação na barra de endereço ou abra ⋮ → Apps / Instalar.',
+      'Confirme a instalação e abra o Ágape pela área de aplicativos.',
+      'Faça login uma vez e use “Sair” apenas quando desejar encerrar sua sessão.',
+    ],
+    note: 'A instalação precisa de HTTPS e de um navegador compatível.',
+  };
+}
+
+window.addEventListener('beforeinstallprompt', (event) => {
+  event.preventDefault();
+  S.deferredInstall = event;
+  renderBannerInstall();
 });
+window.addEventListener('appinstalled', () => {
+  S.deferredInstall = null;
+  localStorage.removeItem('agape-install-hide-until');
+  renderBannerInstall();
+  closeSheet('install-guide-sheet');
+  toast('Ágape instalado! Abra pelo ícone do seu dispositivo. 🎉');
+});
+window.addEventListener('pageshow', () => renderBannerInstall());
+
 function renderBannerInstall() {
   const el = $('install-banner-home');
-  if (!el || ehInstalado() || localStorage.getItem('agape-install-dismissed') === '1') return;
-  const manual = !S.deferredInstall;
-  if (manual && !/android|iphone|ipad|ipod/i.test(navigator.userAgent)) return;
-  el.innerHTML = `<div class="pwa-install-pop" role="dialog" aria-modal="false" aria-labelledby="pwa-install-title">
-    <button class="pwa-install-close" onclick="dispensarInstall()" aria-label="Fechar instalação">×</button>
-    <div class="pwa-install-mark" aria-hidden="true">＋</div>
-    <div class="pwa-install-copy"><h3 id="pwa-install-title">Instale o app da Célula Ágape</h3><p>${manual ? 'Tenha acesso rápido e receba os avisos da célula.' : 'Tenha acesso rápido e receba os avisos da célula.'}</p></div>
-    <button class="pwa-install-action" onclick="${manual ? 'mostrarInstrucaoPWA()' : 'instalarPWA()'}">${manual ? 'Como instalar' : 'Instalar agora'}</button>
-  </div>`;
+  const ajuda = $('pwa-install-help');
+  if (!el) return;
+  const instalado = ehInstalado();
+  if (ajuda) ajuda.hidden = instalado;
+  if (instalado) { el.innerHTML = ''; return; }
+  if (Date.now() < Number(localStorage.getItem('agape-install-hide-until') || 0)) {
+    el.innerHTML = '';
+    return;
+  }
+  const automatico = Boolean(S.deferredInstall);
+  el.innerHTML = '<section class="pwa-install-pop" aria-label="Instalar aplicativo Ágape">'
+    + '<button class="pwa-install-close" type="button" onclick="dispensarInstall()" aria-label="Lembrar mais tarde">×</button>'
+    + '<div class="pwa-install-mark" aria-hidden="true">＋</div>'
+    + '<div class="pwa-install-copy"><h3>Leve o Ágape com você</h3><p>Adicione à tela inicial e abra como aplicativo no celular ou computador.</p></div>'
+    + '<button class="pwa-install-action" type="button"></button></section>';
+  const botao = el.querySelector('.pwa-install-action');
+  botao.textContent = automatico ? 'Instalar agora' : 'Ver como instalar';
+  botao.addEventListener('click', automatico ? instalarPWA : mostrarInstrucaoPWA);
 }
 async function instalarPWA() {
-  if (!S.deferredInstall) return mostrarInstrucaoPWA();
-  S.deferredInstall.prompt();
-  const choice = await S.deferredInstall.userChoice;
+  const evento = S.deferredInstall;
+  if (!evento) return mostrarInstrucaoPWA();
   S.deferredInstall = null;
-  if (choice?.outcome === 'accepted') $('install-banner-home').innerHTML = '';
+  try {
+    await evento.prompt();
+    const escolha = await evento.userChoice;
+    if (escolha?.outcome === 'accepted') {
+      $('install-banner-home').innerHTML = '';
+      return;
+    }
+    toast('Você pode instalar depois, pelo menu do navegador.', 'warn');
+  } catch (erro) {
+    console.warn('[pwa] prompt indisponível:', erro);
+    mostrarInstrucaoPWA();
+  } finally {
+    renderBannerInstall();
+  }
 }
-function dispensarInstall() { localStorage.setItem('agape-install-dismissed', '1'); S.deferredInstall = null; $('install-banner-home').innerHTML = ''; }
-function mostrarInstrucaoPWA() { toast('No Chrome, toque em ⋮ e depois em “Adicionar à tela inicial”. No iPhone, toque em Compartilhar e em “Adicionar à Tela de Início”.', 'ok'); }
+function dispensarInstall() {
+  localStorage.setItem('agape-install-hide-until', String(Date.now() + PRAZO_SILENCIO_INSTALL));
+  renderBannerInstall();
+}
+function mostrarInstrucaoPWA() {
+  const instrucoes = instrucoesPWA();
+  $('pwa-guide-intro').textContent = instrucoes.intro;
+  $('pwa-guide-note').textContent = instrucoes.note;
+  $('pwa-guide-steps').replaceChildren(...instrucoes.steps.map((texto) => {
+    const item = document.createElement('li');
+    item.textContent = texto;
+    return item;
+  }));
+  openSheet('install-guide-sheet');
+}
+async function copiarLinkPWA() {
+  try {
+    await navigator.clipboard.writeText(LINK_CANONICO_AGAPE);
+    toast('Link do Ágape copiado! Cole no navegador.');
+  } catch {
+    window.prompt('Copie o endereço para abrir no navegador:', LINK_CANONICO_AGAPE);
+  }
+}
 
 // ══════════════════════════════════════════
 // EVENTOS GLOBAIS + PARTIDA
