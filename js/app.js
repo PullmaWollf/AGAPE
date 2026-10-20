@@ -9,7 +9,7 @@ const {
 } = window.AgapeUtils;
 
 const db = supabase.createClient(CFG.SUPA_URL, CFG.SUPA_KEY, {
-  auth: { persistSession: true, autoRefreshToken: true, storageKey: 'agape-auth' },
+  auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
 });
 
 const S = {
@@ -56,9 +56,7 @@ async function comBotao(btn, fn) {
 }
 
 async function chamarApi(caminho, corpo) {
-  const token = S.session?.token || localStorage.getItem('agape-session');
   const headers = { 'Content-Type': 'application/json' };
-  if (token) headers.Authorization = `Bearer ${token}`;
   const r = await fetch(caminho, {
     method: 'POST',
     credentials: 'include',
@@ -71,32 +69,19 @@ async function chamarApi(caminho, corpo) {
 }
 
 // ══════════════════════════════════════════
-// AUTENTICAÇÃO (Supabase Auth)
+// AUTENTICAÇÃO NATIVA (cookie HttpOnly do Ágape)
 // ══════════════════════════════════════════
-const COLS_USER = 'id,name,login,role,auth_id,created_at';
-
-async function carregarPerfil(session) {
-  const { data, error } = await db.from('users').select(COLS_USER).eq('auth_id', session.user.id).maybeSingle();
-  if (error) throw error;
-  return data;
-}
-
 async function restaurarSessao() {
-  const token = localStorage.getItem('agape-session');
-  const perfil = JSON.parse(localStorage.getItem('agape-user') || 'null');
-  if (perfil) { S.me = perfil; S.session = { token: token || null, user: { id: perfil.id } }; }
+  S.me = null; S.session = null;
   try {
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
-    const resposta = await fetch('/api/auth-session.js', { method: 'POST', credentials: 'include', headers });
+    const resposta = await fetch('/api/auth-session', { method: 'POST', credentials: 'include' });
     const atual = await resposta.json();
     if (!resposta.ok || !atual.usuario) throw new Error('sessão expirada');
-    if (atual.token) localStorage.setItem('agape-session', atual.token);
     S.me = atual.usuario;
-    S.session = { token: atual.token || token || null, user: { id: atual.usuario.id } };
-    localStorage.setItem('agape-user', JSON.stringify(S.me));
+    S.session = { user: { id: atual.usuario.id } };
   } catch (erro) {
     if (erro?.message === 'sessão expirada' || erro?.message === 'sessão inválida ou expirada') {
-      localStorage.removeItem('agape-session'); localStorage.removeItem('agape-user'); S.me = null; S.session = null;
+      S.me = null; S.session = null;
     }
   }
 }
@@ -110,17 +95,14 @@ async function doLogin() {
   $('login-err').style.display = 'none';
   if (!login.trim() || !senha) return erroLogin('Informe login e senha.');
   await comBotao($('li-btn'), async () => {
-    const r = await fetch('/api/auth-login.js', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login, senha }) });
+    const r = await fetch('/api/auth-login', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login, senha }) });
     const data = await r.json().catch(() => ({}));
     if (!r.ok) return erroLogin(r.status === 401 ? 'Login ou senha incorretos.' : 'Não foi possível entrar agora. Tente de novo.');
-  // O AGAPE usa sua própria sessão assinada; o Supabase fica apenas como banco.
-  // Não dependemos de Supabase Auth, access_token ou refresh_token no navegador.
-  if (!data.token || !data.usuario?.id) {
+  // A sessão permanece somente no cookie HttpOnly do navegador.
+  if (!data.usuario?.id) {
     return erroLogin('O servidor não retornou uma sessão válida. Tente entrar novamente.');
   }
-  localStorage.setItem('agape-session', data.token);
-    localStorage.setItem('agape-user', JSON.stringify(data.usuario));
-    S.me = data.usuario; S.session = { token: data.token, user: { id: data.usuario.id } };
+    S.me = data.usuario; S.session = { user: { id: data.usuario.id } };
     $('li-user').value = ''; $('li-pass').value = '';
     closeSheet('login-sheet');
     await aposLogin();
@@ -136,10 +118,7 @@ async function aposLogin() {
 
 async function doLogout() {
   await removerDispositivoAtual().catch(() => {});
-  await fetch('/api/auth-logout.js', { method: 'POST', credentials: 'include' }).catch(() => {});
-  await db.auth.signOut().catch(() => {});
-  localStorage.removeItem('agape-session');
-  localStorage.removeItem('agape-user');
+  await fetch('/api/auth-logout', { method: 'POST', credentials: 'include' }).catch(() => {});
   localStorage.removeItem('agape-page');
   S.me = null; S.session = null; S.users = []; S.modelos = []; S.dispositivos = []; S.notifs = []; S.pushOk = false;
   closeSheet('conta-sheet');
@@ -194,7 +173,7 @@ async function salvarAvatar(event) {
   const file = event.target.files?.[0]; if (!file) return;
   if (!/^image\/(jpeg|png|webp)$/.test(file.type) || file.size > 500 * 1024) return toast('Escolha uma imagem JPG, PNG ou WebP de até 500 KB.', 'warn');
   const data = await new Promise((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(r.result); r.onerror = reject; r.readAsDataURL(file); });
-  try { const resposta = await chamarApi('/api/profile-avatar.js', { data }); S.me.avatar_url = resposta.avatar_url; localStorage.setItem('agape-user', JSON.stringify(S.me)); atualizarAuth(); toast('Foto do perfil atualizada.'); }
+  try { const resposta = await chamarApi('/api/profile-avatar', { data }); S.me.avatar_url = resposta.avatar_url; atualizarAuth(); toast('Foto do perfil atualizada.'); }
   catch (e) { toast(msgErro(e, 'Não foi possível salvar a foto.'), 'err'); }
 }
 
@@ -205,12 +184,13 @@ async function trocarSenha() {
   if (nova !== conf) return toast('A confirmação não confere com a nova senha.', 'warn');
   await comBotao($('conta-senha-btn'), async () => {
     try {
-      await chamarApi('/api/admin-users.js', { acao: 'trocar_senha', senhaAtual: atual, senhaNova: nova });
+      await chamarApi('/api/admin-users', { acao: 'trocar_senha', senhaAtual: atual, senhaNova: nova });
     } catch (e) {
       return toast(/senha atual/i.test(e.message) ? 'Senha atual incorreta.' : msgErro(e, 'Não foi possível trocar a senha.'), 'err');
     }
     ['conta-senha-atual', 'conta-senha-nova', 'conta-senha-conf'].forEach((i) => ($(i).value = ''));
-    toast('Senha alterada com sucesso ✅');
+    toast('Senha alterada. Entre novamente com a nova senha.');
+    await doLogout();
   });
 }
 
@@ -226,7 +206,7 @@ function montarSemanas(semanas, atribs) {
 
 async function carregarPublico() {
   const [p, s, a, f, palavra] = await Promise.all([
-    fetch('/api/mural.js').then(async (r) => { const j = await r.json(); if (!r.ok) throw new Error(j.erro || 'Falha no mural'); return { data: j.posts || [], error: null }; }),
+    fetch('/api/mural').then(async (r) => { const j = await r.json(); if (!r.ok) throw new Error(j.erro || 'Falha no mural'); return { data: j.posts || [], error: null }; }),
     db.from('escala_semanas').select('*').order('date', { ascending: true }),
     db.from('escala_atribuicoes').select('id,escala_id,user_id,user_name,funcao_id,funcao_nome'),
     db.from('escala_funcoes').select('id,nome').order('nome'),
@@ -251,7 +231,7 @@ async function recarregarEscala() {
 
 async function carregarAdmin() {
   const [u, m, c, d, uso] = await Promise.all([
-  chamarApi('/api/admin-users.js', { acao: 'listar' }),
+  chamarApi('/api/admin-users', { acao: 'listar' }),
     db.from('escala_modelos').select('*, escala_modelo_itens(*)').order('semanas').order('nome'),
     db.from('config').select('chave,valor'),
     db.rpc('dispositivos_por_usuario'),
@@ -559,22 +539,10 @@ async function addPost() {
         throw up.error;
       }
     }
-    const postPayload = {
-      type: S.postType, content, author_id: S.me.id, author_name: S.me.name,
-      image_path: caminho, image_w: img?.w ?? null, image_h: img?.h ?? null, image_bytes: img?.blob.size ?? null,
-      media_type: img?.mediaType ?? 'image', media_duration: img?.duration ?? null,
-    };
-    const response = await fetch('/api/mural.js', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${S.session?.token || localStorage.getItem('agape-session')}` }, body: JSON.stringify({ type: S.postType, content, image_path: caminho, image_w: img?.w ?? null, image_h: img?.h ?? null, image_bytes: img?.blob.size ?? null, media_type: img?.mediaType ?? null, media_duration: img?.duration ?? null }) });
+    const response = await fetch('/api/mural', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: S.postType, content, image_path: caminho, image_w: img?.w ?? null, image_h: img?.h ?? null, image_bytes: img?.blob.size ?? null, media_type: img?.mediaType ?? null, media_duration: img?.duration ?? null }) });
     const payload = await response.json().catch(() => ({}));
     const result = response.ok && payload.post ? { data: payload.post, error: null } : { data: null, error: new Error(payload.erro || `Erro ${response.status}`) };
-    // Permite publicar fotos em projetos que ainda não aplicaram a migração de vídeo.
-    if (result.error && /media_duration|media_type|schema cache|column.*posts/i.test(result.error.message || '')) {
-      const legacyPayload = { ...postPayload };
-      delete legacyPayload.media_type;
-      delete legacyPayload.media_duration;
-      result = await db.from('posts').insert(legacyPayload).select().single();
-    }
-    if (result.error) { if (caminho) db.storage.from('mural').remove([caminho]); throw result.error; }
+    if (result.error) { if (caminho) await db.storage.from('mural').remove([caminho]); throw result.error; }
     const { data } = result;
     if (!S.posts.find((x) => x.id === data.id)) S.posts.unshift(data);
     $('post-text').value = ''; removerImagemPendente();
@@ -588,7 +556,7 @@ async function deletarPost(id) {
   const p = S.posts.find((x) => x.id === id);
   if (!p || !confirm('Excluir esta publicação?')) return;
   let error = null;
-  try { const r = await fetch('/api/mural.js', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${S.session?.token || localStorage.getItem('agape-session')}` }, body: JSON.stringify({ acao: 'excluir', id }) }); const j = await r.json().catch(() => ({})); if (!r.ok) error = new Error(j.erro || `Erro ${r.status}`); } catch (e) { error = e; }
+  try { const r = await fetch('/api/mural', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acao: 'excluir', id }) }); const j = await r.json().catch(() => ({})); if (!r.ok) error = new Error(j.erro || `Erro ${r.status}`); } catch (e) { error = e; }
   if (error) return toast(msgErro(error, 'Não foi possível excluir.'), 'err');
   if (p.image_path) db.storage.from('mural').remove([p.image_path]).catch(() => {});
   S.posts = S.posts.filter((x) => x.id !== id);
@@ -747,7 +715,7 @@ function linhaAtribHtml(userId = '', funcaoId = '') {
   async function salvarFuncao() {
     const nome = $('nova-funcao')?.value.trim();
     if (!nome) return toast('Informe o nome da função.', 'warn');
-    const r = await chamarApi('/api/escala-funcoes.js', { nome });
+    const r = await chamarApi('/api/escala-funcoes', { nome });
     if (r.erro) return toast(r.erro, 'err');
     $('nova-funcao').value = '';
     S.funcoes = [...S.funcoes, r.funcao].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
@@ -756,7 +724,7 @@ function linhaAtribHtml(userId = '', funcaoId = '') {
   }
   async function excluirFuncao(id) {
     if (!confirm('Excluir esta função?')) return;
-    const r = await chamarApi('/api/escala-funcoes.js', { acao: 'excluir', id });
+    const r = await chamarApi('/api/escala-funcoes', { acao: 'excluir', id });
     if (r.erro) return toast(r.erro, 'err');
     S.funcoes = S.funcoes.filter((f) => f.id !== id);
     renderAdmEscala();
@@ -815,7 +783,7 @@ async function salvarSemana() {
   if (!atribuicoes.length && !confirm('Nenhuma pessoa foi escolhida — ninguém será notificado. Salvar assim mesmo?')) return;
   await comBotao($('sem-btn'), async () => {
   try {
-    await chamarApi('/api/escala-save.js', { dados: {
+    await chamarApi('/api/escala-save', { dados: {
       id: $('sem-id').value || null, tipo: $('sem-tipo').value, date,
       alarm_local: on && dt ? dt : null,
       alarm_semana: on && $('sem-alarm-semana').checked, alarm_1d: d1, alarm_3h: h3, alarm_30m: m30,
@@ -830,7 +798,7 @@ async function salvarSemana() {
 
 async function deletarSemana(id) {
   if (!confirm('Excluir esta semana da escala? Os lembretes pendentes serão cancelados.')) return;
-  try { await chamarApi('/api/escala.js', { acao: 'excluir', id }); }
+  try { await chamarApi('/api/escala', { acao: 'excluir', id }); }
   catch (error) { return toast(msgErro(error, 'Não foi possível excluir.'), 'err'); }
   await recarregarEscala();
   toast('Semana excluída.');
@@ -1043,7 +1011,7 @@ async function gerarMes() {
 function renderUsers() {
   const el = $('user-list'); if (!el) return;
   const perfilSelect = $('new-role');
-  if (perfilSelect && S.perfis.length) perfilSelect.innerHTML = S.perfis.map((p) => `<option value="${esc(p.id)}">${esc(p.nome)}</option>`).join('');
+  if (perfilSelect && S.perfis.length) { const selecionado = perfilSelect.value; perfilSelect.innerHTML = S.perfis.filter(p => p.nome !== 'Líder').map((p) => `<option value="${esc(p.id)}">${esc(p.nome)}</option>`).join(''); if ([...perfilSelect.options].some(o => o.value === selecionado)) perfilSelect.value = selecionado; }
   const disp = Object.fromEntries(S.dispositivos.map((d) => [d.user_id, d.dispositivos]));
   el.innerHTML = S.users.map((u) => {
     const id = idSeguro(u.id), n = disp[u.id] ?? 0, eu = u.id === S.me?.id;
@@ -1147,7 +1115,7 @@ async function sincronizarPush({ silencioso = true } = {}) {
     // Inscrição feita com outra chave VAPID nunca receberia nada: refaz.
     if (sub && !mesmaChave(sub.options?.applicationServerKey, chave)) { await sub.unsubscribe(); sub = null; }
     if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: chave });
-    await chamarApi('/api/push-device.js', { acao: 'salvar', endpoint: sub.endpoint, subscription: JSON.stringify(sub.toJSON()), userAgent: navigator.userAgent.slice(0, 200) });
+    await chamarApi('/api/push-device', { acao: 'salvar', endpoint: sub.endpoint, subscription: JSON.stringify(sub.toJSON()), userAgent: navigator.userAgent.slice(0, 200) });
     S.pushOk = true;
     renderBannerNotif(); renderStatusNotif();
     return { ok: true };
@@ -1176,7 +1144,7 @@ async function removerDispositivoAtual() {
   if (!suportaPush() || !S.me) return;
   const reg = await navigator.serviceWorker.getRegistration();
   const sub = await reg?.pushManager.getSubscription();
-  if (sub) await chamarApi('/api/push-device.js', { acao: 'remover', endpoint: sub.endpoint });
+  if (sub) await chamarApi('/api/push-device', { acao: 'remover', endpoint: sub.endpoint });
 }
 
 async function testarNotificacao(userId) {
