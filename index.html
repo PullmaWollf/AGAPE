@@ -181,37 +181,6 @@ body{
 .sec-hdr h2{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:700;color:var(--stone-d)}
 .sec-hdr p{font-size:0.8rem;color:var(--muted);margin-top:2px}
 
-/* ── INSTALL BANNER ── */
-.install-banner{
-  background:linear-gradient(135deg,var(--stone-d),var(--stone));
-  color:var(--cream);border-radius:var(--r);
-  padding:14px 16px;margin-bottom:14px;
-  display:flex;align-items:center;gap:12px;
-  box-shadow:var(--sh-lg);animation:fadeUp .3s ease;
-}
-.install-banner .ib-icon{font-size:1.8rem;flex-shrink:0}
-.install-banner .ib-text{flex:1;min-width:0}
-.install-banner .ib-title{font-weight:700;font-size:0.9rem}
-.install-banner .ib-sub{font-size:0.76rem;opacity:.75;margin-top:2px}
-.install-banner .ib-btn{
-  height:34px;padding:0 14px;border-radius:99px;border:none;
-  background:var(--accent);color:#fff;
-  font-family:'DM Sans',sans-serif;font-size:0.8rem;font-weight:700;
-  cursor:pointer;flex-shrink:0;transition:opacity .15s;
-}
-.install-banner .ib-btn:active{opacity:.8}
-  .install-banner .ib-close{
-  width:28px;height:28px;border-radius:50%;border:none;background:rgba(255,255,255,0.15);
-  color:var(--cream);cursor:pointer;display:flex;align-items:center;justify-content:center;
-  font-size:0.9rem;flex-shrink:0;
-  }
-  .pwa-install-pop{position:relative;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:center;background:linear-gradient(135deg,var(--stone-d),var(--stone));color:var(--cream);border-radius:var(--r);padding:16px;margin-bottom:14px;box-shadow:var(--sh-lg);animation:fadeUp .3s ease}
-  .pwa-install-mark{grid-row:span 2;width:42px;height:42px;border-radius:13px;display:grid;place-items:center;background:var(--accent);color:#fff;font-size:1.7rem}
-  .pwa-install-copy{min-width:0;padding-right:22px}.pwa-install-copy h3{font-size:.94rem;font-weight:800}.pwa-install-copy p{font-size:.76rem;opacity:.8;margin-top:3px;line-height:1.35}
-  .pwa-install-action{grid-column:2;justify-self:start;border:0;border-radius:999px;background:var(--accent);color:#fff;padding:9px 15px;font-weight:800;font-size:.78rem;cursor:pointer}
-  .pwa-install-close{position:absolute;right:10px;top:10px;width:26px;height:26px;border:0;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-size:1.1rem;cursor:pointer}
-  @media(max-width:420px){.pwa-install-pop{padding:14px 12px;gap:4px 9px}.pwa-install-action{padding:8px 11px;font-size:.72rem}}
-
 /* ── MURAL ── */
 .compose-card{
   background:var(--surface);border-radius:var(--r);border:1px solid var(--border);
@@ -721,7 +690,7 @@ body{
     <button onclick="goPage('local')">Localização</button>
     <button onclick="goPage('adm')" id="dl-adm" style="display:none">ADM</button>
   </div>
-  <button type="button" id="pwa-install-global" class="pwa-install-global" onclick="acionarInstalacaoPWA()" aria-label="Instalar aplicativo Ágape">📲 <span>Instalar app</span></button>
+  <button type="button" id="pwa-install-global" class="pwa-install-global" onclick="mostrarInstrucaoPWA()" aria-label="Ver o passo a passo para instalar o Ágape">📲 <span>Como instalar</span></button>
   <div class="nav-right" id="nav-right">
     <button class="btn btn-primary" onclick="openSheet('login-sheet')">Entrar</button>
   </div>
@@ -754,9 +723,6 @@ body{
     </div>
   </div>
   <div class="container">
-    <div id="install-banner-home" aria-live="polite"></div>
-    <p class="pwa-install-status" id="pwa-install-status" aria-live="polite">Verificando se o Ágape pode ser instalado neste navegador...</p>
-    <button type="button" class="pwa-help-link" id="pwa-install-help" onclick="mostrarInstrucaoPWA()">📲 Como instalar o Ágape no celular ou computador <span aria-hidden="true">→</span></button>
     <div id="prox-home"></div>
     <div class="quick-grid">
       <div class="quick-card" onclick="goPage('mural')"><div class="qc-icon">📖</div><div class="qc-title">Mural</div><div class="qc-sub">Versículos e mensagens</div></div>
@@ -764,6 +730,44 @@ body{
       <div class="quick-card" onclick="goPage('local')"><div class="qc-icon">📍</div><div class="qc-title">Localização</div><div class="qc-sub">Ver no mapa</div></div>
       <div class="quick-card" id="home-auth-card" onclick="openSheet('login-sheet')"><div class="qc-icon" id="hac-icon">🔐</div><div class="qc-title" id="hac-title">Entrar</div><div class="qc-sub" id="hac-sub">Acessar sua conta</div></div>
     </div>
+
+    <section class="install-howto" id="como-instalar" aria-labelledby="install-howto-title">
+      <div class="install-howto-header">
+        <div class="install-howto-symbol" aria-hidden="true">📲</div>
+        <div>
+          <p class="install-howto-kicker">Seu Ágape sempre por perto</p>
+          <h2 id="install-howto-title">Como instalar o aplicativo</h2>
+          <p>Sem janelas automáticas. Instale diretamente pelo menu do navegador do seu celular.</p>
+        </div>
+      </div>
+      <div class="install-howto-grid">
+        <article class="install-howto-card">
+          <div class="install-device-heading">
+            <span class="install-device-mark" aria-hidden="true">🤖</span>
+            <div><h3>Android</h3><p>Google Chrome</p></div>
+          </div>
+          <ol class="install-howto-list">
+            <li>Abra <strong>celula-agape.vercel.app</strong> no <strong>Chrome</strong>.</li>
+            <li>Toque nos <strong>três pontinhos (⋮)</strong> do Chrome, no canto superior.</li>
+            <li>Selecione <strong>Instalar aplicativo</strong> ou <strong>Adicionar à tela inicial</strong>.</li>
+            <li>Confirme em <strong>Instalar</strong> e abra o ícone <strong>Ágape</strong> na tela inicial.</li>
+          </ol>
+        </article>
+        <article class="install-howto-card">
+          <div class="install-device-heading">
+            <span class="install-device-mark" aria-hidden="true">🍎</span>
+            <div><h3>iPhone / iPad</h3><p>Safari</p></div>
+          </div>
+          <ol class="install-howto-list">
+            <li>Abra <strong>celula-agape.vercel.app</strong> no <strong>Safari</strong>.</li>
+            <li>Toque no botão <strong>Compartilhar</strong> (quadrado com uma seta para cima).</li>
+            <li>Role o menu e escolha <strong>Adicionar à Tela de Início</strong>.</li>
+            <li>Confirme em <strong>Adicionar</strong> e abra o ícone <strong>Ágape</strong> na tela inicial.</li>
+          </ol>
+        </article>
+      </div>
+      <p class="install-howto-tip"><strong>Dica:</strong> se abriu o link pelo WhatsApp ou Instagram, escolha <strong>Abrir no navegador</strong> primeiro. Depois de instalado, entre pelo ícone do Ágape. Sua sessão ficará salva no dispositivo, salvo se você sair da conta, limpar os dados ou alterar sua senha.</p>
+    </section>
   </div>
 </div>
 
@@ -947,22 +951,6 @@ body{
       <p class="pwa-auth-hint">Você continua conectado ao fechar o app. A senha pode ser salva pelo gerenciador do seu dispositivo.</p>
       <button type="submit" class="btn btn-primary btn-full" id="li-btn">Entrar</button>
     </form>
-  </div>
-</div>
-
-<!-- Ajuda de instalação específica para cada navegador e dispositivo -->
-<div class="sheet-overlay" id="install-guide-sheet" role="dialog" aria-modal="true" aria-labelledby="pwa-guide-title" onclick="sheetBg(event,'install-guide-sheet')">
-  <div class="sheet pwa-guide">
-    <button class="pwa-guide-close" type="button" onclick="closeSheet('install-guide-sheet')" aria-label="Fechar instruções">✕</button>
-    <div class="pwa-guide-icon" aria-hidden="true">📲</div>
-    <h2 id="pwa-guide-title">Instalar o Ágape</h2>
-    <p id="pwa-guide-intro" class="pwa-guide-intro">Abra o aplicativo no navegador do seu dispositivo.</p>
-    <ol id="pwa-guide-steps" class="pwa-guide-steps"></ol>
-    <p id="pwa-guide-note" class="pwa-guide-note"></p>
-    <div class="pwa-guide-actions">
-      <button type="button" class="btn btn-ghost" onclick="copiarLinkPWA()">Copiar endereço</button>
-      <button type="button" class="btn btn-primary" onclick="closeSheet('install-guide-sheet')">Entendi</button>
-    </div>
   </div>
 </div>
 
