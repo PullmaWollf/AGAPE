@@ -656,7 +656,7 @@ body{
 .pwa-auth-hint {color:var(--muted);font-size:.79rem;line-height:1.5;margin:0 0 14px}
   </style>
 <script defer src="/_vercel/insights/script.js"></script>
-<link rel="stylesheet" href="/css/agape-modern.css?v=20261029">
+<link rel="stylesheet" href="/css/agape-modern.css?v=20261029install">
 </head>
 <body>
 
@@ -673,7 +673,7 @@ body{
     <button onclick="goPage('local')">Localização</button>
     <button onclick="goPage('adm')" id="dl-adm" style="display:none">ADM</button>
   </div>
-  <button type="button" id="pwa-install-global" class="pwa-install-global" onclick="mostrarInstrucaoPWA()" aria-label="Ver o passo a passo para instalar o Ágape">📲 <span>Como instalar</span></button>
+  <button type="button" id="pwa-install-global" class="pwa-install-global" onclick="acionarInstalacaoPWA()" aria-label="Ver o passo a passo para instalar o Ágape">📲 <span>Como instalar</span></button>
   <div class="nav-right" id="nav-right">
     <button class="btn btn-primary" onclick="openSheet('login-sheet')">Entrar</button>
   </div>
@@ -714,47 +714,7 @@ body{
       <div class="quick-card" id="home-auth-card" onclick="openSheet('login-sheet')"><div class="qc-icon" id="hac-icon">🔐</div><div class="qc-title" id="hac-title">Entrar</div><div class="qc-sub" id="hac-sub">Acessar sua conta</div></div>
     </div>
 
-    <section class="install-howto" id="como-instalar" aria-labelledby="install-howto-title">
-      <div class="install-howto-header">
-        <div class="install-howto-symbol" aria-hidden="true">📲</div>
-        <div>
-          <p class="install-howto-kicker">Seu Ágape sempre por perto</p>
-          <h2 id="install-howto-title">Como instalar o aplicativo</h2>
-          <p>Escolha seu celular e siga quatro passos rápidos. Nenhum pop-up automático.</p>
-        </div>
-      </div>
-      <div class="install-howto-picker" role="group" aria-label="Escolha seu dispositivo">
-        <button type="button" class="install-platform-btn active" data-install-platform="android" aria-pressed="true" onclick="selecionarGuiaInstalacao('android')">Android</button>
-        <button type="button" class="install-platform-btn" data-install-platform="ios" aria-pressed="false" onclick="selecionarGuiaInstalacao('ios')">iPhone / iPad</button>
-      </div>
-      <div class="install-howto-grid">
-        <article class="install-howto-card" data-install-guide="android">
-          <div class="install-device-heading">
-            <span class="install-device-mark" aria-hidden="true">🤖</span>
-            <div><h3>Android</h3><p>Google Chrome</p></div>
-          </div>
-          <ol class="install-howto-list">
-            <li><span class="install-step-text">Abra <strong>celula-agape.vercel.app</strong> no <strong>Chrome</strong>.</span></li>
-            <li><span class="install-step-text">Toque nos <strong>três pontinhos (⋮)</strong> do Chrome, no canto superior.</span></li>
-            <li><span class="install-step-text">Selecione <strong>Instalar aplicativo</strong> ou <strong>Adicionar à tela inicial</strong>.</span></li>
-            <li><span class="install-step-text">Confirme em <strong>Instalar</strong> e abra o ícone <strong>Ágape</strong> na tela inicial.</span></li>
-          </ol>
-        </article>
-        <article class="install-howto-card" data-install-guide="ios" hidden>
-          <div class="install-device-heading">
-            <span class="install-device-mark" aria-hidden="true">🍎</span>
-            <div><h3>iPhone / iPad</h3><p>Safari</p></div>
-          </div>
-          <ol class="install-howto-list">
-            <li><span class="install-step-text">Abra <strong>celula-agape.vercel.app</strong> no <strong>Safari</strong>.</span></li>
-            <li><span class="install-step-text">Toque no botão <strong>Compartilhar</strong> (quadrado com uma seta para cima).</span></li>
-            <li><span class="install-step-text">Role o menu e escolha <strong>Adicionar à Tela de Início</strong>.</span></li>
-            <li><span class="install-step-text">Confirme em <strong>Adicionar</strong> e abra o ícone <strong>Ágape</strong> na tela inicial.</span></li>
-          </ol>
-        </article>
-      </div>
-      <p class="install-howto-tip"><strong>Dica:</strong> se abriu o link pelo WhatsApp ou Instagram, escolha <strong>Abrir no navegador</strong> primeiro. Depois de instalado, entre pelo ícone do Ágape. Sua sessão ficará salva no dispositivo, salvo se você sair da conta, limpar os dados ou alterar sua senha.</p>
-    </section>
+    
   </div>
 </div>
 
@@ -945,6 +905,69 @@ body{
       <p class="pwa-auth-hint">Você continua conectado ao fechar o app. A senha pode ser salva pelo gerenciador do seu dispositivo.</p>
       <button type="submit" class="btn btn-primary btn-full" id="li-btn">Entrar</button>
     </form>
+  </div>
+</div>
+
+<!-- Instalação: abrir somente quando a pessoa tocar em Como instalar -->
+<div class="sheet-overlay" id="install-sheet" onclick="sheetBg(event,'install-sheet')">
+  <div class="sheet install-sheet" role="dialog" aria-modal="true" aria-labelledby="install-howto-title">
+    <div class="sheet-handle"></div>
+    <button class="install-sheet-close" type="button" onclick="closeSheet('install-sheet')" aria-label="Fechar instruções de instalação">✕</button>
+    <p class="install-sheet-status" id="install-sheet-status" role="status" aria-live="polite"></p>
+<section class="install-howto" id="como-instalar" aria-labelledby="install-howto-title">
+      <div class="install-howto-header">
+        <div class="install-howto-symbol" aria-hidden="true">📲</div>
+        <div>
+          <p class="install-howto-kicker">Seu Ágape sempre por perto</p>
+          <h2 id="install-howto-title">Como instalar o aplicativo</h2>
+          <p>Quando o navegador não permitir instalar diretamente, siga os passos abaixo.</p>
+        </div>
+      </div>
+      <div class="install-howto-picker" role="group" aria-label="Escolha seu dispositivo">
+        <button type="button" class="install-platform-btn active" data-install-platform="android" aria-pressed="true" onclick="selecionarGuiaInstalacao('android')">Android</button>
+        <button type="button" class="install-platform-btn" data-install-platform="ios" aria-pressed="false" onclick="selecionarGuiaInstalacao('ios')">iPhone / iPad</button>
+        <button type="button" class="install-platform-btn" data-install-platform="desktop" aria-pressed="false" onclick="selecionarGuiaInstalacao('desktop')">Computador</button>
+      </div>
+      <div class="install-howto-grid">
+        <article class="install-howto-card" data-install-guide="android">
+          <div class="install-device-heading">
+            <span class="install-device-mark" aria-hidden="true">🤖</span>
+            <div><h3>Android</h3><p>Google Chrome</p></div>
+          </div>
+          <ol class="install-howto-list">
+            <li><span class="install-step-text">Abra <strong>celula-agape.vercel.app</strong> no <strong>Chrome</strong>.</span></li>
+            <li><span class="install-step-text">Toque nos <strong>três pontinhos (⋮)</strong> do Chrome, no canto superior.</span></li>
+            <li><span class="install-step-text">Selecione <strong>Instalar aplicativo</strong> ou <strong>Adicionar à tela inicial</strong>.</span></li>
+            <li><span class="install-step-text">Confirme em <strong>Instalar</strong> e abra o ícone <strong>Ágape</strong> na tela inicial.</span></li>
+          </ol>
+        </article>
+        <article class="install-howto-card" data-install-guide="ios" hidden>
+          <div class="install-device-heading">
+            <span class="install-device-mark" aria-hidden="true">🍎</span>
+            <div><h3>iPhone / iPad</h3><p>Safari</p></div>
+          </div>
+          <ol class="install-howto-list">
+            <li><span class="install-step-text">Abra <strong>celula-agape.vercel.app</strong> no <strong>Safari</strong>.</span></li>
+            <li><span class="install-step-text">Toque no botão <strong>Compartilhar</strong> (quadrado com uma seta para cima).</span></li>
+            <li><span class="install-step-text">Role o menu e escolha <strong>Adicionar à Tela de Início</strong>.</span></li>
+            <li><span class="install-step-text">Confirme em <strong>Adicionar</strong> e abra o ícone <strong>Ágape</strong> na tela inicial.</span></li>
+          </ol>
+        </article>
+        <article class="install-howto-card" data-install-guide="desktop" hidden>
+          <div class="install-device-heading">
+            <span class="install-device-mark" aria-hidden="true">💻</span>
+            <div><h3>Windows / Mac</h3><p>Chrome, Edge ou Safari</p></div>
+          </div>
+          <ol class="install-howto-list">
+            <li><span class="install-step-text">Abra o Ágape no <strong>Chrome</strong> ou <strong>Edge</strong>.</span></li>
+            <li><span class="install-step-text">No menu <strong>⋮</strong>, selecione <strong>Instalar aplicativo</strong> ou <strong>Apps → Instalar este site</strong>.</span></li>
+            <li><span class="install-step-text">Confirme e abra o novo ícone do Ágape.</span></li>
+            <li><span class="install-step-text">No <strong>Safari do Mac</strong>, use <strong>Arquivo → Adicionar ao Dock</strong>.</span></li>
+          </ol>
+        </article>
+      </div>
+      <p class="install-howto-tip"><strong>Dica:</strong> se abriu o link pelo WhatsApp ou Instagram, escolha <strong>Abrir no navegador</strong> primeiro. Depois de instalado, entre pelo ícone do Ágape. Sua sessão ficará salva no dispositivo, salvo se você sair da conta, limpar os dados ou alterar sua senha.</p>
+    </section>
   </div>
 </div>
 
