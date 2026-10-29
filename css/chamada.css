@@ -95,3 +95,5 @@
   .freq-table-scroll th,.freq-table-scroll td{padding:4px}
   .freq-week-bar,.freq-week-bar i,.freq-donut,.freq-person-track i{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
+
+.freq-ativo-check{display:flex;align-items:center;gap:10px;margin:14px 0;font-size:.9rem;font-weight:700;color:#355870}.freq-ativo-check input{width:19px;height:19px;accent-color:#287998}
