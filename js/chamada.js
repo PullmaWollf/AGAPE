@@ -172,10 +172,30 @@
       <div class="chamada-summary-actions">
         ${queue.length?'<button type="button" class="btn btn-ghost" id="chamada-continuar">Continuar marcação</button>':
         '<button type="button" class="btn btn-primary" id="chamada-salvar">Salvar chamada</button>'}
+        ${state.chamada?'<button type="button" class="btn btn-ghost chamada-excluir" id="chamada-excluir">🗑️ Excluir chamada salva</button>':''}
       </div></div>`;
     document.querySelectorAll('[data-corrigir]').forEach(b=>b.addEventListener('click',()=>corrigir(b.dataset.corrigir)));
     $('chamada-continuar')?.addEventListener('click',render);
     $('chamada-salvar')?.addEventListener('click',salvar);
+    $('chamada-excluir')?.addEventListener('click',excluir);
+  }
+  async function excluir(){
+    if(!state.chamada)return;
+    const data=state.data.split('-').reverse().join('/');
+    if(!window.confirm('Excluir definitivamente a chamada de '+data+'? Todas as presenças e faltas desta data serão removidas dos relatórios. Esta ação não pode ser desfeita.'))return;
+    const btn=$('chamada-excluir');if(btn)btn.disabled=true;
+    feedback('Excluindo chamada…');
+    try{
+      await window.chamarApi('/api/chamada',{acao:'excluir',data:state.data});
+      localStorage.removeItem(chave());
+      state.chamada=null;state.marcacoes={};state.historico=[];
+      render();
+      feedback('Chamada excluída. Você pode lançar uma nova chamada nesta data.');
+      window.toast('Chamada excluída com sucesso!');
+    }catch(e){
+      feedback((e.message||'Não foi possível excluir')+' · Tente novamente.',true);
+      if(btn)btn.disabled=false;
+    }
   }
   async function salvar(){
     if(restantes().length || !state.membros.length)return;
