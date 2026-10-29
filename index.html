@@ -1182,6 +1182,21 @@ body{
   </div>
 </div>
 
+<!-- Gestão de integrantes para os relatórios (somente ADM) -->
+<div class="sheet-overlay" id="situacao-presenca-sheet" onclick="sheetBg(event,'situacao-presenca-sheet')">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h2>Participação na célula</h2>
+    <p class="hint" id="situacao-presenca-nome"></p>
+    <input type="hidden" id="situacao-presenca-id">
+    <label class="fld"><span>Data de ingresso (opcional)</span><input type="date" id="situacao-presenca-ingresso"></label>
+    <label class="freq-ativo-check"><input type="checkbox" id="situacao-presenca-ativo" checked> Integrante ativo na célula</label>
+    <p class="hint">Inativos não entram nos novos cálculos. Não informe uma data que você não conhece.</p>
+    <button class="btn btn-primary btn-full" type="button" onclick="salvarSituacaoPresenca()">Salvar situação</button>
+    <button class="btn btn-ghost btn-full" type="button" onclick="closeSheet('situacao-presenca-sheet')">Cancelar</button>
+  </div>
+</div>
+
 <!-- Redefinir senha de outro usuário (ADM) -->
 <div class="sheet-overlay" id="senha-sheet" onclick="sheetBg(event,'senha-sheet')">
   <div class="sheet">
