@@ -49,17 +49,24 @@ export async function usuarioAutenticado(db, req) {
 }
 
 export async function carregarPermissoes(db, perfil) {
-  if (['adm','admin','administrador'].includes(String(perfil.role || '').toLowerCase())) {
-    return Object.fromEntries([
-      'gerencial','usuarios','perfis','mural_publicar','mural_excluir',
-      'palavra','escala','escala_visualizar','modelos','notificacoes','uploads',
-    ].map((chave) => [chave, true]));
-  }
-  if (!perfil.perfil_id) return {};
+  const adm = ['adm','admin','administrador'].includes(String(perfil.role || '').toLowerCase());
+  const basicas = adm ? Object.fromEntries([
+    'gerencial','usuarios','perfis','mural_publicar','mural_excluir',
+    'palavra','escala','escala_visualizar','modelos','notificacoes','uploads',
+  ].map((chave) => [chave, true])) : {};
+  if (!perfil.perfil_id) return basicas;
   const { data, error } = await db.from('perfis_permissao')
-    .select('permissoes').eq('id', perfil.perfil_id).maybeSingle();
+    .select('nome,permissoes').eq('id', perfil.perfil_id).maybeSingle();
   if (error) throw new Error(error.message);
-  return data?.permissoes || {};
+  const nome = String(data?.nome || '').trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  const lider = ['lider','lider em treinamento'].includes(nome);
+  // Chamada e frequência só podem aparecer para Líder/LT, inclusive quando o usuário é ADM.
+  // A API valida novamente o perfil e as permissões antes de ler/gravar dados.
+  return {
+    ...(adm ? basicas : (data?.permissoes || {})),
+    chamada_registrar: lider && data?.permissoes?.chamada_registrar === true,
+    frequencia_relatorio: lider && data?.permissoes?.frequencia_relatorio === true,
+  };
 }
 
 export async function exigirPermissao(db, req, permissao) {
