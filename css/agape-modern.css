@@ -151,3 +151,36 @@ html.agape-installed #pwa-install-global,
 .palavra-upload-status[data-status="sucesso"]{color:#206a50;font-weight:700}
 .palavra-upload-status[data-status="erro"]{color:#ad4036;font-weight:700;overflow-wrap:anywhere}
 @media(max-width:480px){.palavra-admin-card{gap:9px}.palavra-admin-card input[type="file"]{font-size:.75rem;padding:8px}.palavra-admin-card input[type="file"]::file-selector-button{margin-right:7px;padding:9px 10px}}
+
+/* Instalador sob demanda: compacto, sem pop-up ao entrar no site. */
+.install-sheet{padding:20px 20px calc(22px + env(safe-area-inset-bottom));max-height:min(82dvh,620px);overflow-y:auto;background:#fff}
+.install-sheet .sheet-handle{margin:0 auto 12px}
+.install-sheet-close{position:absolute;z-index:1;right:14px;top:12px;display:grid;place-items:center;width:40px;height:40px;border:0;border-radius:50%;background:#eaf2f8;color:#274963;cursor:pointer}
+.install-sheet-close:focus-visible{outline:3px solid #278fbb;outline-offset:2px}
+.install-sheet .install-howto{border:0;background:transparent;padding:0;margin:0;box-shadow:none;border-radius:0}
+.install-sheet .install-howto-header{padding-right:32px;gap:10px;margin:0 0 14px}
+.install-sheet .install-howto-symbol{width:44px;height:44px;flex-basis:44px;font-size:1.25rem}
+.install-sheet .install-howto-header h2{font-size:1.28rem;font-weight:800}
+.install-sheet .install-howto-header p:last-child{font-size:.81rem;line-height:1.45}
+.install-sheet-status{margin:0 32px 10px 0;color:#41617b;font-size:.8rem;line-height:1.45}
+.install-sheet .install-howto-grid{display:grid;grid-template-columns:minmax(0,1fr);max-width:none}
+.install-sheet .install-howto-card{padding:14px;border-radius:14px}
+.install-sheet .install-howto-list{gap:11px}
+.install-sheet .install-howto-list li{font-size:.83rem;line-height:1.42;gap:9px}
+.install-sheet .install-howto-list li::before{height:27px;width:27px;flex-basis:27px}
+.install-sheet .install-device-heading{padding-bottom:9px;margin-bottom:11px}
+.install-sheet .install-device-mark{width:35px;height:35px;flex-basis:35px;font-size:1.16rem}
+.install-sheet .install-howto-tip{font-size:.77rem;margin-top:12px;padding:10px 12px}
+.install-sheet .install-howto-picker{display:flex;width:100%;gap:3px;max-width:none;margin:0 0 12px}
+.install-sheet .install-platform-btn{flex:1;min-width:0;min-height:40px;padding:8px 5px;white-space:nowrap;font-size:.77rem}
+@media(min-width:700px){
+  .install-sheet{position:absolute;top:50%;bottom:auto;left:50%;right:auto;width:min(520px,calc(100vw - 36px));max-height:min(78dvh,650px);border-radius:20px;transform:translate(-50%,-45%)!important;opacity:0;transition:transform .24s ease,opacity .24s ease}
+  .sheet-overlay.open .install-sheet{transform:translate(-50%,-50%)!important;opacity:1}
+}
+@media(max-width:480px){
+  .install-sheet{padding:17px 14px calc(19px + env(safe-area-inset-bottom));max-height:82dvh;border-radius:20px 20px 0 0}
+  .install-sheet .install-howto-header{padding-right:28px}
+  .install-sheet .install-howto-header h2{font-size:1.18rem}
+  .install-sheet .install-platform-btn{font-size:.72rem}
+  .install-sheet .install-howto-card{padding:13px}
+}
