@@ -1,6 +1,6 @@
 // Ágape PWA — shell mínimo offline, rede como fonte de verdade.
 // Nunca cacheia API, sessões, dados de usuários ou respostas do Supabase.
-const CACHE = 'agape-pwa-shell-v14';
+const CACHE = 'agape-pwa-shell-v15';
 const SHELL = [
   '/offline.html', '/', '/manifest.json', '/css/agape-modern.css',
   '/icons/icon-192.png', '/icons/icon-512.png',

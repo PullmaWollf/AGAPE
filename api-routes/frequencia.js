@@ -7,6 +7,17 @@ export function criarHandler({ criarCliente = clienteAdmin } = {}) {
     if(req.method!=='POST')throw new HttpError(405,'Método não permitido');
     const db=criarCliente();
     await exigirLiderChamada(db,req,'frequencia_relatorio');
+    if(req.body?.acao==='periodo'){
+      const [primeira,ultima]=await Promise.all([
+        db.from('chamadas').select('data_celula').order('data_celula',{ascending:true}).limit(1).maybeSingle(),
+        db.from('chamadas').select('data_celula').order('data_celula',{ascending:false}).limit(1).maybeSingle(),
+      ]);
+      if(primeira.error)throw new Error(primeira.error.message);
+      if(ultima.error)throw new Error(ultima.error.message);
+      return responder(res,200,{ok:true,
+        primeira:primeira.data?.data_celula||null,
+        ultima:ultima.data?.data_celula||null});
+    }
     const [inicio,fim]=validarPeriodo(req.body?.inicio,req.body?.fim);
     const [users, calls]=await Promise.all([
       db.from('users').select('id,name,created_at,data_ingresso_celula,ativo').eq('ativo',true).order('name'),

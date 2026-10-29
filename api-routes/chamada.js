@@ -49,7 +49,7 @@ export function criarHandler({ criarCliente = clienteAdmin } = {}) {
       if(error)throw new HttpError(503,'Não foi possível excluir a chamada. Tente novamente.');
       return responder(res,200,{ok:true,excluida:true});
     }
-    if (acao==='salvar') {
+    if (acao==='salvar' || acao==='atualizar') {
       const data=validarDataISO(req.body.data);
       const lista=req.body.presencas;
       if(!Array.isArray(lista)||!lista.length||lista.length>500) throw new HttpError(400,'Marque ao menos uma pessoa');
@@ -61,14 +61,16 @@ export function criarHandler({ criarCliente = clienteAdmin } = {}) {
         }
         ids.add(p.user_id);
       }
-      const { data: chamada_id, error }=await db.rpc('salvar_chamada',{
+      const { data: chamada_id, error }=await db.rpc(acao==='salvar'?'salvar_chamada':'atualizar_chamada',{
         p_data:data,p_registrado_por:perfil.id,p_presencas:lista.map(x=>({user_id:x.user_id,status:x.status})),
       });
       if(error) {
+        if(error.code==='23505')throw new HttpError(409,'Já existe uma chamada salva nesta data. Abra a chamada existente para corrigir ou excluir.');
+        if(error.code==='P0002')throw new HttpError(404,'Chamada não encontrada para edição. Atualize a tela.');
         console.error('[chamada] falha ao salvar:',error.code,error.message);
         throw new HttpError(503,'Não foi possível salvar a chamada. Suas marcações continuam neste dispositivo.');
       }
-      return responder(res,200,{ok:true,chamada_id});
+      return responder(res,200,{ok:true,chamada_id,modo:acao});
     }
     throw new HttpError(400,'Ação desconhecida');
   });
