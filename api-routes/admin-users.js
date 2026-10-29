@@ -68,7 +68,7 @@ export function criarHandler({ criarCliente = clienteAdmin } = {}) {
       if (typeof req.body.ativo !== 'boolean') throw new HttpError(400, 'Situação inválida');
       if (alvo.id === eu.id && req.body.ativo === false) throw new HttpError(400, 'Você não pode inativar sua própria conta');
       const ingresso = req.body.data_ingresso_celula || null;
-      if (ingresso && (!/^\\d{4}-\\d{2}-\\d{2}$/.test(ingresso) ||
+      if (ingresso && (!/^\d{4}-\d{2}-\d{2}$/.test(ingresso) ||
         Number.isNaN(Date.parse(ingresso)) || new Date(ingresso).toISOString().slice(0,10) !== ingresso)) {
         throw new HttpError(400, 'Data de ingresso inválida');
       }
