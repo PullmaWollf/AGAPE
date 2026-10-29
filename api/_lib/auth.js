@@ -53,6 +53,7 @@ export async function carregarPermissoes(db, perfil) {
     return Object.fromEntries([
       'gerencial','usuarios','perfis','mural_publicar','mural_excluir',
       'palavra','escala','escala_visualizar','modelos','notificacoes','uploads',
+      'chamada_registrar','frequencia_relatorio',
     ].map((chave) => [chave, true]));
   }
   if (!perfil.perfil_id) return {};
