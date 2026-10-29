@@ -26,7 +26,7 @@
     const el=$('chamada-feedback');el.textContent=msg;el.classList.toggle('error',error);
   }
   function salvarRascunho(){
-    if(!state.data||!window.S?.me)return;
+    if(!state.data||!window.S?.me||state.chamada)return;
     try {localStorage.setItem(chave(),JSON.stringify({marcacoes:state.marcacoes,atualizado:new Date().toISOString()}));}
     catch(e){console.warn('[chamada] rascunho sem armazenamento',e);}
   }
@@ -45,6 +45,7 @@
   function atualizaAcesso(){
     const sec=$('lider-presenca-acesso');
     if(sec)sec.hidden=!autorizado() && !(window.S?.me?.permissoes?.frequencia_relatorio);
+    const hint=$('lider-presenca-explicacao');if(hint)hint.hidden=sec?.hidden??true;
     if(!window.S?.me && (document.getElementById('page-chamada')?.classList.contains('active') ||
       document.getElementById('page-frequencia')?.classList.contains('active'))){
       window.goPage('home');
@@ -251,7 +252,10 @@
       if(!edicao)salvarRascunho();
       feedback(e.message||'Falha ao salvar a chamada.',true);
       window.toast('Não foi possível salvar. Verifique o aviso.','err');
-      if(e.status===409||String(e.message||'').includes('Já existe uma chamada'))await carregar();
+      if(e.status===409||String(e.message||'').includes('Já existe uma chamada')){
+        state.salvando=false;
+        await carregar();
+      }
     }finally{
       state.salvando=false;
       if(btn){btn.disabled=false;btn.textContent=edicao?'Salvar correções':'Salvar chamada';}
