@@ -1,5 +1,5 @@
 import { HttpError } from './http.js';
-import { usuarioAutenticado, carregarPermissoes } from './auth.js';
+import { usuarioAutenticado } from './auth.js';
 
 export const permissoesChamada = [
   ['chamada_registrar', 'Realizar chamadas de presença'],
@@ -18,9 +18,8 @@ export async function exigirLiderChamada(db, req, chave) {
   if (!['lider', 'lider em treinamento'].includes(normalizar(data?.nome))) {
     throw new HttpError(403, 'Acesso exclusivo a Líder e Líder em Treinamento');
   }
-  const permissoes = await carregarPermissoes(db, perfil);
-  // ADM Líder continua submetido ao perfil elegível, como os demais.
-  if (!data?.permissoes?.[chave] && !permissoes?.[chave]) {
+  // A permissão deve estar habilitada no perfil da liderança.
+  if (data?.permissoes?.[chave] !== true) {
     throw new HttpError(403, 'Permissão de chamada não concedida');
   }
   return { perfil, nomePerfil: data.nome };
