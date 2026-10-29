@@ -1065,7 +1065,7 @@ function renderUsers() {
   }).join('');
 }
 
-async async function atualizarDispositivos() {
+async function atualizarDispositivos() {
   if (!isAdm()) return;
   try {
     const r = await chamarApi('/api/notificacoes-admin', {});
