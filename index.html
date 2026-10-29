@@ -656,7 +656,7 @@ body{
 .pwa-auth-hint {color:var(--muted);font-size:.79rem;line-height:1.5;margin:0 0 14px}
   </style>
 <script defer src="/_vercel/insights/script.js"></script>
-<link rel="stylesheet" href="/css/agape-modern.css?v=20261020b">
+<link rel="stylesheet" href="/css/agape-modern.css?v=20261029">
 </head>
 <body>
 
@@ -875,7 +875,14 @@ body{
   <div class="posts-list" id="adm-posts-list"></div>
   </div>
   <div class="adm-panel" id="adm-palavra">
-    <div class="form-card"><h3>Palavra da Célula</h3><p class="hint">Envie somente a palavra atual em PDF, com 2 a 4 páginas.</p><input id="palavra-pdf" type="file" accept="application/pdf" onchange="publicarPalavra(this)"><button class="btn btn-ghost btn-full" type="button" onclick="removerPalavra()">Remover Palavra atual</button></div>
+    <div class="form-card palavra-admin-card">
+      <h3>Palavra da Célula</h3>
+      <p class="hint">Publique a palavra atual em PDF. <strong>Sem limite de páginas</strong> (arquivo de até 15 MB).</p>
+      <label for="palavra-pdf" class="palavra-file-label">Selecionar PDF</label>
+      <input id="palavra-pdf" type="file" accept=".pdf,application/pdf" aria-describedby="palavra-upload-status" onchange="publicarPalavra(this)">
+      <p class="palavra-upload-status" id="palavra-upload-status" role="status" aria-live="polite">Selecione um arquivo para publicar.</p>
+      <button class="btn btn-ghost btn-full" type="button" onclick="removerPalavra()">Remover Palavra atual</button>
+    </div>
   </div>
 
   <div class="adm-panel" id="adm-escala-a">
