@@ -120,3 +120,43 @@
  .chamada-summary-actions button{width:100%;flex:unset}
  .chamada-result-row button{white-space:normal;text-align:center;min-width:105px}
 }
+
+/* Painel ADM > Chamadas. Independente das telas MATCH e Relatórios. */
+#adm-tab-chamadas[hidden],#adm-chamadas-mais[hidden]{display:none!important}
+.adm-chamadas-cabecalho{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;padding:21px 22px;background:#fff;border:1px solid #dce8ee;border-radius:18px;box-shadow:0 4px 16px #173a5310}
+.adm-chamadas-cabecalho h3{margin:5px 0 8px;color:#254b63;font-size:1.4rem}
+.adm-chamadas-cabecalho p{margin:0;color:#5b7384;line-height:1.55;font-size:.87rem;max-width:580px}
+.adm-chamadas-cabecalho .btn{min-height:44px;white-space:normal}
+.adm-chamadas-alerta{margin:13px 0;padding:13px 15px;background:#fff8ec;border:1px solid #f0dfbf;border-radius:12px;font-size:.83rem;line-height:1.55;color:#765b32}
+.adm-chamadas-resumo{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;margin:18px 2px 8px;color:#2b526a}
+.adm-chamadas-resumo strong{font-size:.98rem}.adm-chamadas-resumo span{font-size:.78rem;color:#718695}
+.adm-chamadas-lista{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:13px}
+.adm-chamada-item{background:#fff;border:1px solid #dbe8ee;border-radius:17px;padding:18px;box-shadow:0 5px 17px #193d5410;min-width:0}
+.adm-chamada-topo,.adm-chamada-data{display:flex;align-items:center;gap:11px}
+.adm-chamada-topo{justify-content:space-between;flex-wrap:wrap}
+.adm-chamada-data strong{display:block;font-size:1.15rem;color:#28506b}
+.adm-chamada-data small{display:block;color:#7a8d9b;font-size:.75rem;margin-top:3px}
+.adm-chamada-calendario{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:#eaf5f9;font-size:1.3rem}
+.adm-chamada-situacao{font-size:.72rem;font-weight:800;color:#277d60;background:#e5f6ed;padding:7px 11px;border-radius:30px}
+.adm-chamada-numeros{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 12px}
+.adm-chamada-numeros span{font-size:.79rem;color:#4f687a;background:#f1f5f8;padding:8px 10px;border-radius:9px}
+.adm-chamada-numeros strong{font-size:1.05rem}
+.adm-chamada-numeros .adm-chamada-presente{color:#257c59;background:#e9f8ef}
+.adm-chamada-numeros .adm-chamada-ausente{color:#a35055;background:#fff0f0}
+.adm-chamada-meta{font-size:.76rem;color:#6b7f8e;line-height:1.5;margin:0 0 16px;overflow-wrap:anywhere}
+.adm-chamada-acoes{display:flex;gap:9px;flex-wrap:wrap}
+.adm-chamada-acoes .btn{flex:1 1 145px;min-width:0;min-height:44px;height:auto;white-space:normal;padding:11px 12px;font-size:.83rem;line-height:1.35}
+.adm-chamada-cancelar{background:#fff6f6;color:#a33e48;border:1px solid #e6b4b9;border-radius:11px;font-weight:800;cursor:pointer}
+.adm-chamada-cancelar:hover{background:#ffebed}
+.adm-chamada-cancelar:focus-visible{outline:3px solid #b84f5c;outline-offset:2px}
+.adm-chamada-acoes button:disabled{opacity:.5;cursor:wait}
+.adm-chamadas-vazio{grid-column:1/-1;text-align:center;background:#fff;border:1px dashed #c9dce7;border-radius:16px;padding:34px 22px;color:#6c8595;line-height:1.7}
+.adm-chamadas-mais{display:block;margin:18px auto;min-height:44px}
+#adm-chamadas-status.error{color:#a5363b;font-weight:700}
+@media(max-width:460px){
+  .adm-chamadas-cabecalho{padding:17px}
+  .adm-chamadas-cabecalho .btn{width:100%}
+  .adm-chamada-acoes{flex-direction:column}
+  .adm-chamada-acoes .btn{flex:unset;width:100%}
+  .adm-chamadas-lista{grid-template-columns:1fr}
+}
