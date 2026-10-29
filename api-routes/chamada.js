@@ -38,6 +38,17 @@ export function criarHandler({ criarCliente = clienteAdmin } = {}) {
         presencas,config:Object.fromEntries((config.data||[]).map(x=>[x.chave,x.valor])),
       });
     }
+    if (acao==='excluir') {
+      const data=validarDataISO(req.body.data);
+      const { data: chamada, error: consultaErro }=await db.from('chamadas')
+        .select('id').eq('data_celula',data).maybeSingle();
+      if(consultaErro)throw new Error(consultaErro.message);
+      if(!chamada)throw new HttpError(404,'Nenhuma chamada salva nesta data');
+      // ON DELETE CASCADE remove as presenças; relatório deixa de contar a reunião.
+      const { error }=await db.from('chamadas').delete().eq('id',chamada.id);
+      if(error)throw new HttpError(503,'Não foi possível excluir a chamada. Tente novamente.');
+      return responder(res,200,{ok:true,excluida:true});
+    }
     if (acao==='salvar') {
       const data=validarDataISO(req.body.data);
       const lista=req.body.presencas;
