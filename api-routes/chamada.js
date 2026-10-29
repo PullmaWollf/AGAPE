@@ -8,6 +8,11 @@ export function criarHandler({ criarCliente = clienteAdmin } = {}) {
     const db=criarCliente();
     const { acao }=req.body||{};
     const { perfil }=await exigirLiderChamada(db,req,'chamada_registrar');
+    if (acao==='config') {
+      const r=await db.from('config').select('chave,valor').in('chave',['celula_dia_semana','celula_hora']);
+      if(r.error)throw new Error(r.error.message);
+      return responder(res,200,{ok:true,config:Object.fromEntries((r.data||[]).map(x=>[x.chave,x.valor]))});
+    }
     if (acao==='abrir') {
       const data=validarDataISO(req.body.data);
       const [membros, config, chamada]=await Promise.all([
