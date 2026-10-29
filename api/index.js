@@ -14,6 +14,8 @@ import palavraCelula from '../api-routes/palavra-celula.js';
 import profileAvatar from '../api-routes/profile-avatar.js';
 import pushDevice from '../api-routes/push-device.js';
 import testPush from '../api-routes/test-push.js';
+import chamada from '../api-routes/chamada.js';
+import frequencia from '../api-routes/frequencia.js';
 
 const rotas = {
   'admin-perfis': adminPerfis,
@@ -32,6 +34,8 @@ const rotas = {
   'profile-avatar': profileAvatar,
   'push-device': pushDevice,
   'test-push': testPush,
+  chamada,
+  frequencia,
 };
 
 export default async function handler(req, res) {
