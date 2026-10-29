@@ -4,7 +4,7 @@
   const $=id=>document.getElementById(id);
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const state={raw:null,resultado:null};
-  const permitido=()=>!!window.S?.me && (window.S.me.permissoes?.frequencia_relatorio || window.S.me.role==='adm');
+  const permitido=()=>!!window.S?.me && (window.S.me.permissoes?.frequencia_relatorio === true);
   const nomeData=d=>d?d.slice(8,10)+'/'+d.slice(5,7):'—';
   function status(msg,error=false){$('freq-status').textContent=msg;$('freq-status').classList.toggle('error',error);}
   function periodoAlterado(){
