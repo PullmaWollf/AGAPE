@@ -327,7 +327,8 @@ function goPage(id) {
   $('fab-escala').classList.toggle('show', id === 'escala' && isAdm());
   if (id === 'mural') renderPosts();
   if (id === 'escala') { renderEscala(); renderBannerNotif(); }
-  if (id === 'adm') { renderUsers(); renderAdmPosts(); renderAdmEscala(); renderModelos(); renderPerfis(); }
+  if (id === 'adm') { renderUsers(); renderAdmPosts(); renderAdmEscala(); renderModelos(); renderPerfis();
+    if ($('adm-chamadas')?.classList.contains('active')) window.agapeAdminChamadas?.abrir(); }
   if (id === 'home') { renderHome(); renderBannerNotif(); }
   window.scrollTo({ top: 0 });
 }
