@@ -1285,15 +1285,27 @@ function renderNotifAdm() {
 }
 
 // ══════════════════════════════════════════
-// INSTALAÇÃO PWA — instruções manuais, sem prompts automáticos.
-// Chrome/Android instala pelo menu de três pontos; iOS pelo Compartilhar.
-// O passo a passo permanece visível na página inicial.
+// INSTALAÇÃO PWA: o botão mostra o prompt nativo quando suportado.
+// iOS/Safari e navegadores sem beforeinstallprompt recebem instruções em um modal.
+// Jamais dispara aviso automático ou mostra instalação no PWA já instalado.
 // ══════════════════════════════════════════
+let pedidoInstalacaoPWA = null;
+window.addEventListener('beforeinstallprompt', (evento) => {
+  if (emModoAplicativo()) return;
+  evento.preventDefault();
+  pedidoInstalacaoPWA = evento;
+});
+window.addEventListener('appinstalled', () => {
+  pedidoInstalacaoPWA = null;
+  closeSheet('install-sheet');
+  atualizarModoAplicativo();
+  toast('Ágape instalado! Abra pelo ícone do aplicativo. 🎉');
+});
+
 function emModoAplicativo() {
   return ehInstalado() || ['fullscreen', 'minimal-ui'].some((modo) =>
     window.matchMedia && window.matchMedia(`(display-mode: ${modo})`).matches);
 }
-
 function atualizarModoAplicativo() {
   const instalado = emModoAplicativo();
   document.documentElement.classList.toggle('agape-installed', instalado);
@@ -1301,10 +1313,11 @@ function atualizarModoAplicativo() {
   const atalho = $('pwa-install-global');
   if (instrucoes) instrucoes.hidden = instalado;
   if (atalho) atalho.hidden = instalado;
+  if (instalado) closeSheet('install-sheet');
 }
 
 function selecionarGuiaInstalacao(plataforma) {
-  const selecionado = plataforma === 'ios' ? 'ios' : 'android';
+  const selecionado = ['ios', 'android', 'desktop'].includes(plataforma) ? plataforma : 'android';
   document.querySelectorAll('[data-install-guide]').forEach((elemento) => {
     elemento.hidden = elemento.dataset.installGuide !== selecionado;
   });
@@ -1317,15 +1330,35 @@ function selecionarGuiaInstalacao(plataforma) {
 
 function mostrarInstrucaoPWA() {
   if (emModoAplicativo()) return;
-  if (!$('page-home')?.classList.contains('active')) goPage('home');
-  const alvo = $('como-instalar');
-  if (!alvo) return;
-  requestAnimationFrame(() => alvo.scrollIntoView({
-    behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
-    block: 'start'
-  }));
+  const android = /android/i.test(navigator.userAgent);
+  const escolha = ehIOS() ? 'ios' : android ? 'android' : 'desktop';
+  selecionarGuiaInstalacao(escolha);
+  const aviso = $('install-sheet-status');
+  const interno = /instagram|fban|fbav|fb_iab|whatsapp|telegram/i.test(navigator.userAgent);
+  if (aviso) {
+    aviso.textContent = interno
+      ? 'Abra o Ágape no Safari ou Chrome do aparelho para instalar. Navegadores internos de outros aplicativos podem impedir a instalação.'
+      : escolha === 'ios'
+        ? 'No iPhone, o Safari não permite instalar automaticamente. Use Compartilhar → Adicionar à Tela de Início.'
+        : 'A instalação direta não está disponível neste navegador agora. Use o menu indicado abaixo.';
+  }
+  openSheet('install-sheet');
 }
+
+// Essa função é chamada diretamente pelo clique para preservar a ativação exigida pelo Chrome.
 function acionarInstalacaoPWA() {
+  if (emModoAplicativo()) return;
+  const evento = pedidoInstalacaoPWA;
+  if (evento && typeof evento.prompt === 'function') {
+    pedidoInstalacaoPWA = null; // Cada evento só pode mostrar uma confirmação.
+    try {
+      Promise.resolve(evento.prompt()).catch(() => mostrarInstrucaoPWA());
+    } catch (erro) {
+      console.warn('[pwa] confirmação nativa indisponível:', erro);
+      mostrarInstrucaoPWA();
+    }
+    return;
+  }
   mostrarInstrucaoPWA();
 }
 
@@ -1349,7 +1382,7 @@ window.msgErro = msgErro;
 
 // A apresentação instalada é distinta da versão no navegador.
 atualizarModoAplicativo();
-selecionarGuiaInstalacao(ehIOS() ? 'ios' : 'android');
+selecionarGuiaInstalacao(ehIOS() ? 'ios' : /android/i.test(navigator.userAgent) ? 'android' : 'desktop');
 window.addEventListener('pageshow', atualizarModoAplicativo);
 if (window.matchMedia) {
   ['standalone', 'fullscreen', 'minimal-ui'].forEach((modo) => {
