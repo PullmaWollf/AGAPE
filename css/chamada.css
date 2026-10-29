@@ -97,3 +97,26 @@
 }
 
 .freq-ativo-check{display:flex;align-items:center;gap:10px;margin:14px 0;font-size:.9rem;font-weight:700;color:#355870}.freq-ativo-check input{width:19px;height:19px;accent-color:#287998}
+
+/* Chamada x Relatórios: instruções visíveis e layout responsivo das ações */
+.lider-presenca-explicacao,.chamada-como-funciona,.freq-como-funciona{font-size:.83rem;line-height:1.6;color:#47687d;background:#edf6fa;border:1px solid #d6e8f1;padding:13px 15px;border-radius:13px;margin:11px 0 16px}
+.lider-presenca-explicacao[hidden],#chamada-existente[hidden]{display:none!important}
+.chamada-ja-registrada{background:#fff;border:1px solid #bedce9;border-radius:20px;padding:25px 20px;text-align:center;box-shadow:0 8px 25px #183f5810}
+.chamada-ja-icon{width:58px;height:58px;display:grid;place-items:center;background:#e6f6ed;color:#208a63;font-size:2rem;font-weight:900;border-radius:50%;margin:0 auto 13px}
+.chamada-ja-registrada h3{font-size:1.3rem;color:#26526d;margin:9px 0}
+.chamada-ja-registrada p{color:#647f91;font-size:.88rem;line-height:1.6}
+.chamada-ja-totais{display:flex;justify-content:center;gap:13px;flex-wrap:wrap;margin:17px 0}
+.chamada-ja-totais span{padding:10px 14px;background:#edf5f8;color:#3a6b82;border-radius:12px;font-weight:800;font-size:.86rem}
+.chamada-ja-acoes{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:17px}
+.chamada-ja-acoes .btn{min-width:180px;max-width:100%;white-space:normal;min-height:46px}
+.chamada-ja-hint{font-size:.76rem!important;margin-top:20px}
+.chamada-summary-actions{display:flex;flex-wrap:wrap;align-items:stretch;gap:10px}
+.chamada-summary-actions button{flex:1 1 180px;min-width:0!important;max-width:100%;white-space:normal;min-height:50px;height:auto;padding:11px 14px;overflow-wrap:anywhere}
+.chamada-excluir{border:1px solid #d9a5a5!important;color:#a53c47!important}
+@media(max-width:480px){
+ .chamada-ja-acoes{flex-direction:column}
+ .chamada-ja-acoes .btn{width:100%}
+ .chamada-summary-actions{flex-direction:column}
+ .chamada-summary-actions button{width:100%;flex:unset}
+ .chamada-result-row button{white-space:normal;text-align:center;min-width:105px}
+}
