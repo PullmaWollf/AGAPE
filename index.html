@@ -926,6 +926,7 @@ body{
       <div class="install-howto-picker" role="group" aria-label="Escolha seu dispositivo">
         <button type="button" class="install-platform-btn active" data-install-platform="android" aria-pressed="true" onclick="selecionarGuiaInstalacao('android')">Android</button>
         <button type="button" class="install-platform-btn" data-install-platform="ios" aria-pressed="false" onclick="selecionarGuiaInstalacao('ios')">iPhone / iPad</button>
+        <button type="button" class="install-platform-btn" data-install-platform="desktop" aria-pressed="false" onclick="selecionarGuiaInstalacao('desktop')">Computador</button>
       </div>
       <div class="install-howto-grid">
         <article class="install-howto-card" data-install-guide="android">
@@ -950,6 +951,18 @@ body{
             <li><span class="install-step-text">Toque no botão <strong>Compartilhar</strong> (quadrado com uma seta para cima).</span></li>
             <li><span class="install-step-text">Role o menu e escolha <strong>Adicionar à Tela de Início</strong>.</span></li>
             <li><span class="install-step-text">Confirme em <strong>Adicionar</strong> e abra o ícone <strong>Ágape</strong> na tela inicial.</span></li>
+          </ol>
+        </article>
+        <article class="install-howto-card" data-install-guide="desktop" hidden>
+          <div class="install-device-heading">
+            <span class="install-device-mark" aria-hidden="true">💻</span>
+            <div><h3>Windows / Mac</h3><p>Chrome, Edge ou Safari</p></div>
+          </div>
+          <ol class="install-howto-list">
+            <li><span class="install-step-text">Abra o Ágape no <strong>Chrome</strong> ou <strong>Edge</strong>.</span></li>
+            <li><span class="install-step-text">No menu <strong>⋮</strong>, selecione <strong>Instalar aplicativo</strong> ou <strong>Apps → Instalar este site</strong>.</span></li>
+            <li><span class="install-step-text">Confirme e abra o novo ícone do Ágape.</span></li>
+            <li><span class="install-step-text">No <strong>Safari do Mac</strong>, use <strong>Arquivo → Adicionar ao Dock</strong>.</span></li>
           </ol>
         </article>
       </div>
