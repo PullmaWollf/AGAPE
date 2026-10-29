@@ -1,1 +1,1 @@
-export { criarHandler } from '../api-routes/admin-users.js';
+export { default, criarHandler } from '../api-routes/admin-users.js';
