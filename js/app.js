@@ -1067,10 +1067,34 @@ function renderUsers() {
         <div class="user-login">${esc(u.login)} · ${n ? `🔔 ${n}` : '🔕 sem aparelho'}</div></div>
       <span class="role-tag role-${u.role === 'adm' ? 'adm' : 'membro'}">${esc(S.perfis.find((p) => p.id === u.perfil_id)?.nome || 'Sem perfil')}</span>
       <button class="btn-sm-icon" onclick="abrirSenhaUsuario('${id}')" aria-label="Redefinir senha">🔑</button>
+      <button class="btn-sm-icon" onclick="abrirSituacaoPresenca('${id}')" aria-label="Situação e ingresso na célula">📅</button>
       ${eu ? '' : `<button class="btn-sm-icon" onclick="alternarPerfil('${id}')" aria-label="Alternar perfil">⭐</button>
       <button class="btn-sm-icon" onclick="deleteUser('${id}')" aria-label="Excluir usuário">🗑</button>`}
     </div>`;
   }).join('');
+}
+
+async function abrirSituacaoPresenca(id) {
+  const u=S.users.find(x=>x.id===id);if(!u)return;
+  try {
+    const r=await chamarApi('/api/admin-users',{acao:'consultar_situacao',id});
+    $('situacao-presenca-id').value=id;
+    $('situacao-presenca-nome').textContent=u.name;
+    $('situacao-presenca-ingresso').value=r.usuario?.data_ingresso_celula||'';
+    $('situacao-presenca-ativo').checked=r.usuario?.ativo!==false;
+    openSheet('situacao-presenca-sheet');
+  } catch(e){toast(msgErro(e,'Não foi possível consultar o integrante.'),'err');}
+}
+async function salvarSituacaoPresenca(){
+  const id=$('situacao-presenca-id').value;
+  try {
+    await chamarApi('/api/admin-users',{
+      acao:'salvar_situacao',id,ativo:$('situacao-presenca-ativo').checked,
+      data_ingresso_celula:$('situacao-presenca-ingresso').value||null
+    });
+    closeSheet('situacao-presenca-sheet');
+    toast('Participação atualizada!');
+  }catch(e){toast(msgErro(e),'err');}
 }
 
 async function atualizarDispositivos() {
