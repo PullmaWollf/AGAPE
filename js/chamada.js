@@ -3,7 +3,7 @@
   'use strict';
   const $ = (id) => document.getElementById(id);
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const state={data:'',membros:[],marcacoes:{},historico:[],chamada:null,carregando:false};
+  const state={data:'',membros:[],marcacoes:{},historico:[],chamada:null,carregando:false,salvando:false,modoEdicao:false,animando:false,reqId:0};
   const autorizado=()=>Boolean(window.S?.me && (
     window.S.me.permissoes?.chamada_registrar===true
   ));
@@ -56,7 +56,7 @@
     feedback('Carregando padrão da célula…');
     try {
       const r=await window.chamarApi('/api/chamada',{acao:'config'});
-      if(!state.data)state.data=dataPadrao(r.config?.celula_dia_semana);
+      state.data=dataPadrao(r.config?.celula_dia_semana);
       $('chamada-data').value=state.data;
       await carregar();
     }catch(e){
@@ -68,17 +68,45 @@
     state.data=data;await carregar();
   }
   async function carregar(){
-    if(state.carregando||!autorizado())return;
+    if(!autorizado()||state.salvando)return;
+    const token=++state.reqId;
     state.carregando=true;feedback('Carregando participantes…');
     $('chamada-game').hidden=true;$('chamada-summary').hidden=true;
+    const existente=$('chamada-existente');if(existente)existente.hidden=true;
     try {
       const r=await window.chamarApi('/api/chamada',{acao:'abrir',data:state.data});
-      state.membros=r.membros||[];state.chamada=r.chamada;state.historico=[];
+      if(token!==state.reqId)return;
+      state.membros=r.membros||[];state.chamada=r.chamada;state.historico=[];state.modoEdicao=false;
       state.marcacoes=Object.fromEntries((r.presencas||[]).map(p=>[p.user_id,p.status]));
-      aplicarRascunho();render();
-      feedback(state.chamada?'Chamada existente carregada. Você pode revisar e corrigir.':'Marque a presença de cada pessoa.');
-    }catch(e){feedback((e.message||'Falha de conexão')+' · Suas marcações locais foram preservadas.',true);}
-    finally{state.carregando=false;}
+      if(!state.chamada)aplicarRascunho();
+      render();
+      feedback(state.chamada?'Esta data já tem chamada salva. Não é possível lançar outra. Use as opções abaixo para consultar ou corrigir.':'Nova chamada: marque quem veio e quem faltou.');
+    }catch(e){if(token===state.reqId)feedback((e.message||'Falha de conexão')+' · Suas marcações locais foram preservadas.',true);}
+    finally{if(token===state.reqId)state.carregando=false;}
+  }
+  function renderExistente(){
+    $('chamada-game').hidden=true;$('chamada-summary').hidden=true;
+    const box=$('chamada-existente');if(!box)return;
+    const presentes=Object.values(state.marcacoes).filter(x=>x==='presente').length;
+    const faltas=Object.values(state.marcacoes).filter(x=>x==='ausente').length;
+    const data=state.data.split('-').reverse().join('/');
+    box.hidden=false;
+    box.innerHTML=`<div class="chamada-ja-registrada">
+      <div class="chamada-ja-icon" aria-hidden="true">✓</div>
+      <span class="chamada-eyebrow">REUNIÃO REGISTRADA</span>
+      <h3>Já existe uma chamada em ${esc(data)}</h3>
+      <p>Esta data já foi lançada. Não é possível fazer outra chamada para o mesmo dia.</p>
+      <div class="chamada-ja-totais"><span>✓ ${presentes} vieram</span><span>✕ ${faltas} faltaram</span></div>
+      <div class="chamada-ja-acoes">
+        <button type="button" class="btn btn-primary" id="chamada-revisar-existente">Ver / corrigir chamada</button>
+        <button type="button" class="btn btn-ghost" id="chamada-excluir-existente">🗑️ Excluir chamada</button>
+      </div>
+      <p class="chamada-ja-hint">Para registrar outra reunião, selecione uma data diferente acima.</p>
+    </div>`;
+    $('chamada-revisar-existente').addEventListener('click',()=>{
+      state.modoEdicao=true;box.hidden=true;resumo();
+    });
+    $('chamada-excluir-existente').addEventListener('click',excluir);
   }
   function restantes(){return state.membros.filter(m=>!state.marcacoes[m.id]);}
   function progresso(){
@@ -98,6 +126,8 @@
       </article>`;
   }
   function render(){
+    if(state.chamada && !state.modoEdicao){renderExistente();return;}
+    const existente=$('chamada-existente');if(existente)existente.hidden=true;
     progresso();
     const queue=restantes();
     const game=$('chamada-game'),summary=$('chamada-summary');
@@ -136,27 +166,31 @@
     card.addEventListener('pointercancel',fim);
   }
   function responder(status){
+    if(state.salvando||state.animando||state.carregando||state.chamada&&!state.modoEdicao)return;
     const m=restantes()[0];
     if(!m||!['presente','ausente'].includes(status))return;
     state.marcacoes[m.id]=status;state.historico.push(m.id);
     salvarRascunho();if(navigator.vibrate)navigator.vibrate(18);
     const card=$('chamada-deck').querySelector('.match-card:not(.match-back)');
     if(card){
+      state.animando=true;
       card.style.transition='transform .17s ease,opacity .17s ease';
       card.style.transform=`translateX(${status==='presente'?600:-600}px) rotate(${status==='presente'?18:-18}deg)`;
-      card.style.opacity='0';setTimeout(render,170);
+      card.style.opacity='0';setTimeout(()=>{state.animando=false;render();},170);
     }else render();
   }
   function desfazer(){
+    if(state.salvando||state.animando)return;
     const id=state.historico.pop();if(!id)return;
     delete state.marcacoes[id];salvarRascunho();render();
   }
   function corrigir(id){
-    if(!state.marcacoes[id])return;
+    if(state.salvando||!state.marcacoes[id]||state.chamada&&!state.modoEdicao)return;
     state.marcacoes[id]=state.marcacoes[id]==='presente'?'ausente':'presente';
     salvarRascunho();resumo();
   }
   function resumo(){
+    if(state.chamada&&!state.modoEdicao){renderExistente();return;}
     const queue=restantes();
     $('chamada-game').hidden=true;$('chamada-summary').hidden=false;
     const present=state.membros.filter(m=>state.marcacoes[m.id]==='presente');
@@ -171,7 +205,7 @@
       }).join('')}</div>
       <div class="chamada-summary-actions">
         ${queue.length?'<button type="button" class="btn btn-ghost" id="chamada-continuar">Continuar marcação</button>':
-        '<button type="button" class="btn btn-primary" id="chamada-salvar">Salvar chamada</button>'}
+        `<button type="button" class="btn btn-primary" id="chamada-salvar">${state.chamada?'Salvar correções':'Salvar chamada'}</button>`}
         ${state.chamada?'<button type="button" class="btn btn-ghost chamada-excluir" id="chamada-excluir">🗑️ Excluir chamada salva</button>':''}
       </div></div>`;
     document.querySelectorAll('[data-corrigir]').forEach(b=>b.addEventListener('click',()=>corrigir(b.dataset.corrigir)));
@@ -180,16 +214,17 @@
     $('chamada-excluir')?.addEventListener('click',excluir);
   }
   async function excluir(){
-    if(!state.chamada)return;
+    if(!state.chamada||state.salvando)return;
     const data=state.data.split('-').reverse().join('/');
     if(!window.confirm('Excluir definitivamente a chamada de '+data+'? Todas as presenças e faltas desta data serão removidas dos relatórios. Esta ação não pode ser desfeita.'))return;
-    const btn=$('chamada-excluir');if(btn)btn.disabled=true;
+    const btn=$('chamada-excluir')||$('chamada-excluir-existente');if(btn)btn.disabled=true;
     feedback('Excluindo chamada…');
     try{
       await window.chamarApi('/api/chamada',{acao:'excluir',data:state.data});
       localStorage.removeItem(chave());
-      state.chamada=null;state.marcacoes={};state.historico=[];
+      state.chamada=null;state.marcacoes={};state.historico=[];state.modoEdicao=false;
       render();
+      window.agapeFrequencia?.invalidar?.();
       feedback('Chamada excluída. Você pode lançar uma nova chamada nesta data.');
       window.toast('Chamada excluída com sucesso!');
     }catch(e){
@@ -198,20 +233,29 @@
     }
   }
   async function salvar(){
-    if(restantes().length || !state.membros.length)return;
-    const btn=$('chamada-salvar');if(btn)btn.disabled=true;
+    if(state.salvando||state.carregando||restantes().length||!state.membros.length||
+       state.chamada&&!state.modoEdicao)return;
+    state.salvando=true;
+    const btn=$('chamada-salvar');if(btn){btn.disabled=true;btn.textContent='Salvando…';}
     feedback('Salvando chamada com segurança…');
+    const edicao=!!state.chamada;
     try {
-      await window.chamarApi('/api/chamada',{acao:'salvar',data:state.data,
+      await window.chamarApi('/api/chamada',{acao:edicao?'atualizar':'salvar',data:state.data,
         presencas:state.membros.map(m=>({user_id:m.id,status:state.marcacoes[m.id]}))});
       localStorage.removeItem(chave());
-      state.historico=[];
-      feedback('Chamada salva! Você pode reabrir a data para editar.');
-      window.toast('Chamada salva com sucesso!');
+      state.historico=[];state.modoEdicao=false;state.chamada=null;state.data='';
+      window.agapeFrequencia?.invalidar?.();
+      window.goPage('home');
+      window.toast(edicao?'Correções salvas com sucesso!':'Chamada salva com sucesso!');
     }catch(e){
-      salvarRascunho();feedback((e.message||'Falha ao salvar')+' Toque em Salvar para tentar novamente.',true);
-      window.toast('Não foi possível salvar. Rascunho preservado.','err');
-    }finally{if(btn)btn.disabled=false;}
+      if(!edicao)salvarRascunho();
+      feedback(e.message||'Falha ao salvar a chamada.',true);
+      window.toast('Não foi possível salvar. Verifique o aviso.','err');
+      if(e.status===409||String(e.message||'').includes('Já existe uma chamada'))await carregar();
+    }finally{
+      state.salvando=false;
+      if(btn){btn.disabled=false;btn.textContent=edicao?'Salvar correções':'Salvar chamada';}
+    }
   }
   document.addEventListener('keydown',e=>{
     if(!$('page-chamada')?.classList.contains('active')||
