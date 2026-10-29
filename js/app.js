@@ -312,7 +312,7 @@ function renderEscalaTudo() { renderEscala(); renderAdmEscala(); renderHome(); }
 function goPage(id) {
   if (['chamada','frequencia'].includes(id)) {
     const chave = id === 'chamada' ? 'chamada_registrar' : 'frequencia_relatorio';
-    if (!S.me || !(S.me.permissoes?.[chave] === true || S.me.role === 'adm')) {
+    if (!S.me || !(S.me.permissoes?.[chave] === true)) {
       toast('Área exclusiva da liderança.', 'warn');
       id = 'home';
     }
