@@ -210,7 +210,7 @@ async function carregarPublico() {
     db.from('escala_semanas').select('*').order('date', { ascending: true }),
     db.from('escala_atribuicoes').select('id,escala_id,user_id,user_name,funcao_id,funcao_nome'),
     db.from('escala_funcoes').select('id,nome').order('nome'),
-    db.from('palavra_celula').select('titulo,arquivo_path,nome_arquivo,paginas,atualizado_em').maybeSingle(),
+    fetch('/api/palavra-celula', { cache: 'no-store' }).then(async (r) => { const j = await r.json(); if (!r.ok) throw new Error(j.erro || 'Falha na Palavra'); return { data: j.palavra || null, error: null }; }).catch((error) => ({ data: null, error })),
   ]);
   for (const r of [p, s, a, f]) if (r.error) throw r.error;
   S.posts = p.data; S.funcoes = f.data;
@@ -340,33 +340,72 @@ function renderPalavra() {
   const el = $('palavra-celula-view'); if (!el) return;
   if (!S.palavra) { el.innerHTML = '<div class="empty">A Palavra da Célula ainda não foi publicada.</div>'; return; }
   const url = `${db.storage.from('palavra-celula').getPublicUrl(S.palavra.arquivo_path).data.publicUrl}?v=${encodeURIComponent(S.palavra.atualizado_em || Date.now())}`;
-  el.innerHTML = `<h3>${esc(S.palavra.titulo)}</h3><p>${esc(S.palavra.nome_arquivo)} · ${S.palavra.paginas} páginas</p><iframe title="${esc(S.palavra.titulo)}" src="${esc(url)}#page=1&view=FitH"></iframe><a class="btn btn-ghost btn-full" href="${esc(url)}" target="_blank" rel="noopener">Abrir PDF</a>`;
+  const info = esc(S.palavra.nome_arquivo || 'Documento PDF');
+  el.innerHTML = `<h3>${esc(S.palavra.titulo)}</h3><p>${info}</p><iframe title="${esc(S.palavra.titulo)}" src="${esc(url)}#page=1&view=FitH" loading="lazy"></iframe><a class="btn btn-ghost btn-full" href="${esc(url)}" target="_blank" rel="noopener">Abrir PDF</a>`;
 }
+function statusPalavra(mensagem, tipo = '') {
+  const el = $('palavra-upload-status');
+  if (!el) return;
+  el.textContent = mensagem;
+  el.dataset.status = tipo;
+}
+
 async function publicarPalavra(input) {
   if (!temPermissao('palavra')) return toast('Você não tem permissão para alterar a Palavra da Célula.', 'warn');
-  const file = input.files?.[0]; input.value = '';
+  const file = input.files?.[0];
   if (!file) return;
-  if (file.type !== 'application/pdf' || file.size > 15 * 1024 * 1024) return toast('Envie um PDF de até 15 MB.', 'warn');
-  const paginas = Number(prompt('Quantas páginas o PDF possui? (2 a 4)', '2'));
-  if (!Number.isInteger(paginas) || paginas < 2 || paginas > 4) return toast('A Palavra precisa ter de 2 a 4 páginas.', 'warn');
-  const path = `${S.me.id}/palavra-${Date.now()}-${novoId()}.pdf`;
-  const up = await db.storage.from('palavra-celula').upload(path, file, { contentType: 'application/pdf', upsert: true });
-  if (up.error) return toast(msgErro(up.error, 'Não foi possível enviar o PDF.'), 'err');
-  const caminhoAnterior = S.palavra?.arquivo_path;
-  const row = { id: true, titulo: 'Palavra da Célula', arquivo_path: path, nome_arquivo: file.name, paginas, atualizado_por: S.me.id, atualizado_em: new Date().toISOString() };
-  const saved = await db.from('palavra_celula').upsert(row).select().single();
-  if (saved.error) return toast(msgErro(saved.error, 'Não foi possível salvar a Palavra.'), 'err');
-  if (caminhoAnterior && caminhoAnterior !== path) await db.storage.from('palavra-celula').remove([caminhoAnterior]);
-  S.palavra = saved.data; renderPalavra(); toast('Palavra da Célula atualizada.');
+  const limiteBytes = 15 * 1024 * 1024;
+  if (!/\.pdf$/i.test(file.name) || (file.type && file.type !== 'application/pdf') || file.size < 1 || file.size > limiteBytes) {
+    input.value = '';
+    statusPalavra('Escolha um PDF de até 15 MB.', 'erro');
+    return toast('Selecione um PDF de até 15 MB.', 'warn');
+  }
+  input.disabled = true;
+  try {
+    const assinatura = await file.slice(0, 5).text();
+    if (assinatura !== '%PDF-') throw new Error('O arquivo não parece ser um PDF válido.');
+    statusPalavra('Preparando o envio seguro…');
+    const preparo = await chamarApi('/api/palavra-celula', {
+      acao: 'preparar', nome_arquivo: file.name, tamanho: file.size,
+    });
+    statusPalavra('Enviando PDF…');
+    const { error: erroUpload } = await db.storage.from('palavra-celula')
+      .uploadToSignedUrl(preparo.path, preparo.token, file, { contentType: 'application/pdf' });
+    if (erroUpload) throw new Error(erroUpload.message || 'Falha no envio do PDF.');
+    statusPalavra('Finalizando a publicação…');
+    const resultado = await chamarApi('/api/palavra-celula', {
+      acao: 'confirmar', path: preparo.path, nome_arquivo: file.name,
+    });
+    S.palavra = resultado.palavra;
+    renderPalavra();
+    statusPalavra('PDF publicado com sucesso!', 'sucesso');
+    toast('Palavra da Célula publicada! 📖');
+  } catch (erro) {
+    console.error('[palavra] falha ao publicar:', erro);
+    const mensagem = erro?.message || 'Falha de conexão. Confira a internet e tente novamente.';
+    statusPalavra(mensagem, 'erro');
+    toast(mensagem, 'err');
+  } finally {
+    input.disabled = false;
+    input.value = '';
+  }
 }
+
 async function removerPalavra() {
   if (!temPermissao('palavra') || !S.palavra) return toast(!S.palavra ? 'Não há Palavra publicada.' : 'Você não tem permissão para remover a Palavra.', 'warn');
   if (!confirm('Remover a Palavra da Célula atual?')) return;
-  const antiga = S.palavra.arquivo_path;
-  const removed = await db.from('palavra_celula').delete().eq('id', true);
-  if (removed.error) return toast(msgErro(removed.error, 'Não foi possível remover a Palavra.'), 'err');
-  await db.storage.from('palavra-celula').remove([antiga]);
-  S.palavra = null; renderPalavra(); toast('Palavra removida.');
+  try {
+    statusPalavra('Removendo a Palavra atual…');
+    await chamarApi('/api/palavra-celula', { acao: 'remover' });
+    S.palavra = null;
+    renderPalavra();
+    statusPalavra('Palavra removida.', 'sucesso');
+    toast('Palavra removida.');
+  } catch (erro) {
+    console.error('[palavra] falha ao remover:', erro);
+    statusPalavra(erro?.message || 'Falha ao remover PDF.', 'erro');
+    toast(erro?.message || 'Falha ao remover PDF.', 'err');
+  }
 }
 
 // ══════════════════════════════════════════

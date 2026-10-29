@@ -9,6 +9,7 @@ import escalaFuncoes from '../api-routes/escala-funcoes.js';
 import escalaSave from '../api-routes/escala-save.js';
 import escala from '../api-routes/escala.js';
 import mural from '../api-routes/mural.js';
+import palavraCelula from '../api-routes/palavra-celula.js';
 import profileAvatar from '../api-routes/profile-avatar.js';
 import pushDevice from '../api-routes/push-device.js';
 import testPush from '../api-routes/test-push.js';
@@ -25,6 +26,7 @@ const rotas = {
   'escala-save': escalaSave,
   escala,
   mural,
+  'palavra-celula': palavraCelula,
   'profile-avatar': profileAvatar,
   'push-device': pushDevice,
   'test-push': testPush,

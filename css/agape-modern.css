@@ -130,3 +130,24 @@ html.agape-installed #pwa-install-global,
   .install-platform-btn{padding:9px 13px}
   .install-howto-tip{font-size:.78rem}
 }
+
+/* Administração da Palavra: upload claro e confortável no PWA. */
+.palavra-admin-card{display:grid;gap:11px}
+.palavra-admin-card h3{margin:0}
+.palavra-admin-card .hint{margin:0;line-height:1.55}
+.palavra-file-label{font-size:.83rem;font-weight:750;color:#31566e}
+.palavra-admin-card input[type="file"]{
+  display:block;width:100%;min-width:0;max-width:100%;
+  padding:10px;border:1px dashed #afc4d5;border-radius:13px;
+  background:#f5f9fc;color:#29435a;font:inherit;font-size:.82rem;
+  overflow:hidden;
+}
+.palavra-admin-card input[type="file"]::file-selector-button{
+  border:0;border-radius:9px;background:#dceef6;color:#1b5573;
+  padding:10px 12px;margin-right:10px;font-weight:750;cursor:pointer;
+}
+.palavra-admin-card input[type="file"]:disabled{opacity:.65;cursor:wait}
+.palavra-upload-status{min-height:20px;font-size:.82rem;color:#567086;line-height:1.45;margin:0}
+.palavra-upload-status[data-status="sucesso"]{color:#206a50;font-weight:700}
+.palavra-upload-status[data-status="erro"]{color:#ad4036;font-weight:700;overflow-wrap:anywhere}
+@media(max-width:480px){.palavra-admin-card{gap:9px}.palavra-admin-card input[type="file"]{font-size:.75rem;padding:8px}.palavra-admin-card input[type="file"]::file-selector-button{margin-right:7px;padding:9px 10px}}
