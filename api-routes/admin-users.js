@@ -57,6 +57,25 @@ export function criarHandler({ criarCliente = clienteAdmin } = {}) {
     }
 
     const { perfil: eu } = await exigirAdmin(db, req);
+    if (acao === 'consultar_situacao') {
+      const alvo = await buscarUsuario(db, req.body.id);
+      const { data, error } = await db.from('users').select('ativo,data_ingresso_celula').eq('id', alvo.id).single();
+      if (error) throw new HttpError(503, 'Cadastre primeiro a migração de Chamada/Frequência.');
+      return responder(res, 200, { ok: true, usuario: { ...data, id: alvo.id } });
+    }
+    if (acao === 'salvar_situacao') {
+      const alvo = await buscarUsuario(db, req.body.id);
+      if (typeof req.body.ativo !== 'boolean') throw new HttpError(400, 'Situação inválida');
+      if (alvo.id === eu.id && req.body.ativo === false) throw new HttpError(400, 'Você não pode inativar sua própria conta');
+      const ingresso = req.body.data_ingresso_celula || null;
+      if (ingresso && (!/^\\d{4}-\\d{2}-\\d{2}$/.test(ingresso) ||
+        Number.isNaN(Date.parse(ingresso)) || new Date(ingresso).toISOString().slice(0,10) !== ingresso)) {
+        throw new HttpError(400, 'Data de ingresso inválida');
+      }
+      const { error } = await db.from('users').update({ ativo: req.body.ativo, data_ingresso_celula: ingresso }).eq('id', alvo.id);
+      if (error) throw new Error(error.message);
+      return responder(res, 200, { ok: true });
+    }
     if (acao === 'listar') {
       const { data, error } = await db.from('users')
         .select('id,name,login,role,perfil_id,created_at,avatar_url').order('name');

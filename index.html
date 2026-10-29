@@ -657,6 +657,7 @@ body{
   </style>
 <script defer src="/_vercel/insights/script.js"></script>
 <link rel="stylesheet" href="/css/agape-modern.css?v=20261029install">
+<link rel="stylesheet" href="/css/chamada.css?v=20261029">
 </head>
 <body>
 
@@ -707,6 +708,10 @@ body{
   </div>
   <div class="container">
     <div id="prox-home"></div>
+    <section id="lider-presenca-acesso" class="lider-presenca-acesso" hidden aria-label="Chamada e relatórios da liderança">
+      <button class="lider-action" type="button" onclick="agapeChamada.abrir()"><span aria-hidden="true">🙋</span><strong>Chamada</strong><small>Registrar presença</small></button>
+      <button class="lider-action" type="button" onclick="agapeFrequencia.abrir()"><span aria-hidden="true">📊</span><strong>Frequência</strong><small>Relatórios da célula</small></button>
+    </section>
     <div class="quick-grid">
       <div class="quick-card" onclick="goPage('mural')"><div class="qc-icon">📖</div><div class="qc-title">Mural</div><div class="qc-sub">Versículos e mensagens</div></div>
       <div class="quick-card" onclick="goPage('escala')"><div class="qc-icon">🧁</div><div class="qc-title">Escala</div><div class="qc-sub">Quem traz o lanche</div></div>
@@ -782,6 +787,69 @@ body{
     <div class="map-btns">
       <a class="map-btn map-btn-waze" href="https://www.waze.com/pt-BR/live-map/directions?to=ll.-16.80167554%2C-49.35215235" target="_blank" rel="noopener">🚗 Abrir no Waze</a>
       <a class="map-btn map-btn-gmaps" href="https://www.google.com/maps/dir//C%C3%A9lula+%C3%81gape+-+Igreja+Videira+-+R.+Portugal,+394-548+-+St.+Aeroporto+Sul,+Aparecida+de+Goi%C3%A2nia+-+GO,+74988-683/@-16.8016138,-49.3523242,21z/data=!4m17!1m7!3m6!1s0x935ef900449a388b:0x8884725bd50b17c4!2sC%C3%A9lula+%C3%81gape+-+Igreja+Videira!8m2!3d-16.8015821!4d-49.3521624!16s%2Fg%2F11z43zncj4!4m8!1m0!1m5!1m1!1s0x935ef900449a388b:0x8884725bd50b17c4!2m2!1d-49.3521624!2d-16.8015821!3e3?entry=ttu&g_ep=EgoyMDI2MDMyNC4wIKXMDSoASAFQAw%3D%3D" target="_blank" rel="noopener">🌎 Google Maps</a>
+    </div>
+  </div>
+</div>
+
+<!-- CHAMADA MATCH — acesso exclusivo da liderança validado no servidor -->
+<div class="page" id="page-chamada">
+  <div class="container chamada-wrap">
+    <div class="chamada-heading">
+      <button type="button" class="chamada-back" onclick="goPage('home')" aria-label="Voltar ao início">←</button>
+      <div><span class="chamada-eyebrow">CÉLULA ÁGAPE</span><h2>Chamada da Célula</h2><p>Uma pessoa por vez, com carinho.</p></div>
+    </div>
+    <label class="chamada-date">Data da célula <input type="date" id="chamada-data" onchange="agapeChamada.mudarData(this.value)"></label>
+    <div id="chamada-feedback" class="chamada-feedback" role="status" aria-live="polite"></div>
+    <section id="chamada-game" hidden aria-label="Marcação de presenças">
+      <div class="chamada-progress"><span id="chamada-counter">0 de 0</span><span id="chamada-progress-percent">0%</span></div>
+      <div class="chamada-track"><span id="chamada-progress-bar"></span></div>
+      <div class="chamada-deck" id="chamada-deck" aria-live="polite"></div>
+      <div class="chamada-controls">
+        <button type="button" class="chamada-no" onclick="agapeChamada.responder('ausente')" aria-label="Não veio">✕<span>Não veio</span></button>
+        <button type="button" class="chamada-undo" onclick="agapeChamada.desfazer()" aria-label="Desfazer última marcação">↶<span>Desfazer</span></button>
+        <button type="button" class="chamada-yes" onclick="agapeChamada.responder('presente')" aria-label="Veio">✓<span>Veio</span></button>
+      </div>
+      <p class="chamada-hint">Arraste: ← não veio | veio → &nbsp;·&nbsp; Teclas ← e →</p>
+      <button type="button" class="chamada-review-link" onclick="agapeChamada.resumo()">Revisar marcações</button>
+    </section>
+    <section id="chamada-summary" hidden aria-label="Resumo da chamada"></section>
+  </div>
+</div>
+
+<!-- RELATÓRIO DE FREQUÊNCIA — consulta restrita à liderança -->
+<div class="page" id="page-frequencia">
+  <div class="container freq-wrap">
+    <div class="chamada-heading"><button type="button" class="chamada-back" onclick="goPage('home')" aria-label="Voltar ao início">←</button>
+      <div><span class="chamada-eyebrow">CÉLULA ÁGAPE</span><h2>Frequência</h2><p>Acompanhe a participação nas reuniões.</p></div>
+    </div>
+    <div class="freq-filters">
+      <label>Período
+        <select id="freq-periodo" onchange="agapeFrequencia.periodoAlterado()">
+          <option value="mes">Último mês</option><option value="3meses" selected>Últimos 3 meses</option><option value="ano">Últimos 12 meses</option><option value="personalizado">Personalizado</option>
+        </select>
+      </label>
+      <label>Início <input type="date" id="freq-inicio"></label>
+      <label>Fim <input type="date" id="freq-fim"></label>
+      <label>Pessoa <select id="freq-pessoa" onchange="agapeFrequencia.renderizar()"><option value="">Todas as pessoas</option></select></label>
+      <button type="button" class="btn btn-primary" onclick="agapeFrequencia.carregar()">Consultar</button>
+    </div>
+    <div id="freq-status" class="chamada-feedback" role="status" aria-live="polite"></div>
+    <div id="freq-conteudo" hidden>
+      <div id="freq-indicadores" class="freq-indicadores"></div>
+      <div class="freq-panel"><h3>Evolução semanal</h3><div id="freq-grafico-semanas"></div></div>
+      <div class="freq-graficos">
+        <div class="freq-panel"><h3>Frequência por pessoa</h3><div id="freq-grafico-pessoas"></div></div>
+        <div class="freq-panel"><h3>Presenças x faltas</h3><div id="freq-grafico-proporcao"></div></div>
+      </div>
+      <div class="freq-panel"><h3><span aria-hidden="true">❤️</span> Atenção pastoral</h3><div id="freq-pastoral"></div></div>
+      <div class="freq-panel"><h3>Tabela detalhada</h3>
+        <p class="freq-subtitle">— indica que a pessoa ainda não integrava a célula ou não possui marcação.</p>
+        <div class="freq-table-scroll"><table id="freq-tabela"></table></div>
+        <div class="freq-export">
+          <button type="button" class="btn btn-ghost" onclick="agapeFrequencia.csv()">Exportar CSV</button>
+          <button type="button" class="btn btn-primary" onclick="agapeFrequencia.pdf()">Salvar PDF / Imprimir</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1114,6 +1182,21 @@ body{
   </div>
 </div>
 
+<!-- Gestão de integrantes para os relatórios (somente ADM) -->
+<div class="sheet-overlay" id="situacao-presenca-sheet" onclick="sheetBg(event,'situacao-presenca-sheet')">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h2>Participação na célula</h2>
+    <p class="hint" id="situacao-presenca-nome"></p>
+    <input type="hidden" id="situacao-presenca-id">
+    <label class="fld"><span>Data de ingresso (opcional)</span><input type="date" id="situacao-presenca-ingresso"></label>
+    <label class="freq-ativo-check"><input type="checkbox" id="situacao-presenca-ativo" checked> Integrante ativo na célula</label>
+    <p class="hint">Inativos não entram nos novos cálculos. Não informe uma data que você não conhece.</p>
+    <button class="btn btn-primary btn-full" type="button" onclick="salvarSituacaoPresenca()">Salvar situação</button>
+    <button class="btn btn-ghost btn-full" type="button" onclick="closeSheet('situacao-presenca-sheet')">Cancelar</button>
+  </div>
+</div>
+
 <!-- Redefinir senha de outro usuário (ADM) -->
 <div class="sheet-overlay" id="senha-sheet" onclick="sheetBg(event,'senha-sheet')">
   <div class="sheet">
@@ -1138,5 +1221,8 @@ body{
 <script src="/js/config.js"></script>
   <script src="/js/app.js" defer></script>
   <script src="/js/perfis.js" defer></script>
+  <script src="/js/frequencia-calculos.js" defer></script>
+  <script src="/js/chamada.js" defer></script>
+  <script src="/js/frequencia.js" defer></script>
 </body>
 </html>
