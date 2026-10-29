@@ -159,6 +159,7 @@ function atualizarAuth() {
   }
   atualizarPills();
   window.agapeChamada?.atualizarAcesso();
+  window.agapeAdminChamadas?.atualizarAcesso();
 }
 
 function abrirConta() {
@@ -337,6 +338,7 @@ function admTab(id, btn) {
   $('adm-' + id).classList.add('active');
   btn.classList.add('active');
   if (id === 'notif') carregarNotifAdm();
+  if (id === 'chamadas') window.agapeAdminChamadas?.abrir();
   if (id === 'modelos') renderModelos();
   if (id === 'usuarios') atualizarDispositivos();
   if (id === 'perfis') renderPerfis();
