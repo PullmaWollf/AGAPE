@@ -7,6 +7,7 @@ const PERMISSOES = [
   ['mural_publicar', 'Publicar no mural'], ['mural_excluir', 'Excluir publicações'], ['palavra', 'Gerenciar Palavra'],
   ['escala', 'Gerenciar escala'], ['escala_visualizar', 'Visualizar escala'], ['modelos', 'Gerenciar modelos'],
   ['notificacoes', 'Gerenciar notificações'], ['uploads', 'Enviar imagens e vídeos'],
+  ['chamada_registrar', 'Realizar chamadas de presença'], ['frequencia_relatorio', 'Ver relatórios de frequência'],
 ];
 
 function limparPermissoes(valor) {
