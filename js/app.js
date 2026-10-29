@@ -158,6 +158,7 @@ function atualizarAuth() {
     $('home-auth-card').onclick = () => openSheet('login-sheet');
   }
   atualizarPills();
+  window.agapeChamada?.atualizarAcesso();
 }
 
 function abrirConta() {
@@ -309,6 +310,13 @@ function renderEscalaTudo() { renderEscala(); renderAdmEscala(); renderHome(); }
 // NAVEGAÇÃO
 // ══════════════════════════════════════════
 function goPage(id) {
+  if (['chamada','frequencia'].includes(id)) {
+    const chave = id === 'chamada' ? 'chamada_registrar' : 'frequencia_relatorio';
+    if (!S.me || !(S.me.permissoes?.[chave] === true || S.me.role === 'adm')) {
+      toast('Área exclusiva da liderança.', 'warn');
+      id = 'home';
+    }
+  }
   localStorage.setItem('agape-page', id);
   document.querySelectorAll('.page').forEach((p) => p.classList.remove('active'));
   $('page-' + id).classList.add('active');
