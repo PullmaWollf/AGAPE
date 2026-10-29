@@ -1,1 +1,1 @@
-export { criarHandler } from '../api-routes/test-push.js';
+export { default, criarHandler } from '../api-routes/test-push.js';
