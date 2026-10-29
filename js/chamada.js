@@ -5,8 +5,7 @@
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const state={data:'',membros:[],marcacoes:{},historico:[],chamada:null,carregando:false};
   const autorizado=()=>Boolean(window.S?.me && (
-    window.S.me.permissoes?.chamada_registrar===true ||
-    window.S.me.role==='adm'
+    window.S.me.permissoes?.chamada_registrar===true
   ));
   const chave=()=>`agape:chamada:rascunho:${window.S?.me?.id||'anon'}:${state.data}`;
   const dataSP=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
