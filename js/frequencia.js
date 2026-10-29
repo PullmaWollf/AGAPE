@@ -3,22 +3,36 @@
   'use strict';
   const $=id=>document.getElementById(id);
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const state={raw:null,resultado:null};
+  const state={raw:null,resultado:null,limites:null};
   const permitido=()=>!!window.S?.me && (window.S.me.permissoes?.frequencia_relatorio === true);
   const nomeData=d=>d?d.slice(8,10)+'/'+d.slice(5,7):'—';
   function status(msg,error=false){$('freq-status').textContent=msg;$('freq-status').classList.toggle('error',error);}
   function periodoAlterado(){
-    if($('freq-periodo').value==='personalizado')return;
-    const end=new Date(new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date())+'T12:00:00Z');
-    const start=new Date(end);
-    start.setUTCDate(start.getUTCDate()-({mes:30,'3meses':90,ano:365}[$('freq-periodo').value]||90));
-    $('freq-inicio').value=start.toISOString().slice(0,10);
-    $('freq-fim').value=end.toISOString().slice(0,10);
+    const periodo=$('freq-periodo').value;
+    if(periodo==='personalizado')return;
+    const hoje=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+    const end=new Date(hoje+'T12:00:00Z');
+    end.setUTCDate(end.getUTCDate()+7);
+    const start=new Date(hoje+'T12:00:00Z');
+    start.setUTCDate(start.getUTCDate()-({mes:30,'3meses':90,ano:365}[periodo]||90));
+    if(periodo==='todas'&&state.limites?.primeira){
+      $('freq-inicio').value=state.limites.primeira;
+      $('freq-fim').value=state.limites.ultima;
+    }else{
+      $('freq-inicio').value=start.toISOString().slice(0,10);
+      $('freq-fim').value=end.toISOString().slice(0,10);
+    }
   }
   async function abrir(){
     if(!permitido())return window.toast('Área exclusiva da liderança.','warn');
     window.goPage('frequencia');
-    if(!$('freq-inicio').value)periodoAlterado();
+    status('Buscando as datas das chamadas já registradas…');
+    try{
+      state.limites=await window.chamarApi('/api/frequencia',{acao:'periodo'});
+    }catch(e){
+      status(e.message||'Não foi possível consultar as datas.',true);return;
+    }
+    periodoAlterado();
     await carregar();
   }
   async function carregar(){
@@ -34,7 +48,9 @@
       sel.innerHTML='<option value="">Todas as pessoas</option>'+r.membros.map(m=>`<option value="${esc(m.id)}">${esc(m.name)}</option>`).join('');
       if([...sel.options].some(o=>o.value===antigo))sel.value=antigo;
       renderizar();
-      status(r.chamadas.length?`Dados de ${r.chamadas.length} reunião(ões) concluída(s).`:'Não há chamadas salvas nesse período.');
+      status(r.chamadas.length?
+        `${r.chamadas.length} chamada(s) registrada(s) entre ${inicio.split('-').reverse().join('/')} e ${fim.split('-').reverse().join('/')}. Datas futuras lançadas antecipadamente também aparecem.`:
+        'Nenhuma chamada salva neste período. Confira as datas ou selecione “Todas as chamadas”.');
       $('freq-conteudo').hidden=false;
     }catch(e){status((e.message||'Falha de conexão')+' · Verifique a migração do banco e tente novamente.',true);}
   }
@@ -46,7 +62,7 @@
     const i=r.indicadores;
     $('freq-indicadores').innerHTML=[
       indicador('Presença média',i.taxa===null?'—':i.taxa+'%','Entre as marcações registradas'),
-      indicador('Células realizadas',i.realizadas,'No período selecionado'),
+      indicador('Chamadas registradas',i.realizadas,'Inclui lançamentos antecipados'),
       indicador('Média de presentes',String(i.media).replace('.',','),'Por reunião'),
       indicador('Melhor semana',i.melhor?nomeData(i.melhor.data):'—',i.melhor?.percentual==null?'Sem dados':i.melhor.percentual+'%'),
       indicador('Menor presença',i.pior?nomeData(i.pior.data):'—',i.pior?.percentual==null?'Sem dados':i.pior.percentual+'%')
@@ -64,7 +80,7 @@
     const p=tot?Math.round(r.proporcao.presentes*100/tot):0;
     $('freq-grafico-proporcao').innerHTML=tot?
       `<div class="freq-donut-box"><div class="freq-donut" style="--freq-p:${p}%"><strong>${p}%</strong></div><div class="freq-legend"><p><i class="present"></i>Presentes: ${r.proporcao.presentes}</p><p><i class="absent"></i>Faltas: ${r.proporcao.ausentes}</p></div></div>`:
-      '<p class="freq-empty">Nenhuma marcação registrada.</p>';
+      '<p class="freq-empty">Nenhuma marcação registrada nesse período.</p>';
     $('freq-pastoral').innerHTML=r.pastoral.length?
       '<p class="freq-subtitle">Pessoas com duas ou mais ausências consecutivas entre as últimas reuniões registradas:</p>'+
       r.pastoral.map(p=>`<div class="freq-pastoral-row">❤️ <strong>${esc(p.nome)}</strong><span>${p.consecutivas} ausências seguidas</span></div>`).join(''):
@@ -94,5 +110,6 @@
     window.addEventListener('afterprint',()=>{document.title=title;},{once:true});
     window.print();
   }
-  window.agapeFrequencia={abrir,carregar,renderizar,periodoAlterado,csv,pdf};
+  function invalidar(){state.raw=null;state.resultado=null;state.limites=null;}
+  window.agapeFrequencia={abrir,carregar,renderizar,periodoAlterado,csv,pdf,invalidar};
 })();
