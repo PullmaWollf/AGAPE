@@ -230,25 +230,24 @@ async function recarregarEscala() {
 }
 
 async function carregarAdmin() {
-  const [u, m, c, d, uso] = await Promise.all([
-  chamarApi('/api/admin-users', { acao: 'listar' }),
+  const [u, m, c, n] = await Promise.all([
+    chamarApi('/api/admin-users', { acao: 'listar' }),
     db.from('escala_modelos').select('*, escala_modelo_itens(*)').order('semanas').order('nome'),
     db.from('config').select('chave,valor'),
-    db.rpc('dispositivos_por_usuario'),
-    db.rpc('uso_imagens'),
+    chamarApi('/api/notificacoes-admin', {}),
   ]);
-  if (u.erro) throw new Error(u.erro);
   S.users = u.usuarios || [];
-  S.modelos = (m.data || []).map((x) => ({ ...x, itens: x.escala_modelo_itens || [] }));
-  S.config = Object.fromEntries((c.data || []).map((x) => [x.chave, x.valor]));
-  S.dispositivos = d.data || [];
-  S.uso = uso.data || null;
+  S.modelos = (m.data || []).map(x => ({ ...x, itens: x.escala_modelo_itens || [] }));
+  S.config = Object.fromEntries((c.data || []).map(x => [x.chave,x.valor]));
+  S.dispositivos = n.dispositivos || [];
+  S.notifs = n.notificacoes || [];
+  S.uso = n.uso || null;
   try {
     const perfis = await chamarApi('/api/admin-perfis', { acao: 'listar' });
     S.perfis = perfis.perfis || []; S.permissoes = perfis.permissoes || [];
-    S.users = (perfis.usuarios || S.users).map((user) => ({ ...user, perfil_id: user.perfil_id }));
-  } catch (e) { console.warn('[v0] perfis:', e); }
-  }
+    S.users = (perfis.usuarios || S.users).map(user => ({ ...user, perfil_id: user.perfil_id }));
+  } catch (e) { console.warn('[admin] perfis:', e); }
+}
 
 // ══════════════════════════════════════════
 // INÍCIO
@@ -1067,8 +1066,12 @@ function renderUsers() {
 }
 
 async function atualizarDispositivos() {
-  const { data } = await db.rpc('dispositivos_por_usuario');
-  if (data) { S.dispositivos = data; renderUsers(); }
+  if (!isAdm()) return;
+  try {
+    const r = await chamarApi('/api/notificacoes-admin', {});
+    S.dispositivos = r.dispositivos || [];
+    renderUsers();
+  } catch (e) { console.warn('[push] dispositivos:', e); }
 }
 
 async function addUser() {
@@ -1243,16 +1246,13 @@ const STATUS = {
 
 async function carregarNotifAdm() {
   if (!isAdm()) return;
-  const [d, n, uso] = await Promise.all([
-    db.rpc('dispositivos_por_usuario'),
-    db.from('notificacoes').select('id,kind,tipo,fire_at,status,tentativas,dispositivos_ok,ultimo_erro,users(name)')
-      .order('fire_at', { ascending: false }).limit(40),
-    db.rpc('uso_imagens'),
-  ]);
-  if (d.data) S.dispositivos = d.data;
-  if (n.data) S.notifs = n.data;
-  if (uso.data) S.uso = uso.data;
-  renderNotifAdm(); renderUsers();
+  try {
+    const n = await chamarApi('/api/notificacoes-admin', {});
+    S.dispositivos = n.dispositivos || [];
+    S.notifs = n.notificacoes || [];
+    S.uso = n.uso || null;
+    renderNotifAdm(); renderUsers();
+  } catch (e) { toast(msgErro(e, 'Não foi possível carregar notificações.'), 'err'); }
 }
 
 function renderNotifAdm() {
