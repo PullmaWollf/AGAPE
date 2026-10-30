@@ -30,7 +30,7 @@
       const vals=linhas.map(l=>l.datas[i]).filter(Boolean);
       const presentes=vals.filter(x=>x==='presente').length;
       const ausentes=vals.filter(x=>x==='ausente').length;
-      return {id:c.id,data:c.data_celula,presentes,ausentes,total:presentes+ausentes,
+      return {id:c.id,data:c.data_celula,tipo:c.tipo||'celula',presentes,ausentes,total:presentes+ausentes,
         percentual:presentes+ausentes?Math.round(presentes/(presentes+ausentes)*100):null};
     });
     const semanasValidas=semanas.filter(s=>s.total>0);
