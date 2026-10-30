@@ -167,3 +167,9 @@ html[data-theme="dark"] #page-home .quick-card .qc-title,
 html[data-theme="dark"] #page-home .lider-action strong {color:var(--text)!important}
 html[data-theme="dark"] #page-home .quick-card .qc-sub,
 html[data-theme="dark"] #page-home .lider-action small {color:var(--muted)!important}
+
+/* Base do tema escuro: contraste vinho em todas as páginas, sem preto absoluto. */
+html[data-theme="dark"]{--bg:#241a23;--surface:#342631;--cream:#342631;--cream-d:#40303d;--text:#fff0f3;--muted:#dcbac7;--border:#654653;color-scheme:dark}
+html[data-theme="dark"] body,html[data-theme="dark"] #app,html[data-theme="dark"] main,html[data-theme="dark"] .page{background-color:var(--bg)!important;color:var(--text)!important}
+html[data-theme="dark"] .card,html[data-theme="dark"] .quick-card,html[data-theme="dark"] .sheet,html[data-theme="dark"] .panel,html[data-theme="dark"] .match-card,html[data-theme="dark"] .freq-card{background-color:var(--surface)!important;color:var(--text)!important;border-color:var(--border)!important}
+html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea{background-color:#40303d!important;color:var(--text)!important;border-color:var(--border)!important}
