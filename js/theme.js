@@ -26,6 +26,7 @@
   }
   function toggle(){definir(root.dataset.theme==='dark'?'light':'dark');}
   window.agapeTheme={toggle,definir};
+  try { if(localStorage.getItem(key)==='dark') root.dataset.theme='dark'; } catch(e) {}
   atualizar();
   media?.addEventListener?.('change',e=>{
     try{if(localStorage.getItem(key))return;}catch(err){return;}
