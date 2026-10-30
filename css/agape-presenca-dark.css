@@ -141,3 +141,29 @@ html[data-theme="dark"] #page-frequencia select{color-scheme:dark}
     background:white!important;color:black!important;border-color:#ccc!important;
   }
 }
+
+/* Superfícies globais: impedir fundos claros ou transparentes no tema escuro. */
+html[data-theme="dark"] #page-home .quick-card,
+html[data-theme="dark"] #page-home .lider-action,
+html[data-theme="dark"] #page-home .prox-banner,
+html[data-theme="dark"] .post-card,
+html[data-theme="dark"] .escala-card,
+html[data-theme="dark"] .form-card,
+html[data-theme="dark"] .sheet,
+html[data-theme="dark"] .loc-card,
+html[data-theme="dark"] .palavra-card,
+html[data-theme="dark"] .adm-chamada-item,
+html[data-theme="dark"] .adm-chamadas-cabecalho,
+html[data-theme="dark"] .adm-chamadas-vazio {
+  background:var(--surface)!important;
+  border-color:var(--border)!important;
+  color:var(--text)!important;
+}
+html[data-theme="dark"] #page-home .quick-card .qc-icon {
+  background:var(--accent-l)!important;
+  color:var(--accent)!important;
+}
+html[data-theme="dark"] #page-home .quick-card .qc-title,
+html[data-theme="dark"] #page-home .lider-action strong {color:var(--text)!important}
+html[data-theme="dark"] #page-home .quick-card .qc-sub,
+html[data-theme="dark"] #page-home .lider-action small {color:var(--muted)!important}
