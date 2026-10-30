@@ -7,6 +7,8 @@ export function criarHandler({ criarCliente = clienteAdmin } = {}) {
     if (req.method!=='POST') throw new HttpError(405,'Método não permitido');
     const db=criarCliente();
     const { acao }=req.body||{};
+    const tipo=String(req.body?.tipo||'celula').toLowerCase();
+    if(!['celula','culto'].includes(tipo))throw new HttpError(400,'Tipo de reunião inválido');
     const { perfil }=await exigirLiderChamada(db,req,'chamada_registrar');
     if (acao==='config') {
       const r=await db.from('config').select('chave,valor').in('chave',['celula_dia_semana','celula_hora']);
@@ -19,8 +21,8 @@ export function criarHandler({ criarCliente = clienteAdmin } = {}) {
         db.from('users').select('id,name,avatar_url,ativo,created_at,data_ingresso_celula')
           .eq('ativo',true).order('name'),
         db.from('config').select('chave,valor').in('chave',['celula_dia_semana','celula_hora']),
-        db.from('chamadas').select('id,data_celula,atualizado_em')
-          .eq('data_celula',data).maybeSingle(),
+        db.from('chamadas').select('id,data_celula,tipo,atualizado_em')
+          .eq('data_celula',data).eq('tipo',tipo).maybeSingle(),
       ]);
       if(membros.error) throw new Error(membros.error.message);
       if(config.error) throw new Error(config.error.message);
@@ -33,7 +35,7 @@ export function criarHandler({ criarCliente = clienteAdmin } = {}) {
         presencas=r.data||[];
       }
       return responder(res,200,{
-        ok:true,data,chamada:chamada.data||null,
+        ok:true,data,tipo,chamada:chamada.data||null,
         membros:(membros.data||[]).filter(m=> (m.data_ingresso_celula || m.created_at?.slice(0,10) || '0000-01-01')<=data),
         presencas,config:Object.fromEntries((config.data||[]).map(x=>[x.chave,x.valor])),
       });
@@ -41,9 +43,9 @@ export function criarHandler({ criarCliente = clienteAdmin } = {}) {
     if (acao==='excluir') {
       const data=validarDataISO(req.body.data);
       const { data: chamada, error: consultaErro }=await db.from('chamadas')
-        .select('id').eq('data_celula',data).maybeSingle();
+        .select('id').eq('data_celula',data).eq('tipo',tipo).maybeSingle();
       if(consultaErro)throw new Error(consultaErro.message);
-      if(!chamada)throw new HttpError(404,'Nenhuma chamada salva nesta data');
+      if(!chamada)throw new HttpError(404,'Nenhuma chamada de '+(tipo==='culto'?'culto':'célula')+' salva nesta data');
       // ON DELETE CASCADE remove as presenças; relatório deixa de contar a reunião.
       const { error }=await db.from('chamadas').delete().eq('id',chamada.id);
       if(error)throw new HttpError(503,'Não foi possível excluir a chamada. Tente novamente.');
@@ -62,10 +64,10 @@ export function criarHandler({ criarCliente = clienteAdmin } = {}) {
         ids.add(p.user_id);
       }
       const { data: chamada_id, error }=await db.rpc(acao==='salvar'?'salvar_chamada':'atualizar_chamada',{
-        p_data:data,p_registrado_por:perfil.id,p_presencas:lista.map(x=>({user_id:x.user_id,status:x.status})),
+        p_data:data,p_tipo:tipo,p_registrado_por:perfil.id,p_presencas:lista.map(x=>({user_id:x.user_id,status:x.status})),
       });
       if(error) {
-        if(error.code==='23505')throw new HttpError(409,'Já existe uma chamada salva nesta data. Abra a chamada existente para corrigir ou excluir.');
+        if(error.code==='23505')throw new HttpError(409,'Já existe uma chamada deste tipo salva nesta data. Abra a chamada existente para corrigir ou excluir.');
         if(error.code==='P0002')throw new HttpError(404,'Chamada não encontrada para edição. Atualize a tela.');
         console.error('[chamada] falha ao salvar:',error.code,error.message);
         throw new HttpError(503,'Não foi possível salvar a chamada. Suas marcações continuam neste dispositivo.');
