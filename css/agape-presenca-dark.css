@@ -1,0 +1,143 @@
+/* Ágape — contraste consistente nas telas Chamada e Frequência.
+   Aplicado após os estilos legados para neutralizar superfícies claras fixas.
+   As cores de status (presença/falta) continuam distinguíveis. */
+html[data-theme="dark"] #page-chamada,
+html[data-theme="dark"] #page-frequencia{
+  --presenca-panel:#292228;
+  --presenca-raised:#332830;
+  --presenca-line:#4c3a43;
+  --presenca-ink:#f4e8ec;
+  --presenca-secondary:#c9b6be;
+  --presenca-accent:#e6a0b5;
+  color:var(--presenca-ink)!important;
+}
+html[data-theme="dark"] #page-chamada .chamada-heading h2,
+html[data-theme="dark"] #page-frequencia .chamada-heading h2,
+html[data-theme="dark"] #page-chamada .chamada-heading p,
+html[data-theme="dark"] #page-frequencia .chamada-heading p,
+html[data-theme="dark"] #page-chamada .chamada-progress,
+html[data-theme="dark"] #page-chamada .match-name,
+html[data-theme="dark"] #page-chamada .match-card p,
+html[data-theme="dark"] #page-chamada .chamada-result h3,
+html[data-theme="dark"] #page-chamada .chamada-result h4,
+html[data-theme="dark"] #page-chamada .chamada-ja-registrada h3,
+html[data-theme="dark"] #page-frequencia .freq-panel h3,
+html[data-theme="dark"] #page-frequencia .freq-person strong,
+html[data-theme="dark"] #page-frequencia .freq-legend p,
+html[data-theme="dark"] #page-frequencia .freq-pastoral-row,
+html[data-theme="dark"] #page-frequencia .freq-ativo-check{
+  color:var(--presenca-ink)!important;
+}
+html[data-theme="dark"] #page-chamada .chamada-date,
+html[data-theme="dark"] #page-chamada .chamada-back,
+html[data-theme="dark"] #page-chamada .chamada-result,
+html[data-theme="dark"] #page-chamada .chamada-ja-registrada,
+html[data-theme="dark"] #page-chamada .chamada-tipo-wrap,
+html[data-theme="dark"] #page-frequencia .freq-filters,
+html[data-theme="dark"] #page-frequencia .freq-panel,
+html[data-theme="dark"] #page-frequencia .freq-indicador,
+html[data-theme="dark"] #page-frequencia .freq-indicadores,
+html[data-theme="dark"] #page-frequencia .freq-table-scroll th:first-child{
+  background:var(--presenca-panel)!important;
+  color:var(--presenca-ink)!important;
+  border-color:var(--presenca-line)!important;
+  box-shadow:none!important;
+}
+html[data-theme="dark"] #page-chamada .match-card{
+  background:linear-gradient(145deg,#3a2b33,#292228)!important;
+  border-color:var(--presenca-line)!important;
+  box-shadow:0 12px 30px rgba(0,0,0,.18)!important;
+}
+html[data-theme="dark"] #page-chamada .match-avatar{
+  background:var(--presenca-raised)!important;
+  border-color:var(--presenca-line)!important;
+}
+html[data-theme="dark"] #page-chamada .chamada-date input,
+html[data-theme="dark"] #page-chamada .chamada-tipo-opcao>span,
+html[data-theme="dark"] #page-chamada .chamada-metrics>div,
+html[data-theme="dark"] #page-chamada .chamada-ja-totais span,
+html[data-theme="dark"] #page-chamada .chamada-result-row button:not(.presente):not(.ausente),
+html[data-theme="dark"] #page-frequencia .freq-filters input,
+html[data-theme="dark"] #page-frequencia .freq-filters select,
+html[data-theme="dark"] #page-frequencia .freq-table-scroll th,
+html[data-theme="dark"] #page-frequencia .freq-table-scroll td.indefinido{
+  background:var(--presenca-raised)!important;
+  color:var(--presenca-ink)!important;
+  border-color:var(--presenca-line)!important;
+}
+html[data-theme="dark"] #page-chamada .chamada-tipo-opcao input:checked+span{
+  background:#49303d!important;
+  border-color:var(--presenca-accent)!important;
+}
+html[data-theme="dark"] #page-chamada .chamada-controls button:not(.chamada-yes):not(.chamada-no),
+html[data-theme="dark"] #page-chamada .chamada-controls .chamada-undo{
+  background:var(--presenca-raised)!important;
+  color:var(--presenca-ink)!important;
+  border-color:var(--presenca-line)!important;
+}
+html[data-theme="dark"] #page-chamada .chamada-controls .chamada-yes{
+  background:#244637!important;color:#a0eac4!important;border-color:#376e54!important;
+}
+html[data-theme="dark"] #page-chamada .chamada-controls .chamada-no{
+  background:#4a2836!important;color:#ffc0d1!important;border-color:#744354!important;
+}
+html[data-theme="dark"] #page-chamada .chamada-result-row button.presente,
+html[data-theme="dark"] #page-frequencia .freq-table-scroll td.presente{
+  background:#244637!important;color:#a0eac4!important;
+}
+html[data-theme="dark"] #page-chamada .chamada-result-row button.ausente,
+html[data-theme="dark"] #page-frequencia .freq-table-scroll td.ausente{
+  background:#4a2836!important;color:#ffc0d1!important;
+}
+html[data-theme="dark"] #page-chamada .chamada-result-row,
+html[data-theme="dark"] #page-frequencia .freq-pastoral-row,
+html[data-theme="dark"] #page-frequencia .freq-table-scroll th,
+html[data-theme="dark"] #page-frequencia .freq-table-scroll td{
+  border-color:var(--presenca-line)!important;
+}
+html[data-theme="dark"] #page-frequencia .freq-table-scroll th,
+html[data-theme="dark"] #page-frequencia .freq-table-scroll td,
+html[data-theme="dark"] #page-chamada .chamada-result-row span{
+  color:var(--presenca-ink)!important;
+}
+html[data-theme="dark"] #page-chamada .chamada-metrics strong,
+html[data-theme="dark"] #page-frequencia .freq-indicador strong,
+html[data-theme="dark"] #page-frequencia .freq-donut strong{
+  color:var(--presenca-accent)!important;
+}
+html[data-theme="dark"] #page-chamada .chamada-metrics span,
+html[data-theme="dark"] #page-chamada .chamada-hint,
+html[data-theme="dark"] #page-chamada .chamada-feedback,
+html[data-theme="dark"] #page-chamada .chamada-ja-registrada p,
+html[data-theme="dark"] #page-frequencia .freq-subtitle,
+html[data-theme="dark"] #page-frequencia .freq-person span,
+html[data-theme="dark"] #page-frequencia .freq-week-col,
+html[data-theme="dark"] #page-frequencia .freq-indicador>span,
+html[data-theme="dark"] #page-frequencia .freq-indicador small{
+  color:var(--presenca-secondary)!important;
+}
+html[data-theme="dark"] #page-frequencia .freq-donut::before{
+  background:var(--presenca-panel)!important;
+}
+html[data-theme="dark"] #page-frequencia .freq-person-track,
+html[data-theme="dark"] #page-frequencia .freq-week-bar,
+html[data-theme="dark"] #page-chamada .chamada-track{
+  background:#473640!important;
+}
+html[data-theme="dark"] #page-chamada .chamada-como-funciona,
+html[data-theme="dark"] #page-frequencia .freq-como-funciona{
+  background:#3a2a34!important;color:var(--presenca-ink)!important;
+  border-color:var(--presenca-line)!important;
+}
+html[data-theme="dark"] #page-chamada input,
+html[data-theme="dark"] #page-frequencia input,
+html[data-theme="dark"] #page-frequencia select{color-scheme:dark}
+@media print{
+  html[data-theme="dark"] #page-frequencia .freq-panel,
+  html[data-theme="dark"] #page-frequencia .freq-indicador,
+  html[data-theme="dark"] #page-frequencia .freq-filters,
+  html[data-theme="dark"] #page-frequencia .freq-table-scroll th,
+  html[data-theme="dark"] #page-frequencia .freq-table-scroll td{
+    background:white!important;color:black!important;border-color:#ccc!important;
+  }
+}
