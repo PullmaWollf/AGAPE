@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#4a4040">
+<meta name="theme-color" content="#8d2946">
 <meta name="description" content="App da Célula Ágape — Igreja Videira">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Ágape">
 <link rel="manifest" href="/manifest.json">
+<!-- Tema inicial sempre claro; escuro só após escolha explícita. -->
 <script>
   // Detecta o modo instalado antes da pintura: o guia nunca aparece no app.
   (function () {
@@ -658,6 +659,7 @@ body{
 <script defer src="/_vercel/insights/script.js"></script>
 <link rel="stylesheet" href="/css/agape-modern.css?v=20261029install">
 <link rel="stylesheet" href="/css/chamada.css?v=20261029">
+<link rel="stylesheet" href="/css/agape-love-safe.css?v=20261030c">
 </head>
 <body>
 
@@ -675,6 +677,7 @@ body{
     <button onclick="goPage('adm')" id="dl-adm" style="display:none">ADM</button>
   </div>
   <button type="button" id="pwa-install-global" class="pwa-install-global" onclick="acionarInstalacaoPWA()" aria-label="Ver o passo a passo para instalar o Ágape">📲 <span>Como instalar</span></button>
+  <button type="button" class="theme-toggle" id="theme-toggle" onclick="agapeTheme.toggle()" aria-label="Alternar modo claro e escuro" title="Alternar tema"><span class="theme-toggle-icon" aria-hidden="true">☾</span><span class="theme-toggle-label">Escuro</span></button>
   <div class="nav-right" id="nav-right">
     <button class="btn btn-primary" onclick="openSheet('login-sheet')">Entrar</button>
   </div>
@@ -797,9 +800,17 @@ body{
   <div class="container chamada-wrap">
     <div class="chamada-heading">
       <button type="button" class="chamada-back" onclick="goPage('home')" aria-label="Voltar ao início">←</button>
-      <div><span class="chamada-eyebrow">CÉLULA ÁGAPE</span><h2>Fazer chamada</h2><p>Etapa 1: selecione a data, marque quem veio e salve uma única vez.</p></div>
+      <div><span class="chamada-eyebrow">CÉLULA ÁGAPE · PRESENÇA</span><h2>Fazer chamada</h2><p>Escolha o tipo de reunião, a data e registre as presenças.</p></div>
     </div>
-    <label class="chamada-date">Data da célula <input type="date" id="chamada-data" onchange="agapeChamada.mudarData(this.value)"></label>
+    <div class="chamada-tipo-wrap" role="group" aria-label="Tipo de reunião">
+      <span class="chamada-tipo-title">Tipo de reunião</span>
+      <div class="chamada-tipo-opcoes">
+        <label class="chamada-tipo-opcao"><input type="radio" name="chamada-tipo" value="celula" checked onchange="agapeChamada.mudarTipo(this.value)"><span>❤️ <strong>Célula</strong><small>Encontro semanal</small></span></label>
+        <label class="chamada-tipo-opcao"><input type="radio" name="chamada-tipo" value="culto" onchange="agapeChamada.mudarTipo(this.value)"><span>⛪ <strong>Culto</strong><small>Reunião da igreja</small></span></label>
+      </div>
+      <select id="chamada-tipo" hidden aria-hidden="true"><option value="celula">Célula</option><option value="culto">Culto</option></select>
+    </div>
+    <label class="chamada-date">Data da reunião <input type="date" id="chamada-data" onchange="agapeChamada.mudarData(this.value)"></label>
     <div class="chamada-como-funciona">👆 <strong>Arraste para a direita</strong> se veio; <strong>esquerda</strong> se faltou. Confira tudo antes de salvar. Depois você voltará ao Início.</div>
     <div id="chamada-feedback" class="chamada-feedback" role="status" aria-live="polite"></div>
     <section id="chamada-existente" hidden aria-label="Chamada já registrada"></section>
@@ -827,6 +838,7 @@ body{
     </div>
     <div class="freq-como-funciona">📊 <strong>Como funciona:</strong> cada chamada salva alimenta automaticamente os relatórios. Por padrão, mostramos <strong>todas as chamadas</strong>, inclusive datas futuras registradas antecipadamente.</div>
     <div class="freq-filters">
+      <label>Tipo de reunião <select id="freq-tipo" onchange="agapeFrequencia.carregar()"><option value="todas">Todas</option><option value="celula">❤️ Célula</option><option value="culto">⛪ Culto</option></select></label>
       <label>Período
         <select id="freq-periodo" onchange="agapeFrequencia.periodoAlterado()">
           <option value="todas" selected>Todas as chamadas</option><option value="mes">Último mês</option><option value="3meses">Últimos 3 meses</option><option value="ano">Últimos 12 meses</option><option value="personalizado">Personalizado</option>
@@ -840,7 +852,7 @@ body{
     <div id="freq-status" class="chamada-feedback" role="status" aria-live="polite"></div>
     <div id="freq-conteudo" hidden>
       <div id="freq-indicadores" class="freq-indicadores"></div>
-      <div class="freq-panel"><h3>Evolução semanal</h3><div id="freq-grafico-semanas"></div></div>
+      <div class="freq-panel"><h3>Evolução por reunião</h3><div id="freq-grafico-semanas"></div></div>
       <div class="freq-graficos">
         <div class="freq-panel"><h3>Frequência por pessoa</h3><div id="freq-grafico-pessoas"></div></div>
         <div class="freq-panel"><h3>Presenças x faltas</h3><div id="freq-grafico-proporcao"></div></div>
@@ -885,7 +897,7 @@ body{
         <button type="button" class="btn btn-ghost" id="adm-chamadas-atualizar">↻ Atualizar lista</button>
       </section>
       <div class="adm-chamadas-alerta">⚠️ <strong>Cancelar é definitivo:</strong> apaga as presenças e faltas da reunião e a remove dos relatórios. Para corrigir uma presença sem apagar, use <strong>Ver / corrigir</strong>.</div>
-      <div class="adm-chamadas-resumo"><strong id="adm-chamadas-total">0 chamadas registradas</strong><span>Da mais recente para a mais antiga</span></div>
+      <div class="adm-chamadas-resumo"><strong id="adm-chamadas-total">0 chamadas registradas</strong><label class="adm-chamadas-tipo-label">Filtrar <select id="adm-chamadas-tipo"><option value="todas">Todas</option><option value="celula">❤️ Célula</option><option value="culto">⛪ Culto</option></select></label></div>
       <div id="adm-chamadas-status" class="chamada-feedback" role="status" aria-live="polite">Abra esta aba para carregar as chamadas.</div>
       <div id="adm-chamadas-lista" class="adm-chamadas-lista"></div>
       <button type="button" class="btn btn-ghost adm-chamadas-mais" id="adm-chamadas-mais" hidden>Carregar mais chamadas</button>
@@ -1238,13 +1250,14 @@ body{
   </div>
 
 <div class="toast" id="toast"></div>
+<script src="/js/theme.js?v=20261030c" defer></script>
 <script src="/js/utils.js"></script>
 <script src="/js/config.js"></script>
   <script src="/js/app.js" defer></script>
   <script src="/js/perfis.js" defer></script>
-  <script src="/js/frequencia-calculos.js" defer></script>
-  <script src="/js/chamada.js" defer></script>
-  <script src="/js/admin-chamadas.js" defer></script>
-  <script src="/js/frequencia.js" defer></script>
+  <script src="/js/frequencia-calculos.js?v=20261030c" defer></script>
+  <script src="/js/chamada.js?v=20261030c" defer></script>
+  <script src="/js/admin-chamadas.js?v=20261030c" defer></script>
+  <script src="/js/frequencia.js?v=20261030c" defer></script>
 </body>
 </html>
