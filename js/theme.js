@@ -3,7 +3,7 @@
   'use strict';
   const root=document.documentElement;
   const key='agape-theme';
-  const media=window.matchMedia?.('(prefers-color-scheme: dark)');
+  // Tema escuro somente quando escolhido pelo usuário; nunca forçar pelo sistema.
   function atualizar(){
     const dark=root.dataset.theme==='dark';
     const btn=document.getElementById('theme-toggle');
@@ -28,8 +28,5 @@
   window.agapeTheme={toggle,definir};
   try { if(localStorage.getItem(key)==='dark') root.dataset.theme='dark'; } catch(e) {}
   atualizar();
-  media?.addEventListener?.('change',e=>{
-    try{if(localStorage.getItem(key))return;}catch(err){return;}
-    definir(e.matches?'dark':'light',false);
-  });
+
 })();
