@@ -67,7 +67,10 @@ html[data-theme="dark"] .hero h1 em{color:#ffa8bc!important}
 .install-howto-list li:before{background:var(--accent)!important}
 .install-howto-header h2,.install-howto-list strong,.install-howto-tip strong,.install-device-heading{color:var(--stone-d)!important}
 .install-sheet-status,.install-howto-header p,.palavra-file-label,.palavra-upload-status,.hint{color:var(--muted)!important}
-html[data-theme="dark"] .sheet-overlay{background:rgba(7,4,9,.70)}
+/* O fundo escuro deve aparecer APENAS quando uma janela modal está aberta.
+   Aplicá-lo à .sheet-overlay fechada cobria o site inteiro com #070409. */
+html[data-theme="dark"] .sheet-overlay:not(.open){background:transparent!important;backdrop-filter:none!important;pointer-events:none}
+html[data-theme="dark"] .sheet-overlay.open{background:rgba(35,20,30,.58)!important;backdrop-filter:blur(4px)}
 html[data-theme="dark"] .user-chip,html[data-theme="dark"] .u-avatar{border-color:var(--border)}
 html[data-theme="dark"] .post-author,html[data-theme="dark"] .qc-title,html[data-theme="dark"] .sec-hdr h2,html[data-theme="dark"] .form-card h3,html[data-theme="dark"] .loc-card h3{color:var(--text)!important}
 html[data-theme="dark"] .qc-sub,html[data-theme="dark"] .post-date,html[data-theme="dark"] .sec-hdr p{color:var(--muted)!important}
