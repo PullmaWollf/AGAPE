@@ -1,4 +1,5 @@
 import adminChamadas from '../api-routes/admin-chamadas.js';
+import adminConfig from '../api-routes/admin-config.js';
 import adminPerfis from '../api-routes/admin-perfis.js';
 import adminUsers from '../api-routes/admin-users.js';
 import authLogin from '../api-routes/auth-login.js';
@@ -20,6 +21,7 @@ import frequencia from '../api-routes/frequencia.js';
 
 const rotas = {
   'admin-chamadas': adminChamadas,
+  'admin-config': adminConfig,
   'admin-perfis': adminPerfis,
   'admin-users': adminUsers,
   'auth-login': authLogin,
