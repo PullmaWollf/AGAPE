@@ -255,6 +255,12 @@ async function carregarAdmin() {
 // INÍCIO
 // ══════════════════════════════════════════
 async function iniciar() {
+  // A navegação precisa ficar disponível mesmo sem conexão, sessão ou dados públicos.
+  const mostrarHomeSegura = () => {
+    document.querySelectorAll('.page').forEach((pagina) => pagina.classList.remove('active'));
+    $('page-home')?.classList.add('active');
+  };
+  mostrarHomeSegura();
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch((e) => console.warn('SW:', e));
     navigator.serviceWorker.addEventListener('message', (ev) => {
@@ -263,17 +269,23 @@ async function iniciar() {
   }
   try {
     await Promise.all([restaurarSessao(), carregarPublico()]);
-    $('erro-conexao').style.display = 'none';
+    if ($('erro-conexao')) $('erro-conexao').style.display = 'none';
   } catch (e) {
-    console.error('iniciar:', e);
-    $('erro-conexao').style.display = 'flex';
+    console.warn('Dados iniciais indisponíveis:', e);
+    if ($('erro-conexao')) $('erro-conexao').style.display = 'flex';
   }
   if (isAdm()) await carregarAdmin().catch((e) => console.warn('admin:', e));
-  renderTudo();
-  ligarRealtime();
-  sincronizarPush({ silencioso: true });
-  const pagina = new URL(location.href).searchParams.get('page') || localStorage.getItem('agape-page') || 'home';
-  if ($('page-' + pagina)) goPage(pagina);
+  try { renderTudo(); } catch (e) { console.error('renderização:', e); mostrarHomeSegura(); }
+  try { ligarRealtime(); } catch (e) { console.warn('realtime:', e); }
+  try { sincronizarPush({ silencioso: true }); } catch (e) { console.warn('push:', e); }
+  // Não restaurar automaticamente páginas internas sem sessão: a página
+  // guardada pode estar vazia ou exigir autenticação, parecendo uma tela preta.
+  let pagina = 'home';
+  try {
+    const solicitada = new URL(location.href).searchParams.get('page') || localStorage.getItem('agape-page');
+    if (S.me && solicitada && $('page-' + solicitada)) pagina = solicitada;
+  } catch (e) { console.warn('Navegação anterior inválida:', e); }
+  try { goPage(pagina); } catch (e) { console.warn('Falha na navegação:', e); mostrarHomeSegura(); }
 }
 
 async function tentarNovamente() {
