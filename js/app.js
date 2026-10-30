@@ -141,7 +141,7 @@ function atualizarAuth() {
     if (dla) dla.style.display = adm ? '' : 'none';
     $('compose-area').style.display = 'block';
     $('login-nudge').style.display = 'none';
-    $('hac-icon').replaceChildren(window.agapeIcon ? window.agapeIcon('person') : document.createTextNode('Conta'));
+    $('hac-icon').innerHTML = '<svg class="ag-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="7.5" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg>';
     $('hac-title').textContent = 'Minha conta';
     $('hac-sub').textContent = 'Senha e notificações';
     $('home-auth-card').onclick = abrirConta;
@@ -152,7 +152,7 @@ function atualizarAuth() {
     fab.classList.remove('show');
     $('compose-area').style.display = 'none';
     $('login-nudge').style.display = 'block';
-    $('hac-icon').replaceChildren(window.agapeIcon ? window.agapeIcon('lock') : document.createTextNode('Entrar'));
+    $('hac-icon').innerHTML = '<svg class="ag-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="7.5" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg>';
     $('hac-title').textContent = 'Entrar';
     $('hac-sub').textContent = 'Acessar sua conta';
     $('home-auth-card').onclick = () => openSheet('login-sheet');
