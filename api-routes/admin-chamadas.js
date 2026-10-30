@@ -20,15 +20,18 @@ export function criarHandler({ criarCliente = clienteAdmin } = {}) {
     await exigirLiderChamada(db, req, 'chamada_registrar');
 
     const { acao } = req.body || {};
+    const tipo = String(req.body?.tipo || 'todas').toLowerCase();
+    if (!['todas','celula','culto'].includes(tipo)) throw new HttpError(400,'Tipo de reunião inválido');
     if (acao === 'listar') {
       const pagina = Number(req.body.pagina ?? 1);
       if (!Number.isSafeInteger(pagina) || pagina < 1 || pagina > 100000) {
         throw new HttpError(400, 'Página inválida');
       }
       const inicio = (pagina - 1) * POR_PAGINA;
-      const r = await db.from('chamadas')
-        .select('id,data_celula,registrado_por,criado_em,atualizado_em', { count: 'exact' })
-        .order('data_celula', { ascending: false })
+      const consulta = db.from('chamadas')
+        .select('id,data_celula,tipo,registrado_por,criado_em,atualizado_em', { count: 'exact' });
+      const r = await (tipo === 'todas' ? consulta : consulta.eq('tipo',tipo))
+        .order('data_celula', { ascending: false }).order('tipo', { ascending: true })
         .range(inicio, inicio + POR_PAGINA - 1);
       if (r.error) throw new Error(r.error.message);
       const chamadas = r.data || [];
@@ -69,6 +72,7 @@ export function criarHandler({ criarCliente = clienteAdmin } = {}) {
         chamadas: chamadas.map(c => ({
           id: c.id,
           data_celula: c.data_celula,
+          tipo: c.tipo,
           criado_em: c.criado_em,
           atualizado_em: c.atualizado_em,
           registrado_por_nome: autores.get(c.registrado_por) || null,
@@ -82,9 +86,10 @@ export function criarHandler({ criarCliente = clienteAdmin } = {}) {
       const id = String(req.body.id || '');
       if (!UUID.test(id)) throw new HttpError(400, 'Identificador da chamada inválido');
       const data = validarDataISO(req.body.data);
+      if (tipo === 'todas') throw new HttpError(400,'Informe o tipo da reunião');
       // Exige ID e data juntos: uma tela desatualizada não exclui outra chamada.
       const r = await db.from('chamadas').delete()
-        .eq('id', id).eq('data_celula', data)
+        .eq('id', id).eq('data_celula', data).eq('tipo',tipo)
         .select('id').maybeSingle();
       if (r.error) throw new HttpError(503, 'Não foi possível cancelar a chamada. Tente novamente.');
       if (!r.data) throw new HttpError(404, 'Chamada não encontrada ou já cancelada. Atualize a lista.');

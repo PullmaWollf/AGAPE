@@ -6,7 +6,7 @@
   const $ = id => document.getElementById(id);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, ch =>
     ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-  const state = { chamadas: [], total: 0, pagina: 0, carregando: false, cancelando: false, pedido: 0 };
+  const state = { tipo: 'todas', chamadas: [], total: 0, pagina: 0, carregando: false, cancelando: false, pedido: 0 };
   const autorizado = () => {
     const me = window.S?.me;
     return !!me && ['adm','admin','administrador'].includes(String(me.role || '').toLowerCase())
@@ -35,6 +35,7 @@
       window.goPage('home');
     }
   }
+  const nomeTipo = tipo => tipo === 'culto' ? 'Culto' : 'Célula';
   function renderizar() {
     const lista = $('adm-chamadas-lista');
     const total = $('adm-chamadas-total');
@@ -47,9 +48,9 @@
       lista.innerHTML = state.chamadas.map(c => `<article class="adm-chamada-item">
         <div class="adm-chamada-topo">
           <div class="adm-chamada-data"><span class="adm-chamada-calendario" aria-hidden="true">📅</span>
-            <div><strong>${esc(dataBR(c.data_celula))}</strong><small>Reunião registrada</small></div>
+            <div><strong>${esc(dataBR(c.data_celula))}</strong><small>${esc(nomeTipo(c.tipo))} · Reunião registrada</small></div>
           </div>
-          <span class="adm-chamada-situacao">Salva</span>
+          <span class="adm-chamada-situacao">${c.tipo==='culto'?'⛪ Culto':'❤️ Célula'}</span>
         </div>
         <div class="adm-chamada-numeros">
           <span class="adm-chamada-presente"><strong>${Number(c.presentes) || 0}</strong> presentes</span>
@@ -58,8 +59,8 @@
         </div>
         <p class="adm-chamada-meta">Registrada por: <strong>${esc(c.registrado_por_nome || 'Não informado')}</strong> · ${esc(horarioBR(c.criado_em))}</p>
         <div class="adm-chamada-acoes">
-          <button type="button" class="btn btn-ghost" data-adm-ver="${esc(c.data_celula)}">👁 Ver / corrigir</button>
-          <button type="button" class="btn adm-chamada-cancelar" data-adm-cancelar="${esc(c.id)}" data-data="${esc(c.data_celula)}">🗑️ Cancelar chamada</button>
+          <button type="button" class="btn btn-ghost" data-adm-ver="${esc(c.data_celula)}" data-tipo="${esc(c.tipo||'celula')}">👁 Ver / corrigir</button>
+          <button type="button" class="btn adm-chamada-cancelar" data-adm-cancelar="${esc(c.id)}" data-data="${esc(c.data_celula)}" data-tipo="${esc(c.tipo||'celula')}">🗑️ Cancelar chamada</button>
         </div>
       </article>`).join('');
     }
@@ -70,6 +71,7 @@
   async function carregar({ mais = false } = {}) {
     if (!autorizado() || state.carregando || state.cancelando) return;
     const pedido = ++state.pedido;
+    state.tipo = $('adm-chamadas-tipo')?.value || 'todas';
     state.carregando = true;
     const proximaPagina = mais ? state.pagina + 1 : 1;
     status(mais ? 'Carregando mais chamadas…' : 'Consultando chamadas registradas…');
@@ -79,7 +81,7 @@
     if (btnAtualizar) btnAtualizar.disabled = true;
     try {
       const resposta = await window.chamarApi('/api/admin-chamadas', {
-        acao: 'listar', pagina: proximaPagina
+        acao: 'listar', pagina: proximaPagina, tipo: state.tipo
       });
       if (pedido !== state.pedido) return;
       state.chamadas = mais ? [...state.chamadas, ...(resposta.chamadas || [])] : (resposta.chamadas || []);
@@ -96,22 +98,22 @@
       if (btnAtualizar) btnAtualizar.disabled = false;
     }
   }
-  async function cancelar(id, data) {
+  async function cancelar(id, data, tipo) {
     if (!autorizado() || state.cancelando || state.carregando) return;
-    const chamada = state.chamadas.find(c => c.id === id && c.data_celula === data);
+    const chamada = state.chamadas.find(c => c.id === id && c.data_celula === data && c.tipo === tipo);
     if (!chamada) return status('Esta chamada não está mais na lista. Atualize.', true);
-    const aviso = 'Cancelar DEFINITIVAMENTE a chamada de ' + dataBR(data) +
+    const aviso = 'Cancelar DEFINITIVAMENTE a chamada de ' + nomeTipo(tipo) + ' de ' + dataBR(data) +
       '?\n\nSerão excluídas ' + ((Number(chamada.presentes) || 0) + (Number(chamada.ausentes) || 0)) +
       ' marcações de presença/falta e a reunião deixará de aparecer nos relatórios.\n\nEsta ação não pode ser desfeita.';
     if (!window.confirm(aviso)) return;
     state.cancelando = true;
-    status('Cancelando a chamada de ' + dataBR(data) + '…');
+    status('Cancelando a chamada de ' + nomeTipo(tipo) + ' de ' + dataBR(data) + '…');
     $('adm-chamadas-lista')?.querySelectorAll('button').forEach(btn => { btn.disabled = true; });
     const mais = $('adm-chamadas-mais'), atualizar = $('adm-chamadas-atualizar');
     if (mais) mais.disabled = true;
     if (atualizar) atualizar.disabled = true;
     try {
-      await window.chamarApi('/api/admin-chamadas', { acao: 'cancelar', id, data });
+      await window.chamarApi('/api/admin-chamadas', { acao: 'cancelar', id, data, tipo });
       window.agapeFrequencia?.invalidar?.();
       window.toast('Chamada de ' + dataBR(data) + ' cancelada.');
       state.cancelando = false;
@@ -134,12 +136,13 @@
     const ver = event.target.closest('[data-adm-ver]');
     if (ver) {
       if (!autorizado() || state.cancelando) return;
-      window.agapeChamada?.abrir(ver.dataset.admVer);
+      window.agapeChamada?.abrir(ver.dataset.admVer,ver.dataset.tipo);
       return;
     }
     const excluir = event.target.closest('[data-adm-cancelar]');
-    if (excluir) cancelar(excluir.dataset.admCancelar, excluir.dataset.data);
+    if (excluir) cancelar(excluir.dataset.admCancelar, excluir.dataset.data, excluir.dataset.tipo);
   });
+  $('adm-chamadas-tipo')?.addEventListener('change', () => carregar());
   $('adm-chamadas-atualizar')?.addEventListener('click', () => carregar());
   $('adm-chamadas-mais')?.addEventListener('click', () => carregar({ mais: true }));
   window.agapeAdminChamadas = { abrir, carregar, atualizarAcesso };

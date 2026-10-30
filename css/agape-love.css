@@ -1,0 +1,138 @@
+/* ÁGAPE 2026 — identidade do amor: rosa, vinho, creme e modo escuro. */
+:root {
+  color-scheme:light;
+  --cream:#fff5f0;--cream-d:#f8e8e5;--stone:#795362;--stone-d:#602b41;
+  --blush:#f0b6bf;--blush-l:#fff0f2;--mauve:#b86880;
+  --accent:#b83258;--accent-l:#ffe7ee;--text:#412637;--muted:#896e79;
+  --border:#ecd6dc;--surface:#fffaf9;--bg:#fff6f4;
+  --danger:#c24b5e;--success:#348966;
+  --sh:0 3px 16px rgba(120,40,67,.075);
+  --sh-lg:0 16px 42px rgba(120,40,67,.14);
+}
+html[data-theme="dark"] {
+  color-scheme:dark;
+  --cream:#261b23;--cream-d:#35232e;--stone:#d7a8b9;--stone-d:#ffe4e9;
+  --blush:#82415d;--blush-l:#402634;--mauve:#d38ca7;
+  --accent:#f18ca9;--accent-l:#4c2939;--text:#f9eaf0;--muted:#c4a4b0;
+  --border:#59404d;--surface:#2c202a;--bg:#1d171f;
+  --danger:#f28d9b;--success:#7ac7a2;
+  --sh:0 4px 20px rgba(0,0,0,.19);
+  --sh-lg:0 18px 45px rgba(0,0,0,.30);
+}
+body {background:var(--bg)!important;color:var(--text)!important;transition:background .22s,color .22s}
+.top-nav,.tab-bar {background:var(--surface)!important;border-color:var(--border)!important;box-shadow:var(--sh)!important}
+.nav-logo-text,.sec-hdr h2,.sheet h2 {color:var(--stone-d)!important}
+.nav-logo-text em,.hero h1 em,.tab-btn.active {color:var(--accent)!important}
+.desktop-links button,.tab-btn {color:var(--muted)}
+.desktop-links button.active,.desktop-links button:hover {background:var(--accent-l)!important;color:var(--accent)!important}
+.btn-primary {background:#b83258!important;border-color:#b83258!important;color:#fff!important;box-shadow:0 5px 18px #b8325829!important}
+.btn-primary:hover {background:#942342!important;border-color:#942342!important}
+html[data-theme="dark"] .btn-primary {background:#dc6888!important;border-color:#dc6888!important;color:#21171e!important}
+.pwa-install-global {background:var(--accent-l)!important;color:var(--accent)!important;border-color:var(--border)!important;box-shadow:none!important}
+.btn-ghost,.btn-outline,.install-sheet-close {color:var(--accent)!important;background:var(--accent-l)!important;border-color:var(--border)!important}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible {outline:3px solid var(--accent)!important;outline-offset:2px}
+.theme-toggle {display:inline-flex;align-items:center;justify-content:center;gap:7px;flex:0 0 auto;min-width:42px;height:42px;border:1px solid var(--border);border-radius:99px;background:var(--accent-l);color:var(--accent);font:700 .78rem 'DM Sans',sans-serif;cursor:pointer;padding:0 12px;transition:transform .2s,background .2s}
+.theme-toggle:active{transform:scale(.94)}
+.theme-toggle-icon{font-size:1.25rem;line-height:1}
+.theme-toggle[aria-pressed="true"]{background:#513043;color:#ffe1eb;border-color:#75435b}
+.theme-toggle-label{white-space:nowrap}
+@media(max-width:680px){.theme-toggle{padding:0;width:40px;min-width:40px}.theme-toggle-label{display:none}}
+@media(max-width:410px){.theme-toggle{width:36px;min-width:36px;height:36px}.top-nav{gap:5px!important}}
+
+/* Arte exclusiva Ágape no início */
+.hero{max-width:1100px;margin:12px auto 0;border-radius:23px;min-height:300px;box-shadow:var(--sh-lg);overflow:hidden}
+.hero-bg{background-image:url('/assets/agape-hero.svg')!important;background-size:cover!important;background-position:center!important;filter:none!important}
+.hero-overlay{background:linear-gradient(90deg,rgba(255,244,238,.94),rgba(255,240,235,.70) 53%,rgba(255,240,235,.10))!important}
+.hero h1{color:#61283f!important;font-size:clamp(2.6rem,5vw,4rem)}
+.hero p{color:#684152!important;max-width:420px}
+.hero-eyebrow{color:#96556e!important}
+html[data-theme="dark"] .hero-overlay{background:linear-gradient(90deg,rgba(29,17,29,.93),rgba(41,20,35,.70) 54%,rgba(41,20,35,.10))!important}
+html[data-theme="dark"] .hero h1,html[data-theme="dark"] .hero p,html[data-theme="dark"] .hero-eyebrow{color:#ffe9ef!important}
+html[data-theme="dark"] .hero h1 em{color:#ffa8bc!important}
+@media(max-width:680px){.hero{width:calc(100% - 24px);min-height:285px;margin:10px 12px 0;padding:0 16px 24px}.hero-overlay{background:linear-gradient(0deg,rgba(255,244,239,.97),rgba(255,239,234,.60) 70%,rgba(255,239,234,.18))!important}html[data-theme="dark"] .hero-overlay{background:linear-gradient(0deg,rgba(31,19,29,.96),rgba(36,19,32,.70) 70%,rgba(36,19,32,.16))!important}}
+
+/* Cartões, formulários e navegação */
+.quick-card,.post-card,.escala-card,.form-card,.compose-card,.loc-card,.palavra-card,.freq-panel,.freq-indicadores,.chamada-result,.chamada-ja-registrada,.adm-chamada-item,.adm-chamadas-cabecalho,.adm-chamadas-vazio {
+  background:var(--surface)!important;border-color:var(--border)!important;box-shadow:var(--sh)!important;color:var(--text)
+}
+.quick-card{transition:transform .2s,box-shadow .2s;border-radius:20px}
+.quick-card:hover{transform:translateY(-3px);box-shadow:var(--sh-lg)!important}
+.qc-icon{filter:saturate(.86)}
+.fld input,.fld select,.fld textarea,input[type="date"],input[type="time"],select,textarea,.palavra-admin-card input[type="file"] {
+  background:var(--surface)!important;border-color:var(--border)!important;color:var(--text)!important;
+}
+.fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--accent)!important;box-shadow:0 0 0 3px var(--accent-l)!important}
+.sheet,.install-sheet,.install-howto-card,.install-sheet .install-howto-card {background:var(--surface)!important;color:var(--text)}
+.install-howto,.install-howto-tip,.install-howto-picker,.install-platform-btn.active,.install-platform-btn[aria-pressed="true"],.install-sheet-close{background:var(--accent-l)!important;color:var(--text)!important;border-color:var(--border)!important}
+.install-howto-list li:before{background:var(--accent)!important}
+.install-howto-header h2,.install-howto-list strong,.install-howto-tip strong,.install-device-heading{color:var(--stone-d)!important}
+.install-sheet-status,.install-howto-header p,.palavra-file-label,.palavra-upload-status,.hint{color:var(--muted)!important}
+html[data-theme="dark"] .sheet-overlay{background:rgba(7,4,9,.70)}
+html[data-theme="dark"] .user-chip,html[data-theme="dark"] .u-avatar{border-color:var(--border)}
+html[data-theme="dark"] .post-author,html[data-theme="dark"] .qc-title,html[data-theme="dark"] .sec-hdr h2,html[data-theme="dark"] .form-card h3,html[data-theme="dark"] .loc-card h3{color:var(--text)!important}
+html[data-theme="dark"] .qc-sub,html[data-theme="dark"] .post-date,html[data-theme="dark"] .sec-hdr p{color:var(--muted)!important}
+
+/* Chamada MATCH */
+.lider-action{background:linear-gradient(145deg,var(--surface),var(--accent-l))!important;border-color:var(--border)!important;color:var(--stone-d)!important;box-shadow:var(--sh)!important}
+.lider-action small,.chamada-heading p,.chamada-feedback,.chamada-hint{color:var(--muted)!important}
+.chamada-heading h2,.chamada-result h3,.chamada-ja-registrada h3,.freq-panel h3,.adm-chamadas-cabecalho h3{color:var(--stone-d)!important}
+.chamada-eyebrow,.chamada-review-link{color:var(--accent)!important}
+.chamada-back,.chamada-date{background:var(--surface)!important;color:var(--stone-d)!important;border-color:var(--border)!important}
+.chamada-date input{background:var(--accent-l)!important;color:var(--text)!important}
+.chamada-como-funciona,.freq-como-funciona,.lider-presenca-explicacao{background:var(--accent-l)!important;color:var(--stone-d)!important;border-color:var(--border)!important}
+.chamada-track,.freq-person-track,.freq-week-bar{background:var(--cream-d)!important}
+#chamada-progress-bar{background:linear-gradient(90deg,#d94c78,#ef9bae)!important}
+.match-card{background:linear-gradient(160deg,var(--surface),var(--accent-l))!important;border-color:var(--border)!important;box-shadow:var(--sh-lg)!important}
+.match-avatar{background:var(--accent-l)!important;border-color:var(--surface)!important}
+.match-name,.match-card p,.chamada-progress{color:var(--stone-d)!important}
+.chamada-result-row{border-color:var(--border)!important}
+.chamada-result-row span{color:var(--text)!important}
+.chamada-metrics>div,.chamada-ja-totais span{background:var(--accent-l)!important;color:var(--stone-d)!important}
+.chamada-metrics strong{color:var(--accent)!important}
+.chamada-metrics span,.chamada-result h4,.chamada-ja-registrada p{color:var(--muted)!important}
+.chamada-controls .chamada-undo{color:var(--stone-d)!important;background:var(--accent-l)!important}
+.chamada-controls .chamada-yes{background:#e2f5e9!important;color:#217e53!important}
+.chamada-controls .chamada-no{background:#ffe5ea!important;color:#ac294c!important}
+.chamada-tipo-wrap{border:1px solid var(--border);border-radius:18px;padding:16px;background:var(--surface);margin:0 0 12px;max-width:580px;box-shadow:var(--sh)}
+.chamada-tipo-title{display:block;font-size:.82rem;font-weight:800;color:var(--stone-d);margin-bottom:11px}
+.chamada-tipo-opcoes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chamada-tipo-opcao{cursor:pointer;min-width:0}
+.chamada-tipo-opcao input{position:absolute;opacity:0;width:1px;height:1px}
+.chamada-tipo-opcao>span{display:flex;flex-direction:column;align-items:center;gap:4px;padding:15px 7px;min-height:92px;border:1.5px solid var(--border);border-radius:14px;background:var(--bg);color:var(--text);text-align:center;font-size:1.2rem;transition:background .2s,border .2s}
+.chamada-tipo-opcao strong{font-size:.93rem;color:var(--stone-d)}
+.chamada-tipo-opcao small{font-size:.69rem;color:var(--muted)}
+.chamada-tipo-opcao input:checked+span{border:2px solid var(--accent);background:var(--accent-l);box-shadow:0 0 0 2px var(--accent-l)}
+.chamada-tipo-opcao input:focus-visible+span{outline:3px solid var(--accent);outline-offset:2px}
+
+/* Relatórios e administração */
+.freq-indicador strong{color:var(--accent)!important}
+.freq-indicador>span,.freq-indicador small,.freq-person span,.freq-subtitle,.freq-week-col{color:var(--muted)!important}
+.freq-person strong,.freq-pastoral-row,.freq-legend p,.adm-chamada-data strong,.adm-chamadas-resumo,.adm-chamada-numeros span{color:var(--text)!important}
+.freq-week-bar i{background:linear-gradient(#f4a0b8,#a52b55)!important}
+.freq-person-track i{background:#ce5b80!important}
+.freq-person-track i.low{background:#e0a557!important}
+.freq-donut{background:conic-gradient(#cf527c var(--freq-p),#e8a2a4 0)!important}
+.freq-donut:before{background:var(--surface)!important}
+.freq-donut strong{color:var(--stone-d)!important}
+.freq-legend i.present{background:#cf527c!important}
+.freq-legend i.absent{background:#e8a2a4!important}
+.freq-table-scroll th,.freq-table-scroll td{border-color:var(--border)!important}
+.freq-table-scroll table,.freq-table-scroll th,.freq-table-scroll td{color:var(--text)!important}
+.freq-table-scroll th{background:var(--accent-l)!important}
+.freq-table-scroll td.indefinido{background:var(--bg)!important}
+.adm-chamadas-alerta{background:var(--accent-l)!important;border-color:var(--border)!important;color:var(--stone-d)!important}
+.adm-chamada-calendario,.adm-chamada-numeros span{background:var(--accent-l)!important}
+.adm-chamada-situacao{background:var(--accent-l)!important;color:var(--accent)!important}
+.adm-chamada-data small,.adm-chamada-meta,.adm-chamadas-resumo span{color:var(--muted)!important}
+.adm-chamadas-tipo-label{display:flex;align-items:center;gap:8px;font-size:.83rem;color:var(--muted)}
+.adm-chamadas-tipo-label select{border:1px solid var(--border);border-radius:10px;padding:8px 10px;min-height:40px;font-weight:700}
+html[data-theme="dark"] .adm-chamada-numeros .adm-chamada-presente{background:#203d34!important;color:#a1e8c5!important}
+html[data-theme="dark"] .adm-chamada-numeros .adm-chamada-ausente{background:#482934!important;color:#ffb4c4!important}
+html[data-theme="dark"] .adm-chamada-cancelar{background:#442632!important;color:#ffb6c4!important;border-color:#704052!important}
+html[data-theme="dark"] .chamada-controls .chamada-yes{background:#244637!important;color:#a0eac4!important}
+html[data-theme="dark"] .chamada-controls .chamada-no{background:#4a2836!important;color:#ffc0d1!important}
+@media print{
+  :root,html[data-theme="dark"]{color-scheme:light;--text:#412637;--muted:#896e79;--border:#ecd6dc;--surface:#fff;--bg:#fff;--stone-d:#602b41;--accent:#b83258;--accent-l:#ffe7ee}
+  body{background:#fff!important;color:#222!important}
+  .theme-toggle{display:none!important}
+}

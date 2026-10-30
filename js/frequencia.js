@@ -5,6 +5,7 @@
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const state={raw:null,resultado:null,limites:null};
   const permitido=()=>!!window.S?.me && (window.S.me.permissoes?.frequencia_relatorio === true);
+  const nomeTipo=t=>t==='culto'?'Culto':'Célula';
   const nomeData=d=>d?d.slice(8,10)+'/'+d.slice(5,7):'—';
   function status(msg,error=false){$('freq-status').textContent=msg;$('freq-status').classList.toggle('error',error);}
   function periodoAlterado(){
@@ -42,14 +43,15 @@
     status('Consultando as chamadas registradas…');
     $('freq-conteudo').hidden=true;
     try {
-      const r=await window.chamarApi('/api/frequencia',{inicio,fim});
+      const tipo=$('freq-tipo')?.value||'todas';
+      const r=await window.chamarApi('/api/frequencia',{inicio,fim,tipo});
       state.raw=r;
       const sel=$('freq-pessoa'),antigo=sel.value;
       sel.innerHTML='<option value="">Todas as pessoas</option>'+r.membros.map(m=>`<option value="${esc(m.id)}">${esc(m.name)}</option>`).join('');
       if([...sel.options].some(o=>o.value===antigo))sel.value=antigo;
       renderizar();
       status(r.chamadas.length?
-        `${r.chamadas.length} chamada(s) registrada(s) entre ${inicio.split('-').reverse().join('/')} e ${fim.split('-').reverse().join('/')}. Datas futuras lançadas antecipadamente também aparecem.`:
+        `${r.chamadas.length} chamada(s) de ${tipo==='todas'?'todos os tipos':nomeTipo(tipo)} registrada(s) entre ${inicio.split('-').reverse().join('/')} e ${fim.split('-').reverse().join('/')}. Datas futuras lançadas antecipadamente também aparecem.`:
         'Nenhuma chamada salva neste período. Confira as datas ou selecione “Todas as chamadas”.');
       $('freq-conteudo').hidden=false;
     }catch(e){status((e.message||'Falha de conexão')+' · Verifique a migração do banco e tente novamente.',true);}
@@ -62,15 +64,15 @@
     const i=r.indicadores;
     $('freq-indicadores').innerHTML=[
       indicador('Presença média',i.taxa===null?'—':i.taxa+'%','Entre as marcações registradas'),
-      indicador('Chamadas registradas',i.realizadas,'Inclui lançamentos antecipados'),
+      indicador('Reuniões registradas',i.realizadas,'No tipo selecionado'),
       indicador('Média de presentes',String(i.media).replace('.',','),'Por reunião'),
-      indicador('Melhor semana',i.melhor?nomeData(i.melhor.data):'—',i.melhor?.percentual==null?'Sem dados':i.melhor.percentual+'%'),
+      indicador('Melhor reunião',i.melhor?nomeData(i.melhor.data):'—',i.melhor?.percentual==null?'Sem dados':i.melhor.percentual+'%'),
       indicador('Menor presença',i.pior?nomeData(i.pior.data):'—',i.pior?.percentual==null?'Sem dados':i.pior.percentual+'%')
     ].join('');
     const chart=$('freq-grafico-semanas');
     const validas=r.semanas.filter(s=>s.percentual!==null);
     chart.innerHTML=validas.length
-      ?`<div class="freq-week-bars">${validas.map(w=>`<div class="freq-week-col" title="${esc(w.data)}: ${w.presentes} presentes, ${w.ausentes} faltas"><span>${w.percentual}%</span><div class="freq-week-bar"><i style="height:${w.percentual}%"></i></div><small>${nomeData(w.data)}</small></div>`).join('')}</div>`
+      ?`<div class="freq-week-bars">${validas.map(w=>`<div class="freq-week-col" title="${esc(w.data)} · ${esc(nomeTipo(w.tipo))}: ${w.presentes} presentes, ${w.ausentes} faltas"><span>${w.percentual}%</span><div class="freq-week-bar"><i style="height:${w.percentual}%"></i></div><small>${nomeData(w.data)}<br>${esc(nomeTipo(w.tipo))}</small></div>`).join('')}</div>`
       :'<p class="freq-empty">Nenhuma semana com presença registrada.</p>';
     const people=$('freq-grafico-pessoas');
     people.innerHTML=r.linhas.length?
@@ -85,7 +87,7 @@
       '<p class="freq-subtitle">Pessoas com duas ou mais ausências consecutivas entre as últimas reuniões registradas:</p>'+
       r.pastoral.map(p=>`<div class="freq-pastoral-row">❤️ <strong>${esc(p.nome)}</strong><span>${p.consecutivas} ausências seguidas</span></div>`).join(''):
       '<p class="freq-empty">Nenhuma sequência recente de ausências identificada.</p>';
-    const head=r.chamadas.map(c=>`<th scope="col">${nomeData(c.data_celula)}</th>`).join('');
+    const head=r.chamadas.map(c=>`<th scope="col" title="${esc(nomeTipo(c.tipo))}">${nomeData(c.data_celula)}<br><small>${esc(nomeTipo(c.tipo))}</small></th>`).join('');
     $('freq-tabela').innerHTML=`<thead><tr><th scope="col">Pessoa</th>${head}<th>Presenças</th><th>Faltas</th><th>%</th></tr></thead>
       <tbody>${r.linhas.map(p=>`<tr><th scope="row">${esc(p.nome)}</th>${p.datas.map(v=>`<td class="freq-cell ${v||'indefinido'}" title="${v||'Não aplicável ou não registrado'}">${v==='presente'?'✓':v==='ausente'?'✕':'—'}</td>`).join('')}<td>${p.presente}</td><td>${p.ausente}</td><td>${p.percentual===null?'—':p.percentual+'%'}</td></tr>`).join('')}</tbody>`;
   }
@@ -94,18 +96,18 @@
     if(!state.resultado)return;
     const r=state.resultado;
     const data=[
-      ['Membro',...r.chamadas.map(c=>c.data_celula),'Presenças','Faltas','Frequência (%)'],
+      ['Membro',...r.chamadas.map(c=>c.data_celula+' ('+nomeTipo(c.tipo)+')'),'Presenças','Faltas','Frequência (%)'],
       ...r.linhas.map(p=>[p.nome,...p.datas.map(s=>s==='presente'?'P':s==='ausente'?'F':''),p.presente,p.ausente,p.percentual??''])
     ];
     const blob=new Blob(['\ufeff'+data.map(l=>l.map(csvCell).join(';')).join('\r\n')],{type:'text/csv;charset=utf-8;'});
     const url=URL.createObjectURL(blob),a=document.createElement('a');
-    a.href=url;a.download=`agape-frequencia-${$('freq-inicio').value}-${$('freq-fim').value}.csv`;document.body.append(a);a.click();a.remove();
+    a.href=url;a.download=`agape-frequencia-${$('freq-tipo')?.value||'todas'}-${$('freq-inicio').value}-${$('freq-fim').value}.csv`;document.body.append(a);a.click();a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),3000);
   }
   function pdf(){
     if(!state.resultado)return;
     const title=document.title;
-    document.title=`Célula Ágape | Frequência ${$('freq-inicio').value} a ${$('freq-fim').value}`;
+    document.title=`Célula Ágape | Frequência ${$('freq-tipo')?.selectedOptions?.[0]?.textContent||'Todas'} | ${$('freq-inicio').value} a ${$('freq-fim').value}`;
     // A folha de impressão inclui os gráficos CSS, indicadores e tabela.
     window.addEventListener('afterprint',()=>{document.title=title;},{once:true});
     window.print();

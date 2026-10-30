@@ -3,11 +3,11 @@
   'use strict';
   const $ = (id) => document.getElementById(id);
   const esc = (v) => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const state={data:'',membros:[],marcacoes:{},historico:[],chamada:null,carregando:false,salvando:false,modoEdicao:false,animando:false,reqId:0};
+  const state={tipo:'celula',data:'',membros:[],marcacoes:{},historico:[],chamada:null,carregando:false,salvando:false,modoEdicao:false,animando:false,reqId:0};
   const autorizado=()=>Boolean(window.S?.me && (
     window.S.me.permissoes?.chamada_registrar===true
   ));
-  const chave=()=>`agape:chamada:rascunho:${window.S?.me?.id||'anon'}:${state.data}`;
+  const chave=()=>`agape:chamada:rascunho:${window.S?.me?.id||'anon'}:${state.tipo}:${state.data}`;
   const dataSP=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
   const dataPadrao=(dia=5)=>{
     const base=new Date(dataSP()+'T12:00:00Z');
@@ -51,9 +51,13 @@
       window.goPage('home');
     }
   }
-  async function abrir(dataSelecionada){
+  const nomeTipo=()=>state.tipo==='culto'?'culto':'célula';
+  async function abrir(dataSelecionada,tipoSelecionado){
     if(!autorizado())return window.toast('Área exclusiva da liderança.','warn');
     window.goPage('chamada');
+    state.tipo=['celula','culto'].includes(tipoSelecionado)?tipoSelecionado:'celula';
+    $('chamada-tipo').value=state.tipo;
+    document.querySelectorAll('input[name="chamada-tipo"]').forEach(el=>{el.checked=el.value===state.tipo;});
     feedback('Carregando padrão da célula…');
     try {
       const r=await window.chamarApi('/api/chamada',{acao:'config'});
@@ -64,6 +68,13 @@
     }catch(e){
       feedback((e.message||'Não foi possível abrir a chamada.')+' A migração SQL pode estar pendente.',true);
     }
+  }
+  async function mudarTipo(tipo){
+    if(!['celula','culto'].includes(tipo)||state.salvando)return;
+    state.tipo=tipo;
+    $('chamada-tipo').value=tipo;
+    document.querySelectorAll('input[name="chamada-tipo"]').forEach(el=>{el.checked=el.value===tipo;});
+    await carregar();
   }
   async function mudarData(data) {
     if(!/^\d{4}-\d{2}-\d{2}$/.test(data))return;
@@ -76,13 +87,13 @@
     $('chamada-game').hidden=true;$('chamada-summary').hidden=true;
     const existente=$('chamada-existente');if(existente)existente.hidden=true;
     try {
-      const r=await window.chamarApi('/api/chamada',{acao:'abrir',data:state.data});
+      const r=await window.chamarApi('/api/chamada',{acao:'abrir',data:state.data,tipo:state.tipo});
       if(token!==state.reqId)return;
       state.membros=r.membros||[];state.chamada=r.chamada;state.historico=[];state.modoEdicao=false;
       state.marcacoes=Object.fromEntries((r.presencas||[]).map(p=>[p.user_id,p.status]));
       if(!state.chamada)aplicarRascunho();
       render();
-      feedback(state.chamada?'Esta data já tem chamada salva. Não é possível lançar outra. Use as opções abaixo para consultar ou corrigir.':'Nova chamada: marque quem veio e quem faltou.');
+      feedback(state.chamada?'Já existe chamada de '+nomeTipo()+' nesta data. Você pode lançar outro tipo de reunião no mesmo dia. Use as opções abaixo para consultar ou corrigir.':'Nova chamada de '+nomeTipo()+': marque quem veio e quem faltou.');
     }catch(e){if(token===state.reqId)feedback((e.message||'Falha de conexão')+' · Suas marcações locais foram preservadas.',true);}
     finally{if(token===state.reqId)state.carregando=false;}
   }
@@ -95,15 +106,15 @@
     box.hidden=false;
     box.innerHTML=`<div class="chamada-ja-registrada">
       <div class="chamada-ja-icon" aria-hidden="true">✓</div>
-      <span class="chamada-eyebrow">REUNIÃO REGISTRADA</span>
-      <h3>Já existe uma chamada em ${esc(data)}</h3>
-      <p>Esta data já foi lançada. Não é possível fazer outra chamada para o mesmo dia.</p>
+      <span class="chamada-eyebrow">${state.tipo==='culto'?'CULTO':'CÉLULA'} REGISTRADO(A)</span>
+      <h3>Já existe chamada de ${esc(nomeTipo())} em ${esc(data)}</h3>
+      <p>Esta reunião já foi registrada. Você pode lançar o outro tipo na mesma data.</p>
       <div class="chamada-ja-totais"><span>✓ ${presentes} vieram</span><span>✕ ${faltas} faltaram</span></div>
       <div class="chamada-ja-acoes">
         <button type="button" class="btn btn-primary" id="chamada-revisar-existente">Ver / corrigir chamada</button>
         <button type="button" class="btn btn-ghost" id="chamada-excluir-existente">🗑️ Excluir chamada</button>
       </div>
-      <p class="chamada-ja-hint">Para registrar outra reunião, selecione uma data diferente acima.</p>
+      <p class="chamada-ja-hint">Para registrar outra reunião, altere o tipo ou selecione outra data.</p>
     </div>`;
     $('chamada-revisar-existente').addEventListener('click',()=>{
       state.modoEdicao=true;box.hidden=true;resumo();
@@ -124,7 +135,7 @@
       <div class="match-stamp match-stamp-no">NÃO VEIO</div><div class="match-stamp match-stamp-yes">VEIO</div>
       <div class="match-avatar">${avatar(m)}</div>
       <div class="match-name">${esc(m.name)}</div>
-      <p>${back?'Próximo participante':'Você viu esta pessoa na célula?'}</p>
+      <p>${back?'Próximo participante':'Esta pessoa participou do '+(state.tipo==='culto'?'culto':'encontro da célula')+'?'}</p>
       </article>`;
   }
   function render(){
@@ -198,7 +209,7 @@
     const present=state.membros.filter(m=>state.marcacoes[m.id]==='presente');
     const absent=state.membros.filter(m=>state.marcacoes[m.id]==='ausente');
     $('chamada-summary').innerHTML=`<div class="chamada-result">
-      <span class="chamada-eyebrow">CONFERÊNCIA</span><h3>Resumo da chamada</h3>
+      <span class="chamada-eyebrow">CONFERÊNCIA · ${state.tipo==='culto'?'CULTO':'CÉLULA'}</span><h3>Resumo da chamada</h3>
       <div class="chamada-metrics"><div><strong>${present.length}</strong><span>Vieram</span></div><div><strong>${absent.length}</strong><span>Não vieram</span></div><div><strong>${queue.length}</strong><span>Pendentes</span></div></div>
       <h4>Revise ou corrija antes de salvar</h4>
       <div class="chamada-result-list">${state.membros.map(m=>{
@@ -218,16 +229,16 @@
   async function excluir(){
     if(!state.chamada||state.salvando)return;
     const data=state.data.split('-').reverse().join('/');
-    if(!window.confirm('Excluir definitivamente a chamada de '+data+'? Todas as presenças e faltas desta data serão removidas dos relatórios. Esta ação não pode ser desfeita.'))return;
+    if(!window.confirm('Excluir definitivamente a chamada de '+nomeTipo()+' de '+data+'? Todas as presenças e faltas desta data serão removidas dos relatórios. Esta ação não pode ser desfeita.'))return;
     const btn=$('chamada-excluir')||$('chamada-excluir-existente');if(btn)btn.disabled=true;
     feedback('Excluindo chamada…');
     try{
-      await window.chamarApi('/api/chamada',{acao:'excluir',data:state.data});
+      await window.chamarApi('/api/chamada',{acao:'excluir',data:state.data,tipo:state.tipo});
       localStorage.removeItem(chave());
       state.chamada=null;state.marcacoes={};state.historico=[];state.modoEdicao=false;
       render();
       window.agapeFrequencia?.invalidar?.();
-      feedback('Chamada excluída. Você pode lançar uma nova chamada nesta data.');
+      feedback('Chamada de '+nomeTipo()+' excluída. Você pode lançar uma nova chamada desse tipo nesta data.');
       window.toast('Chamada excluída com sucesso!');
     }catch(e){
       feedback((e.message||'Não foi possível excluir')+' · Tente novamente.',true);
@@ -242,7 +253,7 @@
     feedback('Salvando chamada com segurança…');
     const edicao=!!state.chamada;
     try {
-      await window.chamarApi('/api/chamada',{acao:edicao?'atualizar':'salvar',data:state.data,
+      await window.chamarApi('/api/chamada',{acao:edicao?'atualizar':'salvar',data:state.data,tipo:state.tipo,
         presencas:state.membros.map(m=>({user_id:m.id,status:state.marcacoes[m.id]}))});
       localStorage.removeItem(chave());
       state.historico=[];state.modoEdicao=false;state.chamada=null;state.data='';
@@ -269,5 +280,5 @@
     if(e.key==='ArrowLeft'){e.preventDefault();responder('ausente');}
     if((e.key==='Backspace'||e.key==='z')&&state.historico.length){e.preventDefault();desfazer();}
   });
-  window.agapeChamada={abrir,mudarData,responder,desfazer,resumo,atualizarAcesso:atualizaAcesso};
+  window.agapeChamada={abrir,mudarTipo,mudarData,responder,desfazer,resumo,atualizarAcesso:atualizaAcesso};
 })();
