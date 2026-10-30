@@ -10,6 +10,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Ágape">
 <link rel="manifest" href="/manifest.json">
+<script>
+/* Aplicar o tema antes da primeira pintura para evitar clarão ao abrir o PWA. */
+(function(){try{var v=localStorage.getItem('agape-theme');var d=v==='dark'||(!v&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.theme=d?'dark':'light';}catch(e){document.documentElement.dataset.theme='light';}})();
+</script>
 <!-- Tema inicial sempre claro; escuro só após escolha explícita. -->
 <script>
   // Detecta o modo instalado antes da pintura: o guia nunca aparece no app.
@@ -659,7 +663,7 @@ body{
 <script defer src="/_vercel/insights/script.js"></script>
 <link rel="stylesheet" href="/css/agape-modern.css?v=20261029install">
 <link rel="stylesheet" href="/css/chamada.css?v=20261029">
-<link rel="stylesheet" href="/css/agape-love-safe.css?v=20261030c">
+<link rel="stylesheet" href="/css/agape-love.css?v=20261030paleta">
 </head>
 <body>
 
