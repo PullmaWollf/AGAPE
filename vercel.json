@@ -3,37 +3,66 @@
     {
       "source": "/sw.js",
       "headers": [
-        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
-        { "key": "Service-Worker-Allowed", "value": "/" }
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        },
+        {
+          "key": "Service-Worker-Allowed",
+          "value": "/"
+        }
       ]
     },
     {
       "source": "/index.html",
       "headers": [
-        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
-        { "key": "Pragma", "value": "no-cache" }
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        },
+        {
+          "key": "Pragma",
+          "value": "no-cache"
+        }
       ]
     },
     {
       "source": "/manifest.json",
       "headers": [
-        { "key": "Content-Type", "value": "application/manifest+json" },
-        { "key": "Cache-Control", "value": "no-cache" }
+        {
+          "key": "Content-Type",
+          "value": "application/manifest+json"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
       ]
     },
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" }
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
       ]
     }
   ],
   "crons": [
-    { "path": "/api/cron-limpeza-mural", "schedule": "0 3 1 * *" }
+    {
+      "path": "/api/cron-limpeza-mural",
+      "schedule": "0 3 1 * *"
+    }
   ],
   "rewrites": [
-    { "source": "/api/:route*", "destination": "/api/index?route=:route*" },
-    { "source": "/((?!icons|sw.js|manifest.json|api).*)", "destination": "/index.html" }
+    {
+      "source": "/api/:route*",
+      "destination": "/api/index?route=:route*"
+    },
+    {
+      "source": "/((?!api/|js/|css/|assets/|icons/|_vercel/|sw\\.js$|manifest\\.json$|offline\\.html$|favicon\\.ico$|robots\\.txt$).*)",
+      "destination": "/index.html"
+    }
   ]
 }
-
