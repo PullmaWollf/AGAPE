@@ -866,12 +866,29 @@ body{
     <div class="sec-hdr"><h2>Painel ADM</h2><p>Gerencie sua célula</p></div>
     <div class="adm-tabs">
       <button class="adm-tab active" onclick="admTab('usuarios',this)">Usuários</button>
+      <button class="adm-tab" id="adm-tab-chamadas" hidden onclick="admTab('chamadas',this)">📋 Chamadas</button>
       <button class="adm-tab" onclick="admTab('perfis',this)">Perfis e permissões</button>
       <button class="adm-tab" onclick="admTab('posts',this)">Posts</button>
   <button class="adm-tab" onclick="admTab('palavra',this)">Palavra</button>
       <button class="adm-tab" onclick="admTab('escala-a',this)">Escala</button>
       <button class="adm-tab" onclick="admTab('modelos',this)">Modelos</button>
       <button class="adm-tab" onclick="admTab('notif',this)">Notificações</button>
+    </div>
+
+    <div class="adm-panel" id="adm-chamadas" aria-label="Gestão das chamadas da célula">
+      <section class="adm-chamadas-cabecalho">
+        <div>
+          <span class="chamada-eyebrow">GESTÃO DE FREQUÊNCIA</span>
+          <h3>Chamadas realizadas</h3>
+          <p>Consulte todas as chamadas salvas, veja presenças e faltas ou cancele uma reunião sem precisar procurar a data na tela MATCH.</p>
+        </div>
+        <button type="button" class="btn btn-ghost" id="adm-chamadas-atualizar">↻ Atualizar lista</button>
+      </section>
+      <div class="adm-chamadas-alerta">⚠️ <strong>Cancelar é definitivo:</strong> apaga as presenças e faltas da reunião e a remove dos relatórios. Para corrigir uma presença sem apagar, use <strong>Ver / corrigir</strong>.</div>
+      <div class="adm-chamadas-resumo"><strong id="adm-chamadas-total">0 chamadas registradas</strong><span>Da mais recente para a mais antiga</span></div>
+      <div id="adm-chamadas-status" class="chamada-feedback" role="status" aria-live="polite">Abra esta aba para carregar as chamadas.</div>
+      <div id="adm-chamadas-lista" class="adm-chamadas-lista"></div>
+      <button type="button" class="btn btn-ghost adm-chamadas-mais" id="adm-chamadas-mais" hidden>Carregar mais chamadas</button>
     </div>
 
     <div class="adm-panel" id="adm-perfis">
@@ -1227,6 +1244,7 @@ body{
   <script src="/js/perfis.js" defer></script>
   <script src="/js/frequencia-calculos.js" defer></script>
   <script src="/js/chamada.js" defer></script>
+  <script src="/js/admin-chamadas.js" defer></script>
   <script src="/js/frequencia.js" defer></script>
 </body>
 </html>

@@ -51,13 +51,14 @@
       window.goPage('home');
     }
   }
-  async function abrir(){
+  async function abrir(dataSelecionada){
     if(!autorizado())return window.toast('Área exclusiva da liderança.','warn');
     window.goPage('chamada');
     feedback('Carregando padrão da célula…');
     try {
       const r=await window.chamarApi('/api/chamada',{acao:'config'});
-      state.data=dataPadrao(r.config?.celula_dia_semana);
+      state.data=/^\d{4}-\d{2}-\d{2}$/.test(String(dataSelecionada||''))
+        ? dataSelecionada : dataPadrao(r.config?.celula_dia_semana);
       $('chamada-data').value=state.data;
       await carregar();
     }catch(e){
