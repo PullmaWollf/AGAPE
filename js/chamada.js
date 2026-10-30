@@ -135,7 +135,7 @@
       <div class="match-stamp match-stamp-no">NÃO VEIO</div><div class="match-stamp match-stamp-yes">VEIO</div>
       <div class="match-avatar">${avatar(m)}</div>
       <div class="match-name">${esc(m.name)}</div>
-      <p>${back?'Próximo participante':'Esta pessoa participou do ${state.tipo==='culto'?'culto':'encontro da célula'}?'}</p>
+      <p>${back?'Próximo participante':'Esta pessoa participou do '+(state.tipo==='culto'?'culto':'encontro da célula')+'?'}</p>
       </article>`;
   }
   function render(){
