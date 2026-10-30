@@ -176,3 +176,15 @@ html[data-theme="dark"] .hero h1,html[data-theme="dark"] .hero p,html[data-theme
   .page,.quick-card,.btn,.tab-btn{animation:none!important;transition:none!important}
 }
 [hidden]{display:none!important}
+
+/* Correção dos cartões de liderança e da hierarquia dos ícones renderizados no HTML. */
+.lider-presenca-acesso .lider-action{background:var(--surface)!important;color:var(--text)!important;border-color:var(--border)!important;box-shadow:none!important;min-height:104px!important;padding:17px 18px!important}
+.lider-presenca-acesso .lider-action>span{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;color:var(--accent)!important;font-size:1rem!important}
+.lider-presenca-acesso .lider-action>span .ag-icon{width:25px;height:25px}
+.lider-presenca-acesso .lider-action strong{color:var(--text)!important;font-weight:650!important;font-size:.94rem!important}
+.lider-presenca-acesso .lider-action small{color:var(--muted)!important;font-size:.79rem!important}
+.lider-presenca-acesso .lider-action:hover{border-color:var(--mauve)!important;background:var(--surface)!important}
+.quick-card .qc-icon{height:28px;line-height:1;align-items:center}
+.quick-card .qc-icon>.ag-icon{width:23px;height:23px}
+.chamada-tipo-opcao .ag-icon{display:inline-block;vertical-align:middle}
+html[data-theme="dark"] .lider-presenca-acesso .lider-action{background:var(--surface)!important;color:var(--text)!important}
