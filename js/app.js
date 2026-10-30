@@ -887,15 +887,21 @@ function renderModelos() {
 
 async function salvarConfig() {
   if (!isAdm() && !temPermissao('modelos')) return toast('Você não tem permissão para alterar o padrão da célula.', 'warn');
-  const linhas = [
-    { chave: 'celula_dia_semana', valor: $('cfg-dia').value },
-    { chave: 'celula_hora', valor: $('cfg-hora').value || '19:30' },
-    { chave: 'hora_aviso_semana', valor: $('cfg-hora-semana').value || '09:00' },
-  ];
-  const { error } = await db.from('config').upsert(linhas.map((l) => ({ ...l, atualizado_em: new Date().toISOString() })), { onConflict: 'chave' });
-  if (error) return toast(msgErro(error), 'err');
-  linhas.forEach((l) => (S.config[l.chave] = l.valor));
-  toast('Configurações salvas ✅');
+  const botao = $('cfg-salvar');
+  await comBotao(botao, async () => {
+    try {
+      const resposta = await chamarApi('/api/admin-config', {
+        acao: 'salvar',
+        dia: $('cfg-dia').value,
+        hora: $('cfg-hora').value,
+        horaAviso: $('cfg-hora-semana').value,
+      });
+      S.config = { ...S.config, ...resposta.config };
+      toast('Padrão da célula salvo com sucesso ✅');
+    } catch (e) {
+      toast(msgErro(e, 'Não foi possível salvar o padrão da célula.'), 'err');
+    }
+  });
 }
 
 let _modSemanas = 4;
@@ -1039,8 +1045,17 @@ async function gerarMes() {
   await comBotao($('mes-btn'), async () => {
     const dia = $('mes-dia').value;
     if (String(S.config.celula_dia_semana ?? '5') !== dia) {
-      const { error: e0 } = await db.from('config').upsert({ chave: 'celula_dia_semana', valor: dia, atualizado_em: new Date().toISOString() }, { onConflict: 'chave' });
-      if (!e0) S.config.celula_dia_semana = dia;
+      try {
+        const resposta = await chamarApi('/api/admin-config', {
+          acao: 'salvar',
+          dia,
+          hora: S.config.celula_hora || '19:30',
+          horaAviso: S.config.hora_aviso_semana || '09:00',
+        });
+        S.config = { ...S.config, ...resposta.config };
+      } catch (e) {
+        return toast(msgErro(e, 'Não foi possível atualizar o dia da célula.'), 'err');
+      }
     }
     const { data, error } = await db.rpc('aplicar_modelo', {
       p_modelo: modeloId, p_datas: datas, p_rotacao: _mes.rot, p_substituir: $('mes-subst').checked });
