@@ -664,6 +664,7 @@ body{
 <link rel="stylesheet" href="/css/agape-modern.css?v=20261029install">
 <link rel="stylesheet" href="/css/chamada.css?v=20261029">
 <link rel="stylesheet" href="/css/agape-love.css?v=20261030paleta">
+<link rel="stylesheet" href="/css/agape-editorial.css?v=20261030">
 </head>
 <body>
 
@@ -706,7 +707,7 @@ body{
     <div class="hero-content">
       <div class="hero-eyebrow">Igreja Videira · Aparecida de Goiânia</div>
       <h1>Célula <em>Ágape</em></h1>
-      <p>Um espaço de amor, comunidade e edificação mútua.</p>
+      <p>Fé que se vive em comunidade.</p>
       <div class="hero-btns">
         <button class="btn btn-primary" onclick="goPage('mural')">Ver Mural</button>
         <button class="btn btn-outline-light" onclick="goPage('local')">Como Chegar</button>
@@ -719,7 +720,7 @@ body{
       <button class="lider-action" type="button" onclick="agapeChamada.abrir()"><span aria-hidden="true">🙋</span><strong>1. Fazer chamada</strong><small>Marcar quem veio e salvar</small></button>
       <button class="lider-action" type="button" onclick="agapeFrequencia.abrir()"><span aria-hidden="true">📊</span><strong>2. Ver relatórios</strong><small>Consultar chamadas já salvas</small></button>
     </section>
-    <p class="lider-presenca-explicacao" id="lider-presenca-explicacao" hidden>Primeiro registre a presença em <strong>Fazer chamada</strong>. Depois consulte os resultados em <strong>Ver relatórios</strong>. Uma chamada por data.</p>
+    <p class="lider-presenca-explicacao" id="lider-presenca-explicacao" hidden>Primeiro registre a presença em <strong>Fazer chamada</strong>. Depois consulte os resultados em <strong>Ver relatórios</strong>. Uma chamada por data e tipo de reunião.</p>
     <div class="quick-grid">
       <div class="quick-card" onclick="goPage('mural')"><div class="qc-icon">📖</div><div class="qc-title">Mural</div><div class="qc-sub">Versículos e mensagens</div></div>
       <div class="quick-card" onclick="goPage('escala')"><div class="qc-icon">🧁</div><div class="qc-title">Escala</div><div class="qc-sub">Quem traz o lanche</div></div>
@@ -804,7 +805,7 @@ body{
   <div class="container chamada-wrap">
     <div class="chamada-heading">
       <button type="button" class="chamada-back" onclick="goPage('home')" aria-label="Voltar ao início">←</button>
-      <div><span class="chamada-eyebrow">CÉLULA ÁGAPE · PRESENÇA</span><h2>Fazer chamada</h2><p>Escolha o tipo de reunião, a data e registre as presenças.</p></div>
+      <div><span class="chamada-eyebrow">PRESENÇAS E PARTICIPAÇÃO</span><h2>Fazer chamada</h2><p>Escolha o tipo de reunião, a data e registre as presenças.</p></div>
     </div>
     <div class="chamada-tipo-wrap" role="group" aria-label="Tipo de reunião">
       <span class="chamada-tipo-title">Tipo de reunião</span>
@@ -838,7 +839,7 @@ body{
 <div class="page" id="page-frequencia">
   <div class="container freq-wrap">
     <div class="chamada-heading"><button type="button" class="chamada-back" onclick="goPage('home')" aria-label="Voltar ao início">←</button>
-      <div><span class="chamada-eyebrow">CÉLULA ÁGAPE</span><h2>Relatórios de frequência</h2><p>Etapa 2: veja os resultados das chamadas já salvas. Não é necessário lançar nada aqui.</p></div>
+      <div><span class="chamada-eyebrow">CÉLULA ÁGAPE</span><h2>Relatórios de frequência</h2><p>Acompanhe a participação nos encontros da célula e nos cultos.</p></div>
     </div>
     <div class="freq-como-funciona">📊 <strong>Como funciona:</strong> cada chamada salva alimenta automaticamente os relatórios. Por padrão, mostramos <strong>todas as chamadas</strong>, inclusive datas futuras registradas antecipadamente.</div>
     <div class="freq-filters">
@@ -1254,6 +1255,7 @@ body{
   </div>
 
 <div class="toast" id="toast"></div>
+<script src="/js/ui-icons.js?v=20261030" defer></script>
 <script src="/js/theme.js?v=20261030c" defer></script>
 <script src="/js/utils.js"></script>
 <script src="/js/config.js"></script>
