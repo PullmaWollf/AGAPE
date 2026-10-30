@@ -57,6 +57,7 @@
     window.goPage('chamada');
     state.tipo=['celula','culto'].includes(tipoSelecionado)?tipoSelecionado:'celula';
     $('chamada-tipo').value=state.tipo;
+    document.querySelectorAll('input[name="chamada-tipo"]').forEach(el=>{el.checked=el.value===state.tipo;});
     feedback('Carregando padrão da célula…');
     try {
       const r=await window.chamarApi('/api/chamada',{acao:'config'});
@@ -71,6 +72,8 @@
   async function mudarTipo(tipo){
     if(!['celula','culto'].includes(tipo)||state.salvando)return;
     state.tipo=tipo;
+    $('chamada-tipo').value=tipo;
+    document.querySelectorAll('input[name="chamada-tipo"]').forEach(el=>{el.checked=el.value===tipo;});
     await carregar();
   }
   async function mudarData(data) {
