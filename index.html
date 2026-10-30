@@ -690,11 +690,11 @@ body{
 
 <!-- BOTTOM TAB BAR -->
 <div class="tab-bar">
-  <button class="tab-btn active" data-page="home" onclick="goPage('home')"><span class="tab-icon">🏠</span><span class="tab-label">Início</span></button>
-  <button class="tab-btn" data-page="mural" onclick="goPage('mural')"><span class="tab-icon">📋</span><span class="tab-label">Mural</span></button>
-  <button class="tab-btn" data-page="escala" onclick="goPage('escala')"><span class="tab-icon">🧁</span><span class="tab-label">Escala</span></button>
-  <button class="tab-btn" data-page="local" onclick="goPage('local')"><span class="tab-icon">📍</span><span class="tab-label">Local</span></button>
-  <button class="tab-btn" data-page="adm" onclick="goPage('adm')" id="tb-adm" style="display:none"><span class="tab-icon">⚙️</span><span class="tab-label">ADM</span></button>
+  <button class="tab-btn active" data-page="home" onclick="goPage('home')"><span class="tab-icon"><svg class="ag-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7M5 9v12h14V9M9 21v-7h6v7"/></svg></span><span class="tab-label">Início</span></button>
+  <button class="tab-btn" data-page="mural" onclick="goPage('mural')"><span class="tab-icon"><svg class="ag-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="5" width="14" height="16" rx="2"/><path d="M9 5.5h6V3H9zM9 11h6M9 15h6"/></svg></span><span class="tab-label">Mural</span></button>
+  <button class="tab-btn" data-page="escala" onclick="goPage('escala')"><span class="tab-icon"><svg class="ag-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M5 11c-1-3 1-5 4-5a4 4 0 0 1 7-1c3 0 5 3 3 6M8 15h8"/></svg></span><span class="tab-label">Escala</span></button>
+  <button class="tab-btn" data-page="local" onclick="goPage('local')"><span class="tab-icon"><svg class="ag-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></span><span class="tab-label">Local</span></button>
+  <button class="tab-btn" data-page="adm" onclick="goPage('adm')" id="tb-adm" style="display:none"><span class="tab-icon"><svg class="ag-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg></span><span class="tab-label">ADM</span></button>
 </div>
 
 <button class="fab" id="fab-escala" onclick="openSheet('escala-sheet')">＋</button>
@@ -717,15 +717,15 @@ body{
   <div class="container">
     <div id="prox-home"></div>
     <section id="lider-presenca-acesso" class="lider-presenca-acesso" hidden aria-label="Chamada e relatórios da liderança">
-      <button class="lider-action" type="button" onclick="agapeChamada.abrir()"><span aria-hidden="true">🙋</span><strong>1. Fazer chamada</strong><small>Marcar quem veio e salvar</small></button>
-      <button class="lider-action" type="button" onclick="agapeFrequencia.abrir()"><span aria-hidden="true">📊</span><strong>2. Ver relatórios</strong><small>Consultar chamadas já salvas</small></button>
+      <button class="lider-action" type="button" onclick="agapeChamada.abrir()"><span aria-hidden="true"><svg class="ag-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2M17 8h5M19.5 5.5v5"/></svg></span><strong>1. Fazer chamada</strong><small>Marcar quem veio e salvar</small></button>
+      <button class="lider-action" type="button" onclick="agapeFrequencia.abrir()"><span aria-hidden="true"><svg class="ag-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20v-8M10 20V5M16 20v-9M22 20v-6"/></svg></span><strong>2. Ver relatórios</strong><small>Consultar chamadas já salvas</small></button>
     </section>
     <p class="lider-presenca-explicacao" id="lider-presenca-explicacao" hidden>Primeiro registre a presença em <strong>Fazer chamada</strong>. Depois consulte os resultados em <strong>Ver relatórios</strong>. Uma chamada por data e tipo de reunião.</p>
     <div class="quick-grid">
-      <div class="quick-card" onclick="goPage('mural')"><div class="qc-icon">📖</div><div class="qc-title">Mural</div><div class="qc-sub">Versículos e mensagens</div></div>
-      <div class="quick-card" onclick="goPage('escala')"><div class="qc-icon">🧁</div><div class="qc-title">Escala</div><div class="qc-sub">Quem traz o lanche</div></div>
-      <div class="quick-card" onclick="goPage('local')"><div class="qc-icon">📍</div><div class="qc-title">Localização</div><div class="qc-sub">Ver no mapa</div></div>
-      <div class="quick-card" id="home-auth-card" onclick="openSheet('login-sheet')"><div class="qc-icon" id="hac-icon">🔐</div><div class="qc-title" id="hac-title">Entrar</div><div class="qc-sub" id="hac-sub">Acessar sua conta</div></div>
+      <div class="quick-card" onclick="goPage('mural')"><div class="qc-icon"><svg class="ag-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v14M3 18V5a2 2 0 0 1 2-2h3a4 4 0 0 1 4 4 4 4 0 0 1 4-4h3a2 2 0 0 1 2 2v13h-5a4 4 0 0 0-4 3 4 4 0 0 0-4-3z"/></svg></div><div class="qc-title">Mural</div><div class="qc-sub">Versículos e mensagens</div></div>
+      <div class="quick-card" onclick="goPage('escala')"><div class="qc-icon"><svg class="ag-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M5 11c-1-3 1-5 4-5a4 4 0 0 1 7-1c3 0 5 3 3 6M8 15h8"/></svg></div><div class="qc-title">Escala</div><div class="qc-sub">Quem traz o lanche</div></div>
+      <div class="quick-card" onclick="goPage('local')"><div class="qc-icon"><svg class="ag-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></div><div class="qc-title">Localização</div><div class="qc-sub">Ver no mapa</div></div>
+      <div class="quick-card" id="home-auth-card" onclick="openSheet('login-sheet')"><div class="qc-icon" id="hac-icon"><svg class="ag-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div><div class="qc-title" id="hac-title">Entrar</div><div class="qc-sub" id="hac-sub">Acessar sua conta</div></div>
     </div>
 
     
@@ -749,7 +749,7 @@ body{
         <div id="img-preview" class="img-preview" style="display:none"></div>
         <div class="compose-footer">
           <div class="type-pills">
-            <button class="type-pill sel" data-t="versiculo" onclick="selType(this)">📖 Versículo</button>
+            <button class="type-pill sel" data-t="versiculo" onclick="selType(this)"><svg class="ag-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v14M3 18V5a2 2 0 0 1 2-2h3a4 4 0 0 1 4 4 4 4 0 0 1 4-4h3a2 2 0 0 1 2 2v13h-5a4 4 0 0 0-4 3 4 4 0 0 0-4-3z"/></svg> Versículo</button>
             <button class="type-pill" data-t="mensagem" onclick="selType(this)">💬</button>
             <button class="type-pill" data-t="aviso" onclick="selType(this)">📢</button>
           </div>
@@ -810,8 +810,8 @@ body{
     <div class="chamada-tipo-wrap" role="group" aria-label="Tipo de reunião">
       <span class="chamada-tipo-title">Tipo de reunião</span>
       <div class="chamada-tipo-opcoes">
-        <label class="chamada-tipo-opcao"><input type="radio" name="chamada-tipo" value="celula" checked onchange="agapeChamada.mudarTipo(this.value)"><span>❤️ <strong>Célula</strong><small>Encontro semanal</small></span></label>
-        <label class="chamada-tipo-opcao"><input type="radio" name="chamada-tipo" value="culto" onchange="agapeChamada.mudarTipo(this.value)"><span>⛪ <strong>Culto</strong><small>Reunião da igreja</small></span></label>
+        <label class="chamada-tipo-opcao"><input type="radio" name="chamada-tipo" value="celula" checked onchange="agapeChamada.mudarTipo(this.value)"><span><svg class="ag-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></svg> <strong>Célula</strong><small>Encontro semanal</small></span></label>
+        <label class="chamada-tipo-opcao"><input type="radio" name="chamada-tipo" value="culto" onchange="agapeChamada.mudarTipo(this.value)"><span><svg class="ag-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v7M9 5h6M4 21V11l8-5 8 5v10M4 14h16M10 21v-5h4v5"/></svg> <strong>Culto</strong><small>Reunião da igreja</small></span></label>
       </div>
       <select id="chamada-tipo" hidden aria-hidden="true"><option value="celula">Célula</option><option value="culto">Culto</option></select>
     </div>
@@ -841,7 +841,7 @@ body{
     <div class="chamada-heading"><button type="button" class="chamada-back" onclick="goPage('home')" aria-label="Voltar ao início">←</button>
       <div><span class="chamada-eyebrow">CÉLULA ÁGAPE</span><h2>Relatórios de frequência</h2><p>Acompanhe a participação nos encontros da célula e nos cultos.</p></div>
     </div>
-    <div class="freq-como-funciona">📊 <strong>Como funciona:</strong> cada chamada salva alimenta automaticamente os relatórios. Por padrão, mostramos <strong>todas as chamadas</strong>, inclusive datas futuras registradas antecipadamente.</div>
+    <div class="freq-como-funciona"><svg class="ag-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20v-8M10 20V5M16 20v-9M22 20v-6"/></svg> <strong>Como funciona:</strong> cada chamada salva alimenta automaticamente os relatórios. Por padrão, mostramos <strong>todas as chamadas</strong>, inclusive datas futuras registradas antecipadamente.</div>
     <div class="freq-filters">
       <label>Tipo de reunião <select id="freq-tipo" onchange="agapeFrequencia.carregar()"><option value="todas">Todas</option><option value="celula">Célula</option><option value="culto">Culto</option></select></label>
       <label>Período
@@ -862,7 +862,7 @@ body{
         <div class="freq-panel"><h3>Frequência por pessoa</h3><div id="freq-grafico-pessoas"></div></div>
         <div class="freq-panel"><h3>Presenças x faltas</h3><div id="freq-grafico-proporcao"></div></div>
       </div>
-      <div class="freq-panel"><h3><span aria-hidden="true">❤️</span> Atenção pastoral</h3><div id="freq-pastoral"></div></div>
+      <div class="freq-panel"><h3><span aria-hidden="true"><svg class="ag-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"/></svg></span> Atenção pastoral</h3><div id="freq-pastoral"></div></div>
       <div class="freq-panel"><h3>Tabela detalhada</h3>
         <p class="freq-subtitle">— indica que a pessoa ainda não integrava a célula ou não possui marcação.</p>
         <div class="freq-table-scroll"><table id="freq-tabela"></table></div>
@@ -883,7 +883,7 @@ body{
     <div class="sec-hdr"><h2>Painel ADM</h2><p>Gerencie sua célula</p></div>
     <div class="adm-tabs">
       <button class="adm-tab active" onclick="admTab('usuarios',this)">Usuários</button>
-      <button class="adm-tab" id="adm-tab-chamadas" hidden onclick="admTab('chamadas',this)">📋 Chamadas</button>
+      <button class="adm-tab" id="adm-tab-chamadas" hidden onclick="admTab('chamadas',this)"><svg class="ag-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="5" width="14" height="16" rx="2"/><path d="M9 5.5h6V3H9zM9 11h6M9 15h6"/></svg> Chamadas</button>
       <button class="adm-tab" onclick="admTab('perfis',this)">Perfis e permissões</button>
       <button class="adm-tab" onclick="admTab('posts',this)">Posts</button>
   <button class="adm-tab" onclick="admTab('palavra',this)">Palavra</button>
