@@ -325,6 +325,9 @@ function renderEscalaTudo() { renderEscala(); renderAdmEscala(); renderHome(); }
 // NAVEGAÇÃO
 // ══════════════════════════════════════════
 function goPage(id) {
+  if (id === 'contatos' && !isAdm() && S.me?.permissoes?.frequencia_relatorio !== true) {
+    toast('Agenda exclusiva da liderança.', 'warn'); id = 'home';
+  }
   if (['chamada','frequencia'].includes(id)) {
     const chave = id === 'chamada' ? 'chamada_registrar' : 'frequencia_relatorio';
     if (!S.me || !(S.me.permissoes?.[chave] === true)) {
