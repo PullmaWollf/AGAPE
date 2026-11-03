@@ -104,7 +104,7 @@ async function enviarPastoral(id){
   try{
     if(!contatosProntos)await carregarContatos();
     const u=contatos.find(x=>x.id===id);if(!u?.telefone)return window.toast('Cadastre o telefone desta pessoa em Contatos antes de enviar.','warn');
-    const primeiro=String(nome||u.name).trim().split(/\s+/)[0];
+    const primeiro=String(u.name).trim().split(/\s+/)[0];
     const mensagem='Olá, '+primeiro+'! Tudo bem? Aqui é da liderança da Célula Ágape. Passando para saber como você está e dizer que sentimos sua falta nos nossos encontros. Você é muito importante para nós! Se precisar conversar, de oração ou de qualquer apoio, estamos por aqui. Que Deus abençoe sua semana!';
     whatsapp(u.telefone,mensagem);
   }catch(e){window.toast(e.message,'err');}
