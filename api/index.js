@@ -19,6 +19,7 @@ import testPush from '../api-routes/test-push.js';
 import chamada from '../api-routes/chamada.js';
 import frequencia from '../api-routes/frequencia.js';
 import agapeExtras from '../api-routes/agape-extras.js';
+import brandManifest from '../api-routes/brand-manifest.js';
 
 const rotas = {
   'admin-chamadas': adminChamadas,
@@ -42,6 +43,7 @@ const rotas = {
   chamada,
   frequencia,
   'agape-extras': agapeExtras,
+  'brand-manifest': brandManifest,
 };
 
 export default async function handler(req, res) {
