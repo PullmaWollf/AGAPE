@@ -35,7 +35,7 @@ function paletaAplicar(){
   if(meta)meta.setAttribute('content',item.cores[1]);
 }
 document.addEventListener('agape:theme-change',paletaAplicar);
-const padrao={paletaLight:'rose',paletaDark:'wine',eyebrow:'by / VIDEIRA GARAVELO',titulo:'Um lugar para',destaque:'pertencer.',descricao:'Célula Ágape — encontros, comunhão e uma fé vivida juntos.',botao1:'Explorar o mural',botao2:'Onde nos encontrar',sections:ids,hidden:[]};
+const padrao={navNome:'Célula Ágape',logoUrl:'',heroUrl:'',heroCor:'#35202a',heroDecoracoes:true,paletaLight:'rose',paletaDark:'wine',eyebrow:'by / VIDEIRA GARAVELO',titulo:'Um lugar para',destaque:'pertencer.',descricao:'Célula Ágape — encontros, comunhão e uma fé vivida juntos.',botao1:'Explorar o mural',botao2:'Onde nos encontrar',sections:ids,hidden:[]};
 function dom(){
   const hero=$('page-home')?.querySelector('.hero-content');
   if(hero){
@@ -83,6 +83,28 @@ function dom(){
 function aplicar(){
   const x={...padrao,...layout};
   paletaAplicar();
+  const nav=$('page-home')?.ownerDocument.querySelector('.nav-logo');
+  const nome=nav?.querySelector('.nav-logo-text');
+  if(nome)nome.textContent=x.navNome||padrao.navNome;
+  const logo=nav?.querySelector('img');
+  if(logo){
+    if(!logo.dataset.agapePadrao)logo.dataset.agapePadrao=logo.src;
+    logo.src=x.logoUrl||logo.dataset.agapePadrao;
+    logo.alt='Logo '+(x.navNome||padrao.navNome);
+  }
+  document.title=x.navNome||padrao.navNome;
+  const favicon=document.querySelector('link[rel="icon"]');
+  if(favicon){
+    if(!favicon.dataset.agapePadrao)favicon.dataset.agapePadrao=favicon.href;
+    favicon.href=x.logoUrl||favicon.dataset.agapePadrao;
+    favicon.type=x.logoUrl?'image/png':'image/x-icon';
+  }
+  const hero=$('page-home')?.querySelector('.hero');
+  if(hero){
+    hero.style.setProperty('--agape-hero-bg',x.heroCor||padrao.heroCor);
+    hero.style.setProperty('--agape-hero-image',x.heroUrl?'linear-gradient(rgba(15,10,14,.40),rgba(15,10,14,.40)),url("'+x.heroUrl+'")':'none');
+    hero.classList.toggle('agape-sem-decoracao',x.heroDecoracoes===false);
+  }
   for(const [k,id] of Object.entries({eyebrow:'agape-hero-eyebrow',titulo:'agape-hero-titulo',destaque:'agape-hero-destaque',descricao:'agape-hero-descricao'}))if($(id))$(id).textContent=x[k]||padrao[k];
   for(const [k,id] of [['botao1','agape-hero-botao1'],['botao2','agape-hero-botao2']]){
     const b=$(id);if(!b)continue;
@@ -98,17 +120,60 @@ function aplicar(){
 function editor(){
   const el=$('agape-editor');if(!el)return;
   const x={...padrao,...layout};
-  el.innerHTML=['eyebrow','titulo','destaque','descricao','botao1','botao2'].map(k=>'<div class="fld"><label>'+esc({eyebrow:'Texto superior',titulo:'Título',destaque:'Palavra em destaque',descricao:'Descrição',botao1:'Botão Mural',botao2:'Botão Localização'}[k])+'</label><input data-layout="'+k+'" maxlength="'+(k==='descricao'?240:110)+'" value="'+esc(x[k]||'')+'"></div>').join('')+
+  el.innerHTML=['navNome','eyebrow','titulo','destaque','descricao','botao1','botao2'].map(k=>'<div class="fld"><label>'+esc({navNome:'Nome exibido na barra de navegação',eyebrow:'Texto superior',titulo:'Título',destaque:'Palavra em destaque',descricao:'Descrição',botao1:'Botão Mural',botao2:'Botão Localização'}[k])+'</label><input data-layout="'+k+'" maxlength="'+(k==='descricao'?240:110)+'" value="'+esc(x[k]||'')+'"></div>').join('')+
+  '<h3>Identidade visual</h3><div class="agape-identidade-grid"><div class="agape-identidade-grupo"><h4>Logo da navbar e ícone do app</h4><p class="hint">Envie uma imagem quadrada. Ela será usada na navbar, no favicon e nas próximas instalações do PWA.</p><div id="agape-logo-preview" class="agape-identidade-preview"></div><input type="file" accept="image/png,image/jpeg,image/webp" aria-label="Enviar novo logo" onchange="agapeExtras.enviarImagem(this,\'logo\')"><button type="button" class="btn btn-ghost" onclick="agapeExtras.removerImagem(\'logo\')">Usar imagem padrão</button></div><div class="agape-identidade-grupo"><h4>Fundo do header</h4><p class="hint">Cor sólida ou imagem opcional. O texto continuará editável abaixo.</p><div id="agape-hero-preview" class="agape-identidade-preview"></div><input type="file" accept="image/png,image/jpeg,image/webp" aria-label="Enviar imagem de fundo do header" onchange="agapeExtras.enviarImagem(this,\'hero\')"><button type="button" class="btn btn-ghost" onclick="agapeExtras.removerImagem(\'hero\')">Remover imagem de fundo</button></div></div><div class="fld"><label for="agape-hero-cor">Cor do fundo do header</label><input type="color" id="agape-hero-cor" value="'+esc(x.heroCor||padrao.heroCor)+'"></div><label class="agape-toggle"><input type="checkbox" id="agape-hero-decoracoes" '+(x.heroDecoracoes!==false?'checked':'')+'> Mostrar detalhes decorativos no header</label>'+ 
   '<h3>Paleta de cores</h3><p class="agape-paleta-dica">Escolha uma combinação para cada modo. O botão de tema continuará alternando entre claro e escuro para todos os usuários.</p>'+
   ['light','dark'].map(modo=>'<div class="agape-paleta-grupo"><h4>'+(modo==='light'?'Modo claro':'Modo escuro')+'</h4><div class="agape-paleta-grid">'+paletas[modo].map(p=>'<label class="agape-paleta-opcao"><input type="radio" name="agape-paleta-'+modo+'" value="'+p.id+'" '+((modo==='light'?x.paletaLight:x.paletaDark)===p.id?'checked':'')+'><span class="agape-paleta-amostra" aria-hidden="true">'+p.cores.map(c=>'<i style="background:'+c+'"></i>').join('')+'</span><span>'+esc(p.nome)+'</span></label>').join('')+'</div></div>').join('')+
   '<h3>Blocos da página</h3><p class="hint">Use as setas para reorganizar. Desmarque para ocultar.</p><div id="agape-layout-blocos"></div><button type="button" class="btn btn-primary btn-full" onclick="agapeExtras.salvarLayout()">Publicar alterações</button><button type="button" class="btn btn-ghost btn-full" onclick="agapeExtras.restaurarLayout()">Restaurar padrão</button>';
+  atualizarPrevias();
   const lista=$('agape-layout-blocos');const order=[...new Set([...(x.sections||ids),...ids])];
   lista.innerHTML=order.map((id,i)=>'<div class="agape-layout-row" data-section="'+id+'"><label><input type="checkbox" '+(!(x.hidden||[]).includes(id)?'checked':'')+'> '+esc(nomes[id])+'</label><span><button type="button" class="btn btn-ghost" onclick="agapeExtras.mover(this,-1)" aria-label="Mover para cima">↑</button><button type="button" class="btn btn-ghost" onclick="agapeExtras.mover(this,1)" aria-label="Mover para baixo">↓</button></span></div>').join('');
+}
+function atualizarPrevias(){
+  const logo=$('agape-logo-preview'),hero=$('agape-hero-preview');
+  if(logo){logo.replaceChildren();const img=document.createElement('img');img.src=layout.logoUrl||document.querySelector('.nav-logo img')?.dataset.agapePadrao||'/icons/icon-192.png';img.alt='Prévia da identidade';logo.append(img);}
+  if(hero){hero.replaceChildren();if(layout.heroUrl){const img=document.createElement('img');img.src=layout.heroUrl;img.alt='Prévia do fundo';hero.append(img);}else hero.textContent='Sem imagem — será usada a cor selecionada';}
+}
+async function enviarImagem(input,tipo){
+  if(!adm()||!input.files?.[0])return;
+  const arquivo=input.files[0];
+  if(!['image/png','image/jpeg','image/webp'].includes(arquivo.type)||arquivo.size>8*1024*1024){window.toast('Escolha PNG, JPG ou WebP de até 8 MB.','err');input.value='';return;}
+  try{
+    const imagem=await createImageBitmap(arquivo);
+    const tamanho=tipo==='logo'?512:1200;
+    const escala=Math.min(1,tamanho/Math.max(imagem.width,imagem.height));
+    const canvas=document.createElement('canvas');
+    canvas.width=tipo==='logo'?512:Math.max(1,Math.round(imagem.width*escala));
+    canvas.height=tipo==='logo'?512:Math.max(1,Math.round(imagem.height*escala));
+    const ctx=canvas.getContext('2d');
+    if(tipo==='logo'){
+      const lado=Math.min(imagem.width,imagem.height);
+      ctx.drawImage(imagem,(imagem.width-lado)/2,(imagem.height-lado)/2,lado,lado,0,0,512,512);
+    }else ctx.drawImage(imagem,0,0,canvas.width,canvas.height);
+    imagem.close?.();
+    const data=canvas.toDataURL('image/png');
+    if(data.length>1400000)throw new Error('Imagem muito detalhada. Use uma imagem menor.');
+    const resposta=await api('identidade_upload',{tipo,data});
+    layout[tipo==='logo'?'logoUrl':'heroUrl']=resposta.url;
+    atualizarPrevias();
+    window.toast('Imagem enviada. Clique em Publicar alterações para aplicá-la.');
+  }catch(e){window.toast(e.message||'Erro no envio','err');}
+  finally{input.value='';}
+}
+function removerImagem(tipo){
+  if(!adm())return;
+  layout[tipo==='logo'?'logoUrl':'heroUrl']='';
+  atualizarPrevias();
+  window.toast('Clique em Publicar alterações para confirmar a remoção.');
 }
 function mover(btn,delta){const row=btn.closest('[data-section]'),box=row.parentElement;if(delta<0&&row.previousElementSibling)box.insertBefore(row,row.previousElementSibling);if(delta>0&&row.nextElementSibling)box.insertBefore(row.nextElementSibling,row);}
 async function salvarLayout(){
   if(!adm())return;
   const x={};$('agape-editor').querySelectorAll('[data-layout]').forEach(i=>x[i.dataset.layout]=i.value.trim());
+  x.logoUrl=layout.logoUrl||'';
+  x.heroUrl=layout.heroUrl||'';
+  x.heroCor=$('agape-hero-cor')?.value||padrao.heroCor;
+  x.heroDecoracoes=!!$('agape-hero-decoracoes')?.checked;
   x.paletaLight=$('agape-editor').querySelector('input[name="agape-paleta-light"]:checked')?.value||'rose';
   x.paletaDark=$('agape-editor').querySelector('input[name="agape-paleta-dark"]:checked')?.value||'wine';
   const rows=[...$('agape-layout-blocos').querySelectorAll('[data-section]')];x.sections=rows.map(r=>r.dataset.section);x.hidden=rows.filter(r=>!r.querySelector('input').checked).map(r=>r.dataset.section);
@@ -153,6 +218,6 @@ function atualizarAcesso(){
   if(!window.S?.me)contatosProntos=false;
 }
 function inicializar(){dom();atualizarAcesso();lerLayout();}
-window.agapeExtras={atualizarAcesso,abrirContatos,renderContatos,lerMeuTelefone,salvarMeuTelefone,abrirZap,editarTelefone,enviarPastoral,salvarLayout,restaurarLayout,mover};
+window.agapeExtras={atualizarAcesso,abrirContatos,renderContatos,lerMeuTelefone,salvarMeuTelefone,abrirZap,editarTelefone,enviarPastoral,salvarLayout,restaurarLayout,mover,enviarImagem,removerImagem};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',inicializar);else inicializar();
 })();
