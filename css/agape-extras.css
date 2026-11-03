@@ -1,0 +1,16 @@
+/* Ágape — personalização e agenda: herda cores dos temas claro/escuro */
+.agape-layout-hidden{display:none!important}
+.agape-layout-row,.agape-contato-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 2px;border-bottom:1px solid var(--border)}
+.agape-layout-row label{display:flex;align-items:center;gap:9px;cursor:pointer;font-size:.9rem;color:var(--text)}
+.agape-layout-row span,.agape-contato-acoes{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.agape-layout-row .btn{padding:7px 12px;min-width:36px}
+.agape-contato-row strong{display:block;font-size:.95rem;color:var(--text)}
+.agape-contato-row small{display:block;font-size:.8rem;color:var(--muted);margin-top:4px}
+.agape-contato-acoes .btn{font-size:.8rem;padding:9px 12px;min-height:34px}
+.agape-contatos .form-card{margin-top:16px}
+.agape-contatos input{width:100%;margin:8px 0 14px}
+.freq-pastoral-row{flex-wrap:wrap;gap:10px}
+.freq-pastoral-row .btn{margin-left:auto;font-size:.8rem;padding:9px 12px}
+#agape-editor>.btn{margin-top:12px}
+#agape-editor>h3{margin:18px 0 8px}
+@media(max-width:600px){.agape-contato-row{align-items:flex-start;flex-direction:column}.agape-contato-acoes{width:100%}.freq-pastoral-row .btn{margin-left:0;width:100%}}
