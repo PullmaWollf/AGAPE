@@ -16,3 +16,16 @@
 @media(max-width:600px){.agape-contato-row{align-items:flex-start;flex-direction:column}.agape-contato-acoes{width:100%}.freq-pastoral-row .btn{margin-left:0;width:100%}}
 
 #agape-home-contatos[hidden],#agape-nav-contatos[hidden],#agape-layout-tab[hidden],#agape-adm-contatos[hidden]{display:none!important}
+
+/* Identidade visual configurada pelo administrador. */
+.nav-logo-text{overflow-wrap:anywhere}
+#page-home .hero.agape-sem-decoracao::before,#page-home .hero.agape-sem-decoracao::after{display:none!important}
+#agape-editor .agape-identidade-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+#agape-editor .agape-identidade-preview{display:flex;align-items:center;justify-content:center;min-height:104px;border:1px dashed var(--border);border-radius:12px;background:var(--surface);margin:8px 0;overflow:hidden}
+#agape-editor .agape-identidade-preview img{max-height:135px;max-width:100%;object-fit:contain}
+#agape-editor input[type="file"]{max-width:100%;font-size:.8rem}
+#agape-editor input[type="color"]{width:72px;height:40px;padding:4px;border:1px solid var(--border);border-radius:8px;background:var(--surface)}
+#agape-editor .agape-identidade-grupo{padding:12px;border:1px solid var(--border);border-radius:12px;min-width:0}
+#agape-editor .agape-identidade-grupo h4{margin:0 0 8px}
+#agape-editor .agape-toggle{display:flex;align-items:center;gap:9px;margin:12px 0}
+@media(max-width:650px){#agape-editor .agape-identidade-grid{grid-template-columns:1fr}}
