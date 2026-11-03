@@ -21,6 +21,11 @@ function dom(){
   }
   const quick=$('page-home')?.querySelector('.quick-grid');
   if(quick){quick.id='quick-grid';const h=quick.previousElementSibling;if(h)h.id='home-links-section';}
+  if(quick&&!$('agape-home-contatos')){
+    const card=document.createElement('div');card.className='quick-card';card.id='agape-home-contatos';card.onclick=()=>window.goPage('contatos');
+    card.innerHTML='<div class="qc-icon"><svg class="ag-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></div><div class="qc-title">Contatos</div><div class="qc-sub">Agenda e WhatsApp</div>';
+    quick.appendChild(card);
+  }
   const admTabs=$('page-adm')?.querySelector('.adm-tabs');
   if(admTabs&&!$('agape-layout-tab')){
     const b=document.createElement('button');b.className='adm-tab';b.id='agape-layout-tab';b.textContent='Personalizar início';
@@ -111,6 +116,7 @@ async function enviarPastoral(id){
 }
 function atualizarAcesso(){
   const botao=$('agape-nav-contatos');if(botao)botao.hidden=!(adm()||lider());
+  if($('agape-home-contatos'))$('agape-home-contatos').hidden=!(adm()||lider());
   if($('agape-layout-tab'))$('agape-layout-tab').hidden=!adm();
   if($('agape-adm-contatos'))$('agape-adm-contatos').hidden=!adm();
   if(!window.S?.me)contatosProntos=false;
