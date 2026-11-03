@@ -57,6 +57,10 @@
   ],
   "rewrites": [
     {
+      "source": "/manifest.webmanifest",
+      "destination": "/api/index?route=brand-manifest"
+    },
+    {
       "source": "/api/:route*",
       "destination": "/api/index?route=:route*"
     },
