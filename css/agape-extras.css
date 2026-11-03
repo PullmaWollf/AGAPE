@@ -14,3 +14,5 @@
 #agape-editor>.btn{margin-top:12px}
 #agape-editor>h3{margin:18px 0 8px}
 @media(max-width:600px){.agape-contato-row{align-items:flex-start;flex-direction:column}.agape-contato-acoes{width:100%}.freq-pastoral-row .btn{margin-left:0;width:100%}}
+
+#agape-home-contatos[hidden],#agape-nav-contatos[hidden],#agape-layout-tab[hidden],#agape-adm-contatos[hidden]{display:none!important}
