@@ -11,10 +11,10 @@ html[data-theme="dark"][data-palette="violet"]{--accent:#c6a5ff;--accent-l:#4032
 /* O hero tem cores fixas no tema padrão; personalizações seguem o tom escolhido. */
 html[data-palette]:not([data-palette="rose"]):not([data-palette="wine"]) #page-home .hero{background:var(--stone-d)!important}
 html[data-palette]:not([data-palette="rose"]):not([data-palette="wine"]) #page-home .hero h1,
-html[data-palette]:not([data-palette="rose"]):not([data-palette="wine"]) #page-home .hero h1 em{color:var(--surface)!important}
+html[data-palette]:not([data-palette="rose"]):not([data-palette="wine"]) #page-home .hero h1 em{color:#fff!important}
 html[data-palette]:not([data-palette="rose"]):not([data-palette="wine"]) #page-home .hero .hero-eyebrow,
 html[data-palette]:not([data-palette="rose"]):not([data-palette="wine"]) #page-home .hero p{color:var(--blush)!important}
-html[data-palette]:not([data-palette="rose"]):not([data-palette="wine"]) #page-home .hero-btns .btn-primary{background:var(--surface)!important;border-color:var(--surface)!important;color:var(--stone-d)!important}
+html[data-palette]:not([data-palette="rose"]):not([data-palette="wine"]) #page-home .hero-btns .btn-primary{background:#fff!important;border-color:#fff!important;color:#24303a!important}
 html[data-palette]:not([data-palette="rose"]):not([data-palette="wine"]) .btn-primary{background:var(--accent)!important;border-color:var(--accent)!important;color:var(--surface)!important;box-shadow:none!important}
 html[data-theme="dark"][data-palette]:not([data-palette="wine"]) .btn-primary{color:var(--bg)!important}
 html[data-palette]:not([data-palette="rose"]):not([data-palette="wine"]) .nav-logo-text em{color:var(--accent)!important}
