@@ -58,7 +58,9 @@ export default envolver(async (req,res)=>{
     const allowed=['prox-home','home-leadership-heading','lider-presenca-acesso','lider-presenca-explicacao','home-links-section','quick-grid'];
     const sections=Array.isArray(x.sections)?x.sections.filter(v=>allowed.includes(v)).filter((v,i,a)=>a.indexOf(v)===i):allowed;
     const hidden=Array.isArray(x.hidden)?x.hidden.filter(v=>allowed.includes(v)):[];
-    const layout={eyebrow:txt(x.eyebrow,90),titulo:txt(x.titulo,110),destaque:txt(x.destaque,90),descricao:txt(x.descricao,LIMITE),botao1:txt(x.botao1,55),botao2:txt(x.botao2,55),sections,hidden};
+    const paletaLight=['rose','ocean','emerald','indigo','amber'].includes(x.paletaLight)?x.paletaLight:'rose';
+    const paletaDark=['wine','midnight','forest','graphite','violet'].includes(x.paletaDark)?x.paletaDark:'wine';
+    const layout={paletaLight,paletaDark,eyebrow:txt(x.eyebrow,90),titulo:txt(x.titulo,110),destaque:txt(x.destaque,90),descricao:txt(x.descricao,LIMITE),botao1:txt(x.botao1,55),botao2:txt(x.botao2,55),sections,hidden};
     const {error}=await db.from('config').upsert({chave:'home_layout_v1',valor:JSON.stringify(layout),atualizado_em:new Date().toISOString()},{onConflict:'chave'});
     if(error)throw new Error(error.message);
     return responder(res,200,{ok:true,layout});
