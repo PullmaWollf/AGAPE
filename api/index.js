@@ -18,6 +18,7 @@ import pushDevice from '../api-routes/push-device.js';
 import testPush from '../api-routes/test-push.js';
 import chamada from '../api-routes/chamada.js';
 import frequencia from '../api-routes/frequencia.js';
+import agapeExtras from '../api-routes/agape-extras.js';
 
 const rotas = {
   'admin-chamadas': adminChamadas,
@@ -40,6 +41,7 @@ const rotas = {
   'test-push': testPush,
   chamada,
   frequencia,
+  'agape-extras': agapeExtras,
 };
 
 export default async function handler(req, res) {
