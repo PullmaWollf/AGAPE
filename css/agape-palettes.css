@@ -1,0 +1,31 @@
+/* Ágape — 10 paletas selecionáveis pelo ADM (5 claras + 5 escuras).
+   A seleção é aplicada via data-palette; a dupla padrão preserva o tema Ágape existente. */
+html[data-theme="light"][data-palette="ocean"]{--accent:#1463a3;--accent-l:#e8f2fc;--text:#233649;--muted:#617487;--stone-d:#1b3e61;--stone:#4c6680;--border:#d9e5ee;--surface:#fff;--bg:#f4f8fc;--cream:#f4f8fc;--cream-d:#e6f0f8;--blush:#c8dfef;--blush-l:#edf6fc;--mauve:#4788b8}
+html[data-theme="light"][data-palette="emerald"]{--accent:#14785b;--accent-l:#e7f5ef;--text:#253c34;--muted:#60776c;--stone-d:#215742;--stone:#527566;--border:#dce9df;--surface:#fff;--bg:#f5f9f5;--cream:#f5f9f5;--cream-d:#eaf2ea;--blush:#cbe4d5;--blush-l:#eef8f1;--mauve:#46957b}
+html[data-theme="light"][data-palette="indigo"]{--accent:#5146a5;--accent-l:#eeecfb;--text:#302e48;--muted:#6e6a85;--stone-d:#39346d;--stone:#67648e;--border:#e3e0ef;--surface:#fff;--bg:#f8f7fc;--cream:#f8f7fc;--cream-d:#f0eef8;--blush:#dcd7f3;--blush-l:#f2f0fc;--mauve:#7c70bd}
+html[data-theme="light"][data-palette="amber"]{--accent:#985b15;--accent-l:#fff2db;--text:#423628;--muted:#7b6b58;--stone-d:#70471d;--stone:#80694b;--border:#ece2d3;--surface:#fffefa;--bg:#fbf8f1;--cream:#fbf8f1;--cream-d:#f5ecdc;--blush:#eed8ae;--blush-l:#fff7e9;--mauve:#ad7b3d}
+html[data-theme="dark"][data-palette="midnight"]{--accent:#83bdf2;--accent-l:#213e59;--text:#e9f3fd;--muted:#b4c6d8;--stone-d:#edf5ff;--stone:#bdcddd;--border:#33465a;--surface:#1b2938;--bg:#101b29;--cream:#101b29;--cream-d:#253649;--blush:#2a4b68;--blush-l:#20364b;--mauve:#91b8db}
+html[data-theme="dark"][data-palette="forest"]{--accent:#88d9b2;--accent-l:#214d3d;--text:#e7f6ed;--muted:#b0c9bb;--stone-d:#f1fff5;--stone:#b9d2c2;--border:#344c3f;--surface:#1d3027;--bg:#13231c;--cream:#13231c;--cream-d:#294134;--blush:#315945;--blush-l:#233b2f;--mauve:#9acfb1}
+html[data-theme="dark"][data-palette="graphite"]{--accent:#c2d0dd;--accent-l:#343c45;--text:#f0f3f6;--muted:#b8c0c9;--stone-d:#f5f6f8;--stone:#c2c9d0;--border:#41474f;--surface:#292e34;--bg:#1b1f24;--cream:#1b1f24;--cream-d:#353c43;--blush:#4c545d;--blush-l:#323941;--mauve:#c0ccd6}
+html[data-theme="dark"][data-palette="violet"]{--accent:#c6a5ff;--accent-l:#403258;--text:#f2eafd;--muted:#c8b9d9;--stone-d:#f7efff;--stone:#cdbbe0;--border:#4b3b5b;--surface:#2c2239;--bg:#1c1627;--cream:#1c1627;--cream-d:#392b4a;--blush:#513a6b;--blush-l:#362841;--mauve:#c7a5e7}
+/* O hero tem cores fixas no tema padrão; personalizações seguem o tom escolhido. */
+html[data-palette]:not([data-palette="rose"]):not([data-palette="wine"]) #page-home .hero{background:var(--stone-d)!important}
+html[data-palette]:not([data-palette="rose"]):not([data-palette="wine"]) #page-home .hero h1,
+html[data-palette]:not([data-palette="rose"]):not([data-palette="wine"]) #page-home .hero h1 em{color:var(--surface)!important}
+html[data-palette]:not([data-palette="rose"]):not([data-palette="wine"]) #page-home .hero .hero-eyebrow,
+html[data-palette]:not([data-palette="rose"]):not([data-palette="wine"]) #page-home .hero p{color:var(--blush)!important}
+html[data-palette]:not([data-palette="rose"]):not([data-palette="wine"]) #page-home .hero-btns .btn-primary{background:var(--surface)!important;border-color:var(--surface)!important;color:var(--stone-d)!important}
+html[data-palette]:not([data-palette="rose"]):not([data-palette="wine"]) .btn-primary{background:var(--accent)!important;border-color:var(--accent)!important;color:var(--surface)!important;box-shadow:none!important}
+html[data-theme="dark"][data-palette]:not([data-palette="wine"]) .btn-primary{color:var(--bg)!important}
+html[data-palette]:not([data-palette="rose"]):not([data-palette="wine"]) .nav-logo-text em{color:var(--accent)!important}
+.agape-paleta-grupo{margin:18px 0 22px}
+.agape-paleta-grupo h4{font-size:.9rem;font-weight:700;color:var(--text);margin-bottom:5px}
+.agape-paleta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:12px}
+.agape-paleta-opcao{display:flex;align-items:center;gap:9px;min-width:0;cursor:pointer;padding:12px 10px;border:1px solid var(--border);border-radius:11px;background:var(--surface);font-size:.8rem;color:var(--text)}
+.agape-paleta-opcao:has(input:checked){border-color:var(--accent);outline:1px solid var(--accent);background:var(--accent-l)}
+.agape-paleta-opcao:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.agape-paleta-opcao input{accent-color:var(--accent);flex-shrink:0}
+.agape-paleta-amostra{display:inline-flex;gap:3px;flex-shrink:0}
+.agape-paleta-amostra i{display:block;width:14px;height:24px;border-radius:3px;border:1px solid #8883}
+.agape-paleta-dica{font-size:.78rem;color:var(--muted);line-height:1.5}
+@media(max-width:480px){.agape-paleta-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.agape-paleta-opcao{padding:11px 8px;gap:6px}}
