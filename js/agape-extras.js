@@ -9,7 +9,33 @@ const api=(acao,data={})=>window.chamarApi('/api/agape-extras',{acao,...data});
 let layout={},contatos=[],contatosProntos=false;
 const ids=['prox-home','home-leadership-heading','lider-presenca-acesso','lider-presenca-explicacao','home-links-section','quick-grid'];
 const nomes={'prox-home':'Próxima escala','home-leadership-heading':'Título da gestão','lider-presenca-acesso':'Ações de presença','lider-presenca-explicacao':'Explicação da chamada','home-links-section':'Título Seu espaço','quick-grid':'Atalhos da comunidade'};
-const padrao={eyebrow:'by / VIDEIRA GARAVELO',titulo:'Um lugar para',destaque:'pertencer.',descricao:'Célula Ágape — encontros, comunhão e uma fé vivida juntos.',botao1:'Explorar o mural',botao2:'Onde nos encontrar',sections:ids,hidden:[]};
+const paletas={
+  light:[
+    {id:'rose',nome:'Rosé clássico',cores:['#842e49','#f9f6f3','#fffefd']},
+    {id:'ocean',nome:'Azul oceano',cores:['#1463a3','#f4f8fc','#ffffff']},
+    {id:'emerald',nome:'Verde esmeralda',cores:['#14785b','#f5f9f5','#ffffff']},
+    {id:'indigo',nome:'Índigo moderno',cores:['#5146a5','#f8f7fc','#ffffff']},
+    {id:'amber',nome:'Âmbar elegante',cores:['#985b15','#fbf8f1','#fffefa']}
+  ],
+  dark:[
+    {id:'wine',nome:'Vinho Ágape',cores:['#e6a0b5','#1c191c','#272126']},
+    {id:'midnight',nome:'Azul meia-noite',cores:['#83bdf2','#101b29','#1b2938']},
+    {id:'forest',nome:'Floresta',cores:['#88d9b2','#13231c','#1d3027']},
+    {id:'graphite',nome:'Grafite',cores:['#c2d0dd','#1b1f24','#292e34']},
+    {id:'violet',nome:'Violeta',cores:['#c6a5ff','#1c1627','#2c2239']}
+  ]
+};
+function paletaAplicar(){
+  const modo=document.documentElement.dataset.theme==='dark'?'dark':'light';
+  const chave=modo==='dark'?'paletaDark':'paletaLight';
+  const selecionada=layout[chave]||(modo==='dark'?'wine':'rose');
+  const item=paletas[modo].find(p=>p.id===selecionada)||paletas[modo][0];
+  document.documentElement.dataset.palette=item.id;
+  const meta=document.querySelector('meta[name="theme-color"]');
+  if(meta)meta.setAttribute('content',item.cores[1]);
+}
+document.addEventListener('agape:theme-change',paletaAplicar);
+const padrao={paletaLight:'rose',paletaDark:'wine',eyebrow:'by / VIDEIRA GARAVELO',titulo:'Um lugar para',destaque:'pertencer.',descricao:'Célula Ágape — encontros, comunhão e uma fé vivida juntos.',botao1:'Explorar o mural',botao2:'Onde nos encontrar',sections:ids,hidden:[]};
 function dom(){
   const hero=$('page-home')?.querySelector('.hero-content');
   if(hero){
@@ -56,6 +82,7 @@ function dom(){
 }
 function aplicar(){
   const x={...padrao,...layout};
+  paletaAplicar();
   for(const [k,id] of Object.entries({eyebrow:'agape-hero-eyebrow',titulo:'agape-hero-titulo',destaque:'agape-hero-destaque',descricao:'agape-hero-descricao'}))if($(id))$(id).textContent=x[k]||padrao[k];
   for(const [k,id] of [['botao1','agape-hero-botao1'],['botao2','agape-hero-botao2']]){
     const b=$(id);if(!b)continue;
@@ -72,6 +99,8 @@ function editor(){
   const el=$('agape-editor');if(!el)return;
   const x={...padrao,...layout};
   el.innerHTML=['eyebrow','titulo','destaque','descricao','botao1','botao2'].map(k=>'<div class="fld"><label>'+esc({eyebrow:'Texto superior',titulo:'Título',destaque:'Palavra em destaque',descricao:'Descrição',botao1:'Botão Mural',botao2:'Botão Localização'}[k])+'</label><input data-layout="'+k+'" maxlength="'+(k==='descricao'?240:110)+'" value="'+esc(x[k]||'')+'"></div>').join('')+
+  '<h3>Paleta de cores</h3><p class="agape-paleta-dica">Escolha uma combinação para cada modo. O botão de tema continuará alternando entre claro e escuro para todos os usuários.</p>'+
+  ['light','dark'].map(modo=>'<div class="agape-paleta-grupo"><h4>'+(modo==='light'?'Modo claro':'Modo escuro')+'</h4><div class="agape-paleta-grid">'+paletas[modo].map(p=>'<label class="agape-paleta-opcao"><input type="radio" name="agape-paleta-'+modo+'" value="'+p.id+'" '+((modo==='light'?x.paletaLight:x.paletaDark)===p.id?'checked':'')+'><span class="agape-paleta-amostra" aria-hidden="true">'+p.cores.map(c=>'<i style="background:'+c+'"></i>').join('')+'</span><span>'+esc(p.nome)+'</span></label>').join('')+'</div></div>').join('')+
   '<h3>Blocos da página</h3><p class="hint">Use as setas para reorganizar. Desmarque para ocultar.</p><div id="agape-layout-blocos"></div><button type="button" class="btn btn-primary btn-full" onclick="agapeExtras.salvarLayout()">Publicar alterações</button><button type="button" class="btn btn-ghost btn-full" onclick="agapeExtras.restaurarLayout()">Restaurar padrão</button>';
   const lista=$('agape-layout-blocos');const order=[...new Set([...(x.sections||ids),...ids])];
   lista.innerHTML=order.map((id,i)=>'<div class="agape-layout-row" data-section="'+id+'"><label><input type="checkbox" '+(!(x.hidden||[]).includes(id)?'checked':'')+'> '+esc(nomes[id])+'</label><span><button type="button" class="btn btn-ghost" onclick="agapeExtras.mover(this,-1)" aria-label="Mover para cima">↑</button><button type="button" class="btn btn-ghost" onclick="agapeExtras.mover(this,1)" aria-label="Mover para baixo">↓</button></span></div>').join('');
@@ -80,6 +109,8 @@ function mover(btn,delta){const row=btn.closest('[data-section]'),box=row.parent
 async function salvarLayout(){
   if(!adm())return;
   const x={};$('agape-editor').querySelectorAll('[data-layout]').forEach(i=>x[i.dataset.layout]=i.value.trim());
+  x.paletaLight=$('agape-editor').querySelector('input[name="agape-paleta-light"]:checked')?.value||'rose';
+  x.paletaDark=$('agape-editor').querySelector('input[name="agape-paleta-dark"]:checked')?.value||'wine';
   const rows=[...$('agape-layout-blocos').querySelectorAll('[data-section]')];x.sections=rows.map(r=>r.dataset.section);x.hidden=rows.filter(r=>!r.querySelector('input').checked).map(r=>r.dataset.section);
   try{const r=await api('layout_salvar',{layout:x});layout=r.layout;aplicar();window.toast('Página inicial atualizada para todos!');}catch(e){window.toast(e.message,'err');}
 }
