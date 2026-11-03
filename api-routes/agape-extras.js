@@ -50,6 +50,25 @@ export default envolver(async (req,res)=>{
     if(!data)throw new HttpError(404,'Usuário não encontrado');
     return responder(res,200,{ok:true});
   }
+  if(acao==='identidade_upload'){
+    await exigirAdmin(db,req);
+    const tipo=String(req.body?.tipo||'');
+    if(!['logo','hero'].includes(tipo))throw new HttpError(400,'Tipo de imagem inválido');
+    const data=String(req.body?.data||'');
+    if(!/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(data)||data.length>1400000)
+      throw new HttpError(400,'Use uma imagem PNG, JPG ou WebP de até 1 MB');
+    const match=data.match(/^data:image\/(png|jpeg|webp);base64,(.+)$/);
+    const imagem=Buffer.from(match[2],'base64');
+    if(imagem.length<50||imagem.length>1024*1024)throw new HttpError(400,'Tamanho de imagem inválido');
+    const extensao=match[1]==='jpeg'?'jpg':match[1];
+    const arquivo='branding/'+(tipo==='logo'?'app-icon':'hero')+'.'+extensao;
+    const {error}=await db.storage.from('profile-avatars').upload(arquivo,imagem,{
+      contentType:'image/'+match[1],upsert:true,cacheControl:'60'
+    });
+    if(error)throw new Error(error.message);
+    const url=db.storage.from('profile-avatars').getPublicUrl(arquivo).data.publicUrl+'?v='+Date.now();
+    return responder(res,200,{ok:true,url,tipo});
+  }
   if(acao==='layout_salvar'){
     await exigirAdmin(db,req);
     const x=req.body?.layout;
@@ -60,7 +79,18 @@ export default envolver(async (req,res)=>{
     const hidden=Array.isArray(x.hidden)?x.hidden.filter(v=>allowed.includes(v)):[];
     const paletaLight=['rose','ocean','emerald','indigo','amber'].includes(x.paletaLight)?x.paletaLight:'rose';
     const paletaDark=['wine','midnight','forest','graphite','violet'].includes(x.paletaDark)?x.paletaDark:'wine';
-    const layout={paletaLight,paletaDark,eyebrow:txt(x.eyebrow,90),titulo:txt(x.titulo,110),destaque:txt(x.destaque,90),descricao:txt(x.descricao,LIMITE),botao1:txt(x.botao1,55),botao2:txt(x.botao2,55),sections,hidden};
+    const validarUrl=(v,tipo)=>{
+      const url=String(v||'').trim();
+      if(!url)return '';
+      const esperado=process.env.SUPABASE_URL||process.env.SUPA_URL||'https://pubrskqrsskiamzflpmj.supabase.co';
+      const base=new URL(esperado);
+      let u;try{u=new URL(url);}catch{throw new HttpError(400,'URL da imagem inválida');}
+      if(u.protocol!=='https:'||u.origin!==base.origin||!u.pathname.startsWith('/storage/v1/object/public/profile-avatars/branding/'+(tipo==='logo'?'app-icon':'hero')+'.'))
+        throw new HttpError(400,'Escolha uma imagem enviada pelo editor');
+      return u.href;
+    };
+    const cor=/^#[0-9a-f]{6}$/i.test(String(x.heroCor||''))?x.heroCor:'#35202a';
+    const layout={paletaLight,paletaDark,navNome:txt(x.navNome,70)||'Célula Ágape',logoUrl:validarUrl(x.logoUrl,'logo'),heroUrl:validarUrl(x.heroUrl,'hero'),heroCor:cor,heroDecoracoes:x.heroDecoracoes!==false,eyebrow:txt(x.eyebrow,90),titulo:txt(x.titulo,110),destaque:txt(x.destaque,90),descricao:txt(x.descricao,LIMITE),botao1:txt(x.botao1,55),botao2:txt(x.botao2,55),sections,hidden};
     const {error}=await db.from('config').upsert({chave:'home_layout_v1',valor:JSON.stringify(layout),atualizado_em:new Date().toISOString()},{onConflict:'chave'});
     if(error)throw new Error(error.message);
     return responder(res,200,{ok:true,layout});
