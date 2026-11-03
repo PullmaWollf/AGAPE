@@ -85,7 +85,14 @@ function aplicar(){
   paletaAplicar();
   const nav=$('page-home')?.ownerDocument.querySelector('.nav-logo');
   const nome=nav?.querySelector('.nav-logo-text');
-  if(nome)nome.textContent=x.navNome||padrao.navNome;
+  if(nome){
+    const palavras=String(x.navNome||padrao.navNome).trim().split(/\s+/);
+    nome.replaceChildren();
+    if(palavras.length>1){
+      nome.append(document.createTextNode(palavras.slice(0,-1).join(' ')+' '));
+      const destaque=document.createElement('em');destaque.textContent=palavras.at(-1);nome.append(destaque);
+    }else nome.textContent=palavras[0]||padrao.navNome;
+  }
   const logo=nav?.querySelector('img');
   if(logo){
     if(!logo.dataset.agapePadrao)logo.dataset.agapePadrao=logo.src;
