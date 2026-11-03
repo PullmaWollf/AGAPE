@@ -85,7 +85,7 @@
       '<p class="freq-empty">Nenhuma marcação registrada nesse período.</p>';
     $('freq-pastoral').innerHTML=r.pastoral.length?
       '<p class="freq-subtitle">Pessoas com duas ou mais ausências consecutivas entre as últimas reuniões registradas:</p>'+
-      r.pastoral.map(p=>`<div class="freq-pastoral-row">❤️ <strong>${esc(p.nome)}</strong><span>${p.consecutivas} ausências seguidas</span></div>`).join(''):
+      r.pastoral.map(p=>`<div class="freq-pastoral-row"><strong>${esc(p.nome)}</strong><span>${p.consecutivas} ausências seguidas</span><button type="button" class="btn btn-primary" onclick="agapeExtras.enviarPastoral('${esc(p.id)}','${esc(p.nome).replace(/&#39;/g, '&#39;')}')">Enviar mensagem pelo WhatsApp</button></div>`).join(''):
       '<p class="freq-empty">Nenhuma sequência recente de ausências identificada.</p>';
     const head=r.chamadas.map(c=>`<th scope="col" title="${esc(nomeTipo(c.tipo))}">${nomeData(c.data_celula)}<br><small>${esc(nomeTipo(c.tipo))}</small></th>`).join('');
     $('freq-tabela').innerHTML=`<thead><tr><th scope="col">Pessoa</th>${head}<th>Presenças</th><th>Faltas</th><th>%</th></tr></thead>
