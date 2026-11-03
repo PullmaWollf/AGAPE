@@ -158,6 +158,7 @@ function atualizarAuth() {
     $('home-auth-card').onclick = () => openSheet('login-sheet');
   }
   atualizarPills();
+  window.agapeExtras?.atualizarAcesso();
   window.agapeChamada?.atualizarAcesso();
   window.agapeAdminChamadas?.atualizarAcesso();
 }
@@ -168,6 +169,7 @@ function abrirConta() {
   $('conta-login').textContent = `${S.me.login} · ${isAdm() ? 'Administrador' : 'Membro'}`;
   ['conta-senha-atual', 'conta-senha-nova', 'conta-senha-conf'].forEach((i) => ($(i).value = ''));
   renderStatusNotif();
+  window.agapeExtras?.lerMeuTelefone();
   openSheet('conta-sheet');
 }
 
@@ -342,6 +344,7 @@ function goPage(id) {
   if (id === 'adm') { renderUsers(); renderAdmPosts(); renderAdmEscala(); renderModelos(); renderPerfis();
     if ($('adm-chamadas')?.classList.contains('active')) window.agapeAdminChamadas?.abrir(); }
   if (id === 'home') { renderHome(); renderBannerNotif(); }
+  if (id === 'contatos') window.agapeExtras?.abrirContatos();
   window.scrollTo({ top: 0 });
 }
 
@@ -363,7 +366,7 @@ function renderPalavra() {
   if (!S.palavra) { el.innerHTML = '<div class="empty">A Palavra da Célula ainda não foi publicada.</div>'; return; }
   const url = `${db.storage.from('palavra-celula').getPublicUrl(S.palavra.arquivo_path).data.publicUrl}?v=${encodeURIComponent(S.palavra.atualizado_em || Date.now())}`;
   const info = esc(S.palavra.nome_arquivo || 'Documento PDF');
-  el.innerHTML = `<h3>${esc(S.palavra.titulo)}</h3><p>${info}</p><iframe title="${esc(S.palavra.titulo)}" src="${esc(url)}#page=1&view=FitH" loading="lazy"></iframe><a class="btn btn-ghost btn-full" href="${esc(url)}" target="_blank" rel="noopener">Abrir PDF</a>`;
+  el.innerHTML = `<p>${info}</p><iframe title="${esc(S.palavra.titulo)}" src="${esc(url)}#page=1&view=FitH" loading="lazy"></iframe><a class="btn btn-ghost btn-full" href="${esc(url)}" target="_blank" rel="noopener">Abrir PDF</a>`;
 }
 function statusPalavra(mensagem, tipo = '') {
   const el = $('palavra-upload-status');
