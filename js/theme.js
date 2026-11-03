@@ -23,6 +23,7 @@
     root.dataset.theme=dark?'dark':'light';
     if(salvar)try{localStorage.setItem(key,dark?'dark':'light');}catch(e){}
     atualizar();
+    document.dispatchEvent(new Event('agape:theme-change'));
   }
   function toggle(){definir(root.dataset.theme==='dark'?'light':'dark');}
   window.agapeTheme={toggle,definir};
