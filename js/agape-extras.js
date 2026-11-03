@@ -99,11 +99,11 @@ function renderContatos(){
 }
 function abrirZap(id){const u=contatos.find(x=>x.id===id);if(u)whatsapp(u.telefone);}
 async function editarTelefone(id){if(!adm())return;const u=contatos.find(x=>x.id===id);if(!u)return;const telefone=prompt('Telefone de '+u.name+' (DDD + número):',u.telefone||'');if(telefone===null)return;try{await api('contato_salvar',{id,telefone});await abrirContatos();window.toast('Contato atualizado.');}catch(e){window.toast(e.message,'err');}}
-async function enviarPastoral(id,nome){
+async function enviarPastoral(id){
   if(!lider())return window.toast('Acesso restrito à liderança.','warn');
   try{
     if(!contatosProntos)await carregarContatos();
-    const u=contatos.find(x=>x.id===id);if(!u?.telefone)return window.toast('Cadastre o telefone de '+nome+' em Contatos antes de enviar.','warn');
+    const u=contatos.find(x=>x.id===id);if(!u?.telefone)return window.toast('Cadastre o telefone desta pessoa em Contatos antes de enviar.','warn');
     const primeiro=String(nome||u.name).trim().split(/\s+/)[0];
     const mensagem='Olá, '+primeiro+'! Tudo bem? Aqui é da liderança da Célula Ágape. Passando para saber como você está e dizer que sentimos sua falta nos nossos encontros. Você é muito importante para nós! Se precisar conversar, de oração ou de qualquer apoio, estamos por aqui. Que Deus abençoe sua semana!';
     whatsapp(u.telefone,mensagem);
